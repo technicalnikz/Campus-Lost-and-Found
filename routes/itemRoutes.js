@@ -155,6 +155,53 @@ router.get('/qr-lookup/:refCode', (req, res) => {
   });
 });
 
+// POST /api/items/anonymous-notify - Public finder messaging (delivers alert straight to owner's account)
+router.post('/anonymous-notify', (req, res) => {
+  try {
+    const { refCode, message, locationFound, finderContact } = req.body;
+    if (!refCode || !message) {
+      return res.status(400).json({ success: false, message: 'Reference code and message are required.' });
+    }
+
+    const items = getItems();
+    const searchRef = refCode.toUpperCase().trim();
+    const itemIndex = items.findIndex(i =>
+      (i.refCode && i.refCode.toUpperCase().trim() === searchRef) ||
+      String(i.id) === searchRef
+    );
+
+    if (itemIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Item not found with this reference code.' });
+    }
+
+    const item = items[itemIndex];
+    if (!item.notifications) item.notifications = [];
+
+    const newNotification = {
+      id: 'notif-' + Date.now(),
+      refCode: item.refCode,
+      itemTitle: item.title,
+      message: sanitizeString(message),
+      locationFound: sanitizeString(locationFound || 'Campus area'),
+      finderContact: sanitizeString(finderContact || 'Anonymous Student / Finder'),
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+
+    item.notifications.unshift(newNotification);
+    saveItems(items);
+
+    res.json({
+      success: true,
+      message: 'Anonymous alert sent straight to the owner\'s account notification inbox! 📲',
+      itemTitle: item.title,
+      notification: newNotification
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to deliver notification.' });
+  }
+});
+
 // GET /api/items/my-notifications - Retrieve notification inbox for logged-in user's registered items
 router.get('/my-notifications', requireAuth, (req, res) => {
   const items = getItems();

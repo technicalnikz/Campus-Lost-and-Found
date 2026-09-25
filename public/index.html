@@ -326,6 +326,55 @@
       padding: 0.1rem 0.38rem;
       line-height: 1;
     }
+    .notif-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 0.9rem;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .notif-item.unread {
+      background: rgba(250, 204, 21, 0.06);
+      border-color: rgba(250, 204, 21, 0.35);
+    }
+    .notif-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+      font-size: 0.85rem;
+      color: #ffffff;
+    }
+    .notif-time {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .notif-msg {
+      font-size: 0.8rem;
+      color: #e2e8f0;
+      margin: 0.25rem 0;
+      line-height: 1.4;
+    }
+    .notif-contact {
+      font-size: 0.75rem;
+      color: #86efac;
+      margin: 0.4rem 0 0;
+    }
+    .btn-mark-read {
+      background: none;
+      border: 1px solid rgba(250, 204, 21, 0.3);
+      color: var(--yellow-light);
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .btn-mark-read:hover {
+      background: rgba(250, 204, 21, 0.15);
+      border-color: var(--yellow-main);
+    }
     .badge-registered {
       background: rgba(59, 130, 246, 0.15);
       color: #93c5fd;
@@ -1013,6 +1062,7 @@
       </div>
 
       <form id="anonymousFinderForm" onsubmit="handleAnonymousFinderSubmit(event)">
+        <input type="hidden" id="finderRefCodeInput" />
         <div class="input-field" style="margin-bottom: 0.85rem;">
           <label style="font-size: 0.8rem; font-weight: 700; color: var(--yellow-light);">Where is the item right now? *</label>
           <input type="text" id="finderLocationInput" placeholder="e.g. Left with Ms. Santos at Library 2nd floor desk" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 0.6rem; color: var(--text-main);" />
@@ -1501,7 +1551,8 @@
 
     function closeRegisterBelongingModal() {
       document.getElementById('registerBelongingModal').classList.remove('open');
-      document.getElementById('regBelongingForm').reset();
+      const form = document.getElementById('registerBelongingForm');
+      if (form) form.reset();
     }
 
     function closeAuthRequiredModal() {
@@ -1510,10 +1561,11 @@
 
     async function handleRegisterBelongingSubmit(e) {
       e.preventDefault();
-      const title    = document.getElementById('regItemTitle').value.trim();
-      const category = document.getElementById('regItemCategory').value;
-      const identifiers = document.getElementById('regItemIdentifiers').value.trim();
-      const instructions = document.getElementById('regItemInstructions').value.trim();
+      const title        = document.getElementById('regTitle').value.trim();
+      const category     = document.getElementById('regCategory').value;
+      const location     = document.getElementById('regLocation') ? document.getElementById('regLocation').value : 'Campus-wide';
+      const identifiers  = document.getElementById('regIdentifiers').value.trim();
+      const instructions = document.getElementById('regInstructions').value.trim();
 
       if (!title || !category) {
         showToast('Please fill in the item name and category.', 'error');
@@ -1524,7 +1576,7 @@
         const res = await fetch('/api/items/register-belonging', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, category, identifiers, instructions })
+          body: JSON.stringify({ title, category, location, identifiers, instructions })
         });
         const data = await res.json();
         if (!data.success) {
@@ -1559,13 +1611,13 @@
           return;
         }
         const item = data.item;
-        document.getElementById('finderScreenTitle').textContent = item.title;
-        document.getElementById('finderScreenCategory').textContent = item.category;
-        document.getElementById('finderScreenInstructions').textContent = item.instructions;
+        document.getElementById('finderScreenItemTitle').textContent = item.title;
+        document.getElementById('finderScreenRefCode').textContent = item.refCode;
+        document.getElementById('finderScreenInstructions').textContent = item.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.';
         document.getElementById('finderRefCodeInput').value = item.refCode;
         document.getElementById('finderMessageInput').value = '';
         document.getElementById('finderLocationInput').value = '';
-        document.getElementById('finderOptionalContact').value = '';
+        document.getElementById('finderContactInput').value = '';
         document.getElementById('anonymousFinderModal').classList.add('open');
       } catch (err) {
         showToast('Failed to load item info.', 'error');
@@ -1578,10 +1630,10 @@
 
     async function handleAnonymousFinderSubmit(e) {
       e.preventDefault();
-      const refCode      = document.getElementById('finderRefCodeInput').value;
-      const message      = document.getElementById('finderMessageInput').value.trim();
+      const refCode       = document.getElementById('finderRefCodeInput').value;
+      const message       = document.getElementById('finderMessageInput').value.trim();
       const locationFound = document.getElementById('finderLocationInput').value.trim();
-      const finderContact = document.getElementById('finderOptionalContact').value.trim();
+      const finderContact = document.getElementById('finderContactInput').value.trim();
 
       if (!message) {
         showToast('Please describe where and how you found the item.', 'error');

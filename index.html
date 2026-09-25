@@ -282,15 +282,113 @@
       align-items: center;
       gap: 0.5rem;
     }
-    .match-banner button {
+    .btn-match-qr {
       background: var(--yellow-main);
       color: #18181b;
       border: none;
-      border-radius: 4px;
-      padding: 0.25rem 0.55rem;
-      font-size: 0.7rem;
-      font-weight: 700;
+      border-radius: 6px;
+      padding: 0.3rem 0.65rem;
+      font-size: 0.72rem;
+      font-weight: 800;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-match-qr:hover {
+      background: #fde047;
+      transform: translateY(-1px);
+    }
+    .notif-bell-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(250, 204, 21, 0.3);
+      color: var(--yellow-light);
+      border-radius: 999px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .notif-bell-btn:hover {
+      background: rgba(250, 204, 21, 0.15);
+      border-color: var(--yellow-main);
+    }
+    .notif-badge {
+      background: #ef4444;
+      color: #ffffff;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.1rem 0.38rem;
+      line-height: 1;
+    }
+    .notif-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 0.9rem;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .notif-item.unread {
+      background: rgba(250, 204, 21, 0.06);
+      border-color: rgba(250, 204, 21, 0.35);
+    }
+    .notif-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+      font-size: 0.85rem;
+      color: #ffffff;
+    }
+    .notif-time {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .notif-msg {
+      font-size: 0.8rem;
+      color: #e2e8f0;
+      margin: 0.25rem 0;
+      line-height: 1.4;
+    }
+    .notif-contact {
+      font-size: 0.75rem;
+      color: #86efac;
+      margin: 0.4rem 0 0;
+    }
+    .btn-mark-read {
+      background: none;
+      border: 1px solid rgba(250, 204, 21, 0.3);
+      color: var(--yellow-light);
+      border-radius: 6px;
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .btn-mark-read:hover {
+      background: rgba(250, 204, 21, 0.15);
+      border-color: var(--yellow-main);
+    }
+    .badge-registered {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+    }
+    .chip-my-vault {
+      background: rgba(59, 130, 246, 0.12) !important;
+      border-color: rgba(59, 130, 246, 0.4) !important;
+      color: #bfdbfe !important;
+    }
+    .chip-my-vault.active {
+      background: #2563eb !important;
+      color: #ffffff !important;
+      border-color: #2563eb !important;
     }
 
     .hotspots-row {
@@ -393,10 +491,10 @@
       body * {
         visibility: hidden !important;
       }
-      #qrPrintArea, #qrPrintArea * {
+      #qrPrintArea, #qrPrintArea *, #matchPrintArea, #matchPrintArea * {
         visibility: visible !important;
       }
-      #qrPrintArea {
+      #qrPrintArea, #matchPrintArea {
         position: fixed;
         left: 50%;
         top: 30px;
@@ -445,9 +543,13 @@
         <img src="cspc-logo.png" alt="CSPC Logo" style="width: 34px; height: 34px; object-fit: contain; border-radius: 50%; background: #ffffff; padding: 2px; box-shadow: 0 0 10px rgba(234,179,8,0.3);" />
         <span>CSPC Lost &amp; Found Management System</span>
       </div>
-      <div class="nav-links">
+      <div class="nav-links" style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
         <a href="#items">Items</a>
         <a href="#report">Report Item</a>
+        <button type="button" class="btn btn-outline" style="border-color: rgba(250,204,21,0.5); color: var(--yellow-light); padding: 0.35rem 0.8rem; font-size: 0.76rem;" onclick="handleOpenRegisterBelonging()">🏷️ Register Belonging</button>
+        <button type="button" class="notif-bell-btn" id="notifBellBtn" onclick="openNotificationsModal()" title="View Notifications">
+          🔔 <span class="notif-badge" id="notifCountBadge" style="display: none;">0</span>
+        </button>
       </div>
     </div>
   </nav>
@@ -457,11 +559,12 @@
     <div class="hero-text">
       <p class="hero-greeting">Camarines Sur Polytechnic Colleges</p>
       <h1 class="hero-name">Lost &amp; Found Management System</h1>
-      <p class="hero-role">Quickly report lost belongings or register items found on campus.</p>
+      <p class="hero-role">Student Affairs &amp; Services Office (SASO) · Official Campus Portal</p>
       
-      <div class="hero-buttons">
-        <a href="#report" class="btn btn-primary">Report an Item</a>
-        <a href="#items" class="btn btn-outline">Browse All Items</a>
+      <div class="hero-buttons" style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <a href="#report" class="btn btn-primary">Report Lost/Found</a>
+        <a href="#items" class="btn btn-outline">Browse Items</a>
+        <button type="button" class="btn btn-outline" onclick="handleOpenRegisterBelonging()" style="border-color: rgba(250,204,21,0.5); color: var(--yellow-light);">🏷️ Register Belonging (Get QR)</button>
       </div>
 
       <!-- Quick Stats -->
@@ -509,6 +612,7 @@
         <button class="chip" onclick="setFilter('lost', this)">Lost</button>
         <button class="chip" onclick="setFilter('found', this)">Found</button>
         <button class="chip" onclick="setFilter('claimed', this)">Claimed</button>
+        <button class="chip chip-my-vault" id="chipMyBelongings" onclick="setFilter('registered', this)">🔒 My Belongings (<span id="myBelongingsCount">0</span>)</button>
       </div>
     </div>
 
@@ -823,6 +927,207 @@
         <button type="button" class="btn btn-outline" onclick="closeReportSuccessModal()">Close</button>
         <button type="button" class="btn btn-primary" id="successPrintBtn" onclick="openQrFromSuccessModal()">🏷️ Get QR Sticker</button>
       </div>
+  <!-- REGISTER VALUABLE BELONGING MODAL -->
+  <div class="slip-overlay" id="registerBelongingModal" onclick="if(event.target===this) closeRegisterBelongingModal()">
+    <div style="background: #18181b; border: 1.5px solid var(--yellow-main); border-radius: 18px; padding: 2rem; max-width: 500px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(250,204,21,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
+        <div>
+          <span style="font-size: 0.68rem; font-weight: 800; background: rgba(59,130,246,0.18); color: #93c5fd; padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">Preventive Student Vault</span>
+          <h2 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0.4rem 0 0.2rem;">Register Valuable Belonging</h2>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Register your laptop, tumbler, or binder before it gets lost to generate an anonymous recovery QR sticker.</p>
+        </div>
+        <button onclick="closeRegisterBelongingModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
+      </div>
+
+      <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 1.2rem; font-size: 0.78rem; color: #bfdbfe;">
+        🔒 <strong>Private to Your Account:</strong> Only you have access to your registered belongings. They are stored in your personal vault and never displayed on the public feed.
+      </div>
+
+      <form id="registerBelongingForm" onsubmit="handleRegisterBelongingSubmit(event)">
+        <div class="input-field" style="margin-bottom: 0.9rem;">
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--yellow-light);">Belonging Name / Model *</label>
+          <input type="text" id="regTitle" placeholder="e.g. Acer Aspire 5 Laptop / AquaFlask 32oz Mustard" required minlength="3" maxlength="100" style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(250,204,21,0.25); border-radius: 8px; padding: 0.6rem; color: var(--text-main);" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.9rem;">
+          <div class="input-field">
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--yellow-light);">Category *</label>
+            <select id="regCategory" required style="width: 100%; background: #27272a; border: 1.5px solid rgba(250,204,21,0.25); border-radius: 8px; padding: 0.6rem; color: var(--text-main);">
+              <option value="Electronics">Electronics (Laptop, Calc, Phone)</option>
+              <option value="Water Bottles/Tumblers">Water Bottle / Tumbler</option>
+              <option value="Bags & Wallets">Bag, Backpack, Wallet</option>
+              <option value="Books & Documents">Books & Binder Folders</option>
+              <option value="School Supplies">School Supplies</option>
+              <option value="Keys">Keys</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+          <div class="input-field">
+            <label style="font-size: 0.8rem; font-weight: 700; color: var(--yellow-light);">Primary Building</label>
+            <select id="regLocation" style="width: 100%; background: #27272a; border: 1.5px solid rgba(250,204,21,0.25); border-radius: 8px; padding: 0.6rem; color: var(--text-main);">
+              <option value="Campus-wide">Campus-wide</option>
+              <option value="Engineering (CEA)">CEA (Engineering)</option>
+              <option value="Computer Studies (CCS)">CCS (Computer)</option>
+              <option value="Library">Library</option>
+              <option value="Gymnasium">Gymnasium</option>
+              <option value="Main Building">Main Building</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-field" style="margin-bottom: 0.9rem;">
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--yellow-light);">Distinguishing Marks / Serial No. (Optional)</label>
+          <input type="text" id="regIdentifiers" placeholder="e.g. Anime sticker on lid, engraved initials" maxlength="150" style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(250,204,21,0.25); border-radius: 8px; padding: 0.6rem; color: var(--text-main);" />
+        </div>
+
+        <div class="input-field" style="margin-bottom: 1.25rem;">
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--yellow-light);">Default Note for Finder</label>
+          <textarea id="regInstructions" rows="2" style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(250,204,21,0.25); border-radius: 8px; padding: 0.6rem; color: var(--text-main); font-size: 0.8rem; resize: none;" placeholder="e.g. If found, please scan this QR to notify me or leave with the library front counter."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-outline" onclick="closeRegisterBelongingModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="regSubmitBtn">✨ Register &amp; Generate QR Sticker</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- AUTH REQUIRED MODAL -->
+  <div class="slip-overlay" id="authRequiredModal" onclick="if(event.target===this) closeAuthRequiredModal()">
+    <div style="background: #18181b; border: 1.5px solid var(--yellow-main); border-radius: 18px; padding: 2rem; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔒</div>
+      <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--yellow-main); margin-bottom: 0.5rem;">Registered Account Required</h3>
+      <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">
+        Belonging Registration is a <strong>preventive feature</strong> available exclusively to authenticated CSPC students and staff. This guarantees that <strong>only you have access</strong> to your registered belongings and notification alerts.
+      </p>
+      <div style="display: flex; gap: 0.75rem; justify-content: center;">
+        <button type="button" class="btn btn-outline" onclick="closeAuthRequiredModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="closeAuthRequiredModal(); document.getElementById('registerBelongingModal').classList.add('open');" style="padding: 0.5rem 1.25rem;">Continue (Demo Mode)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANONYMOUS FINDER RECOVERY SCREEN MODAL -->
+  <div class="slip-overlay" id="anonymousFinderModal" onclick="if(event.target===this) closeAnonymousFinderModal()">
+    <div style="background: #18181b; border: 1.5px solid #22c55e; border-radius: 18px; padding: 1.8rem; max-width: 490px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(34,197,94,0.3); padding-bottom: 0.8rem; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <img src="cspc-logo.png" alt="CSPC Logo" style="width: 32px; height: 32px; object-fit: contain;" />
+          <div>
+            <span style="font-size: 0.68rem; font-weight: 800; color: #4ade80; text-transform: uppercase;">Anonymous Recovery Portal</span>
+            <h3 style="font-size: 1.05rem; font-weight: 800; color: #ffffff; margin: 0;">Found Item Notification</h3>
+          </div>
+        </div>
+        <button onclick="closeAnonymousFinderModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
+      </div>
+
+      <!-- Item Card for Finder -->
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 0.85rem; margin-bottom: 1rem;">
+        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">You Found:</div>
+        <div style="font-size: 1.05rem; font-weight: 800; color: var(--yellow-main);" id="finderScreenItemTitle">MacBook Air M2</div>
+        <div style="font-family: monospace; font-size: 0.72rem; color: #94a3b8;" id="finderScreenRefCode">CSPC-REG-QR-001</div>
+        <div style="font-size: 0.75rem; color: #cbd5e1; margin-top: 0.4rem;" id="finderScreenInstructions">Please leave with the library front desk.</div>
+      </div>
+
+      <!-- Privacy Notice -->
+      <div style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); border-radius: 8px; padding: 0.7rem; margin-bottom: 1.1rem; font-size: 0.76rem; color: #86efac; line-height: 1.45;">
+        🛡️ <strong>Student Privacy Protected:</strong> The owner's phone number, email, and social media are completely private. Your message below will be routed straight to their CSPC account dashboard.
+      </div>
+
+      <form id="anonymousFinderForm" onsubmit="handleAnonymousFinderSubmit(event)">
+        <input type="hidden" id="finderRefCodeInput" />
+        <div class="input-field" style="margin-bottom: 0.85rem;">
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--yellow-light);">Where is the item right now? *</label>
+          <input type="text" id="finderLocationInput" placeholder="e.g. Left with Ms. Santos at Library 2nd floor desk" required style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 0.6rem; color: var(--text-main);" />
+        </div>
+
+        <div class="input-field" style="margin-bottom: 0.85rem;">
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--yellow-light);">Message for the Owner *</label>
+          <textarea id="finderMessageInput" rows="2" required placeholder="e.g. Hi! Found your item near table 5. Handed it over to campus security desk." style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 0.6rem; color: var(--text-main); font-size: 0.8rem; resize: none;"></textarea>
+        </div>
+
+        <div class="input-field" style="margin-bottom: 1.25rem;">
+          <label style="font-size: 0.8rem; font-weight: 700; color: var(--yellow-light);">Your Name or Department (Optional - leave blank for 100% anonymity)</label>
+          <input type="text" id="finderContactInput" placeholder="e.g. BSIT student / Security Post 2" style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 0.6rem; color: var(--text-main);" />
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-outline" onclick="closeAnonymousFinderModal()">Cancel</button>
+          <button type="submit" class="btn" id="finderSendBtn" style="background: #22c55e; color: #000; font-weight: 800; border: none; padding: 0.5rem 1.25rem; border-radius: 8px; cursor: pointer;">🚀 Send Alert to Owner</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS INBOX MODAL -->
+  <div class="slip-overlay" id="notificationsModal" onclick="if(event.target===this) closeNotificationsModal()">
+    <div style="background: #18181b; border: 1.5px solid var(--yellow-main); border-radius: 18px; padding: 1.8rem; max-width: 500px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(250,204,21,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.3rem;">🔔</span>
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 800; color: #ffffff; margin: 0;">QR Recovery Alerts</h3>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Direct notifications from students who scanned your item QR stickers</span>
+          </div>
+        </div>
+        <button onclick="closeNotificationsModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
+      </div>
+
+      <div id="notificationsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- SMART MATCH HANDOVER QR MODAL -->
+  <div class="slip-overlay" id="matchQrModal" onclick="if(event.target===this) closeMatchQrModal()">
+    <div style="background: #18181b; border: 1.5px solid var(--yellow-main); border-radius: 18px; padding: 1.8rem; max-width: 520px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(250,204,21,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
+        <div>
+          <span style="font-size: 0.68rem; font-weight: 800; background: rgba(234,179,8,0.18); color: var(--yellow-main); padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">Smart Match Handover Token</span>
+          <h2 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0.4rem 0 0.2rem;">🤝 Match Verification QR</h2>
+          <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">Automated reconciliation between Lost report and Found report.</p>
+        </div>
+        <button onclick="closeMatchQrModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
+      </div>
+
+      <div style="background: rgba(250,204,21,0.08); border: 1px solid rgba(250,204,21,0.25); border-radius: 10px; padding: 0.8rem; margin-bottom: 1.2rem; font-size: 0.78rem; line-height: 1.45;">
+        <strong style="color: var(--yellow-main); display: block; margin-bottom: 0.25rem;">📌 Functionality &amp; Use:</strong>
+        <span style="color: #fef08a;">
+          Show this QR code at the <strong>SAO Security Desk</strong> or to the custodian. When scanned, it instantly loads the side-by-side reconciliation record to verify ownership (matching location, category, and private verification hints) before item handover is authorized.
+        </span>
+      </div>
+
+      <div id="matchPrintArea" style="background: #ffffff; color: #0f172a; border-radius: 12px; padding: 1.25rem; text-align: center; border: 2px dashed #0f172a; margin-bottom: 1.2rem;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+          <img src="cspc-logo.png" alt="CSPC Logo" style="width: 26px; height: 26px; object-fit: contain;" />
+          <span style="font-weight: 900; font-size: 0.8rem; text-transform: uppercase;">CSPC Custody Handover Verification</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem; margin: 0.6rem 0; text-align: left; font-size: 0.75rem;">
+          <div>
+            <span style="color: #ef4444; font-weight: 800; font-size: 0.68rem; text-transform: uppercase;">Lost Report</span>
+            <div style="font-weight: 800; color: #0f172a;" id="matchLostTitle">Lost Item</div>
+            <div style="font-family: monospace; color: #64748b; font-size: 0.68rem;" id="matchLostRef">CSPC-LF-000</div>
+          </div>
+          <div>
+            <span style="color: #22c55e; font-weight: 800; font-size: 0.68rem; text-transform: uppercase;">Found Report</span>
+            <div style="font-weight: 800; color: #0f172a;" id="matchFoundTitle">Found Item</div>
+            <div style="font-family: monospace; color: #64748b; font-size: 0.68rem;" id="matchFoundRef">CSPC-LF-000</div>
+          </div>
+        </div>
+
+        <div style="display: inline-block; padding: 0.5rem; background: #ffffff; border: 1.5px solid #0f172a; border-radius: 8px; margin-bottom: 0.5rem;">
+          <img id="matchQrImage" src="" alt="Match Verification QR" style="width: 130px; height: 130px; display: block;" />
+        </div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Scan at SAO Desk to Authorize Handover</div>
+      </div>
+
+      <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="closeMatchQrModal()">Close</button>
+        <button class="btn btn-primary" onclick="printMatchQr()">🖨️ Print Handover Token</button>
+      </div>
     </div>
   </div>
 
@@ -992,18 +1297,24 @@
       const grid = document.getElementById('itemsGrid');
 
       // Update counters
-      const total = items.length;
+      const total = items.filter(i => i.type !== 'registered').length;
       const lostCount = items.filter(i => i.type === 'lost').length;
       const foundCount = items.filter(i => i.type === 'found').length;
       const claimedCount = items.filter(i => i.claimed || i.status === 'claimed').length;
+      const regCount = items.filter(i => i.type === 'registered').length;
 
       document.getElementById('statTotal').innerText = total;
       document.getElementById('statLost').innerText = lostCount;
       document.getElementById('statFound').innerText = foundCount;
       document.getElementById('statClaimed').innerText = claimedCount;
 
+      const regBadge = document.getElementById('myBelongingsCount');
+      if (regBadge) regBadge.innerText = regCount;
+
       // Filter by type
       let filtered = items.filter(item => {
+        if (currentFilter === 'registered') return item.type === 'registered';
+        if (item.type === 'registered') return false; // Hide registered belongings from public tabs
         if (currentFilter === 'lost') return item.type === 'lost' && !item.claimed;
         if (currentFilter === 'found') return item.type === 'found' && !item.claimed;
         if (currentFilter === 'claimed') return item.claimed;
@@ -1037,6 +1348,40 @@
       }
 
       grid.innerHTML = filtered.map(item => {
+        // Special rendering for registered belongings in vault
+        if (item.type === 'registered') {
+          return `
+            <div class="project-card" id="item-card-${item.id}" style="border-color: rgba(59, 130, 246, 0.4); background: rgba(30, 41, 59, 0.35);">
+              <div class="project-card-header">
+                <div style="flex: 1;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                    <div>
+                      <span class="project-type" style="color: #93c5fd;">${escapeHtml(item.category)}</span>
+                      <span class="ref-code" style="margin-left: 0.4rem; color: #60a5fa;">${escapeHtml(item.refCode || '')}</span>
+                    </div>
+                    <span class="item-badge badge-registered">🔒 Registered Belonging</span>
+                  </div>
+                  <h3 style="margin-top: 0.35rem; color: #ffffff;">${escapeHtml(item.title)}</h3>
+                </div>
+              </div>
+
+              <p style="margin-top: 0.25rem; color: #cbd5e1;">${escapeHtml(item.desc)}</p>
+
+              <div class="card-meta-line">
+                <span><strong>Primary Building:</strong> ${escapeHtml(item.location)}</span>
+                <span><strong>Registered:</strong> ${escapeHtml(item.date || 'Recently')}</span>
+                ${item.instructions ? `<span><strong>Finder Instructions:</strong> ${escapeHtml(item.instructions)}</span>` : ''}
+              </div>
+
+              <div class="card-actions" style="margin-top: 1rem;">
+                <button class="btn-sm btn-qr" onclick="openQrStickerModal(${item.id})">🏷️ QR Sticker</button>
+                <button class="btn-sm btn-outline" style="border-color: rgba(34,197,94,0.4); color: #86efac;" onclick="openAnonymousFinderModal('${escapeHtml(item.refCode)}')">📱 Test Finder Screen</button>
+                <button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Unregister</button>
+              </div>
+            </div>
+          `;
+        }
+
         let badgeHtml = '';
         if (item.claimed) {
           badgeHtml = '<span class="item-badge badge-claimed">Claimed</span>';
@@ -1052,13 +1397,12 @@
         const match = findMatch(item, items);
         let matchBannerHtml = '';
         if (match) {
-          const matchTypeLabel = match.type === 'found' ? 'Found item' : 'Lost item';
           matchBannerHtml = `
             <div class="match-banner">
               <div>
                 <strong>Potential Match:</strong> ${escapeHtml(match.title)} (${escapeHtml(match.location)})
               </div>
-              <button onclick="openQrStickerModal(${match.id})">View QR</button>
+              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${match.id})">🤝 Match Handover QR</button>
             </div>
           `;
         }
@@ -1152,6 +1496,237 @@
       showToast('Anonymous notification delivered to the owner\'s account! 📲');
       input.value = '';
       toggleAnonymousDemo(false);
+    }
+
+    // ── Register Belonging Modal ──────────────────────────────────────────────
+    function handleOpenRegisterBelonging() {
+      document.getElementById('registerBelongingModal').classList.add('open');
+    }
+
+    function closeRegisterBelongingModal() {
+      document.getElementById('registerBelongingModal').classList.remove('open');
+      const form = document.getElementById('registerBelongingForm');
+      if (form) form.reset();
+    }
+
+    function closeAuthRequiredModal() {
+      document.getElementById('authRequiredModal').classList.remove('open');
+    }
+
+    function handleRegisterBelongingSubmit(e) {
+      e.preventDefault();
+      const title        = document.getElementById('regTitle').value.trim();
+      const category     = document.getElementById('regCategory').value;
+      const location     = document.getElementById('regLocation') ? document.getElementById('regLocation').value : 'Campus-wide';
+      const identifiers  = document.getElementById('regIdentifiers').value.trim();
+      const instructions = document.getElementById('regInstructions').value.trim();
+
+      if (!title || !category) {
+        showToast('Please fill in the item name and category.', 'error');
+        return;
+      }
+
+      const items = getItems();
+      const nextNum = items.length + 1;
+      const refCode = `CSPC-REG-QR-${String(nextNum).padStart(4, '0')}`;
+
+      const newBelonging = {
+        id: Date.now(),
+        refCode,
+        title,
+        category,
+        type: 'registered',
+        location,
+        locationDetails: identifiers,
+        instructions: instructions || 'If found, please notify owner via QR or leave with CSPC SASO / Campus Security.',
+        contact: 'Verified CSPC Account',
+        desc: identifiers ? `Valuable belonging: ${identifiers}` : 'Valuable personal belonging registered in student vault.',
+        verification: identifiers || 'Registered by verified CSPC account',
+        photo: '',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        status: 'registered',
+        claimed: false,
+        notifications: [],
+        createdAt: new Date().toISOString()
+      };
+
+      items.unshift(newBelonging);
+      saveItems(items);
+
+      closeRegisterBelongingModal();
+      showToast('✅ Belonging registered! Your QR sticker is ready.');
+
+      // Open QR sticker modal
+      openQrStickerModal(newBelonging.id);
+      renderItems();
+    }
+
+    // ── Anonymous Finder Modal ────────────────────────────────────────────────
+    function openAnonymousFinderModal(refCode) {
+      const items = getItems();
+      const item = items.find(i => (i.refCode && i.refCode.toUpperCase() === refCode.toUpperCase()) || String(i.id) === refCode);
+      if (!item) {
+        showToast('Could not load item info. Invalid QR code.', 'error');
+        return;
+      }
+
+      document.getElementById('finderScreenItemTitle').textContent = item.title;
+      document.getElementById('finderScreenRefCode').textContent = item.refCode;
+      document.getElementById('finderScreenInstructions').textContent = item.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.';
+      document.getElementById('finderRefCodeInput').value = item.refCode;
+      document.getElementById('finderMessageInput').value = '';
+      document.getElementById('finderLocationInput').value = '';
+      document.getElementById('finderContactInput').value = '';
+      document.getElementById('anonymousFinderModal').classList.add('open');
+    }
+
+    function closeAnonymousFinderModal() {
+      document.getElementById('anonymousFinderModal').classList.remove('open');
+    }
+
+    function handleAnonymousFinderSubmit(e) {
+      e.preventDefault();
+      const refCode       = document.getElementById('finderRefCodeInput').value;
+      const message       = document.getElementById('finderMessageInput').value.trim();
+      const locationFound = document.getElementById('finderLocationInput').value.trim();
+      const finderContact = document.getElementById('finderContactInput').value.trim();
+
+      if (!message) {
+        showToast('Please describe where and how you found the item.', 'error');
+        return;
+      }
+
+      const items = getItems();
+      const item = items.find(i => i.refCode && i.refCode.toUpperCase() === refCode.toUpperCase());
+      if (item) {
+        if (!item.notifications) item.notifications = [];
+        item.notifications.unshift({
+          id: 'notif-' + Date.now(),
+          refCode: item.refCode,
+          itemTitle: item.title,
+          message,
+          locationFound: locationFound || 'Campus area',
+          finderContact: finderContact || 'Anonymous Student / Finder',
+          timestamp: new Date().toISOString(),
+          read: false
+        });
+        saveItems(items);
+        updateNotifBadge();
+      }
+
+      showToast('📲 Anonymous alert delivered to the owner\'s account!');
+      closeAnonymousFinderModal();
+    }
+
+    // ── Match QR Modal ────────────────────────────────────────────────────────
+    function openMatchQrModal(lostId, foundId) {
+      const items = getItems();
+      const lost  = items.find(i => i.id === lostId)  || {};
+      const found = items.find(i => i.id === foundId) || {};
+
+      document.getElementById('matchLostTitle').textContent  = lost.title  || '—';
+      document.getElementById('matchFoundTitle').textContent = found.title || '—';
+      document.getElementById('matchLostRef').textContent    = lost.refCode  || '—';
+      document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
+
+      const matchPayload = encodeURIComponent(
+        `CSPC Match | Lost: ${lost.refCode} | Found: ${found.refCode} | Verify at SASO`
+      );
+      document.getElementById('matchQrImage').src =
+        `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${matchPayload}`;
+
+      document.getElementById('matchQrModal').classList.add('open');
+    }
+
+    function closeMatchQrModal() {
+      document.getElementById('matchQrModal').classList.remove('open');
+    }
+
+    function printMatchQr() {
+      window.print();
+    }
+
+    // ── Notifications Modal ───────────────────────────────────────────────────
+    function openNotificationsModal() {
+      document.getElementById('notificationsModal').classList.add('open');
+      loadNotificationsIntoModal();
+    }
+
+    function closeNotificationsModal() {
+      document.getElementById('notificationsModal').classList.remove('open');
+    }
+
+    function loadNotificationsIntoModal() {
+      const list = document.getElementById('notificationsList');
+      const items = getItems();
+      const notifications = [];
+
+      items.forEach(i => {
+        if (i.notifications && Array.isArray(i.notifications)) {
+          i.notifications.forEach(n => {
+            notifications.push({
+              ...n,
+              itemId: i.id,
+              itemTitle: i.title,
+              refCode: i.refCode
+            });
+          });
+        }
+      });
+
+      notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      if (!notifications.length) {
+        list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">No finder alerts yet. When someone scans your QR sticker, you\'ll see their message here.</p>';
+        return;
+      }
+
+      list.innerHTML = notifications.map(n => `
+        <div class="notif-item${n.read ? '' : ' unread'}" data-id="${n.id}">
+          <div class="notif-header">
+            <strong>🏷️ ${n.itemTitle || n.refCode}</strong>
+            <span class="notif-time">${new Date(n.timestamp).toLocaleString()}</span>
+          </div>
+          <p class="notif-msg">📍 <em>${n.locationFound || 'Location not specified'}</em></p>
+          <p class="notif-msg">💬 ${n.message}</p>
+          ${n.finderContact && n.finderContact !== 'Anonymous Student / Finder'
+            ? `<p class="notif-contact">📞 Finder left optional contact: ${n.finderContact}</p>`
+            : '<p class="notif-contact">🔒 Finder remained anonymous</p>'}
+          ${!n.read ? `<button class="btn-mark-read" onclick="markNotifRead('${n.id}', this)">Mark as read</button>` : ''}
+        </div>
+      `).join('');
+
+      updateNotifBadge();
+    }
+
+    function markNotifRead(notifId, btn) {
+      const items = getItems();
+      items.forEach(i => {
+        if (i.notifications) {
+          const n = i.notifications.find(notif => notif.id === notifId);
+          if (n) n.read = true;
+        }
+      });
+      saveItems(items);
+      const itemEl = btn.closest('.notif-item');
+      if (itemEl) itemEl.classList.remove('unread');
+      btn.remove();
+      updateNotifBadge();
+    }
+
+    function updateNotifBadge() {
+      const items = getItems();
+      let unread = 0;
+      items.forEach(i => {
+        if (i.notifications) {
+          unread += i.notifications.filter(n => !n.read).length;
+        }
+      });
+      const badge = document.getElementById('notifCountBadge');
+      if (badge) {
+        badge.textContent = unread;
+        badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+      }
     }
 
     function openImageModal(photoSrc, title) {
@@ -1407,6 +1982,7 @@
     // Initial render
     document.addEventListener('DOMContentLoaded', () => {
       renderItems();
+      updateNotifBadge();
     });
   </script>
 </body>
