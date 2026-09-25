@@ -1490,6 +1490,238 @@
       toggleAnonymousDemo(false);
     }
 
+    // ── Register Belonging Modal ──────────────────────────────────────────────
+    function handleOpenRegisterBelonging() {
+      if (!currentUser) {
+        document.getElementById('authRequiredModal').classList.add('open');
+      } else {
+        document.getElementById('registerBelongingModal').classList.add('open');
+      }
+    }
+
+    function closeRegisterBelongingModal() {
+      document.getElementById('registerBelongingModal').classList.remove('open');
+      document.getElementById('regBelongingForm').reset();
+    }
+
+    function closeAuthRequiredModal() {
+      document.getElementById('authRequiredModal').classList.remove('open');
+    }
+
+    async function handleRegisterBelongingSubmit(e) {
+      e.preventDefault();
+      const title    = document.getElementById('regItemTitle').value.trim();
+      const category = document.getElementById('regItemCategory').value;
+      const identifiers = document.getElementById('regItemIdentifiers').value.trim();
+      const instructions = document.getElementById('regItemInstructions').value.trim();
+
+      if (!title || !category) {
+        showToast('Please fill in the item name and category.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/items/register-belonging', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, category, identifiers, instructions })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          showToast(data.message || 'Registration failed.', 'error');
+          return;
+        }
+
+        closeRegisterBelongingModal();
+        showToast('✅ Belonging registered! Your QR sticker is ready.');
+
+        // Open QR sticker modal for the newly registered item
+        openQrStickerModal(data.item.id);
+
+        // Refresh belonging count chip
+        fetchMyBelongingsCount();
+
+        // Refresh feed if currently showing registered items
+        if (currentFilter === 'registered') fetchAndRenderItems();
+
+      } catch (err) {
+        showToast('Server error. Please try again.', 'error');
+      }
+    }
+
+    // ── Anonymous Finder Modal ────────────────────────────────────────────────
+    async function openAnonymousFinderModal(refCode) {
+      try {
+        const res = await fetch(`/api/items/qr-lookup/${encodeURIComponent(refCode)}`);
+        const data = await res.json();
+        if (!data.success) {
+          showToast('Could not load item info. Invalid QR code.', 'error');
+          return;
+        }
+        const item = data.item;
+        document.getElementById('finderScreenTitle').textContent = item.title;
+        document.getElementById('finderScreenCategory').textContent = item.category;
+        document.getElementById('finderScreenInstructions').textContent = item.instructions;
+        document.getElementById('finderRefCodeInput').value = item.refCode;
+        document.getElementById('finderMessageInput').value = '';
+        document.getElementById('finderLocationInput').value = '';
+        document.getElementById('finderOptionalContact').value = '';
+        document.getElementById('anonymousFinderModal').classList.add('open');
+      } catch (err) {
+        showToast('Failed to load item info.', 'error');
+      }
+    }
+
+    function closeAnonymousFinderModal() {
+      document.getElementById('anonymousFinderModal').classList.remove('open');
+    }
+
+    async function handleAnonymousFinderSubmit(e) {
+      e.preventDefault();
+      const refCode      = document.getElementById('finderRefCodeInput').value;
+      const message      = document.getElementById('finderMessageInput').value.trim();
+      const locationFound = document.getElementById('finderLocationInput').value.trim();
+      const finderContact = document.getElementById('finderOptionalContact').value.trim();
+
+      if (!message) {
+        showToast('Please describe where and how you found the item.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/items/anonymous-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refCode, message, locationFound, finderContact })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('📲 Anonymous alert delivered to the owner\'s account!');
+          closeAnonymousFinderModal();
+        } else {
+          showToast(data.message || 'Failed to send notification.', 'error');
+        }
+      } catch (err) {
+        showToast('Server error. Please try again.', 'error');
+      }
+    }
+
+    // ── Match QR Modal ────────────────────────────────────────────────────────
+    async function openMatchQrModal(lostId, foundId) {
+      try {
+        const [r1, r2] = await Promise.all([
+          fetch(`/api/items/${lostId}`).then(r => r.json()),
+          fetch(`/api/items/${foundId}`).then(r => r.json())
+        ]);
+        const lost  = r1.item || {};
+        const found = r2.item || {};
+
+        document.getElementById('matchLostTitle').textContent  = lost.title  || '—';
+        document.getElementById('matchFoundTitle').textContent = found.title || '—';
+        document.getElementById('matchLostRef').textContent    = lost.refCode  || '—';
+        document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
+
+        const matchPayload = encodeURIComponent(
+          `CSPC Match | Lost: ${lost.refCode} | Found: ${found.refCode} | Verify at SASO`
+        );
+        document.getElementById('matchQrImage').src =
+          `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${matchPayload}`;
+
+        document.getElementById('matchQrModal').classList.add('open');
+      } catch (err) {
+        showToast('Could not generate match QR. Please try again.', 'error');
+      }
+    }
+
+    function closeMatchQrModal() {
+      document.getElementById('matchQrModal').classList.remove('open');
+    }
+
+    function printMatchQr() {
+      window.print();
+    }
+
+    // ── Notifications Modal ───────────────────────────────────────────────────
+    async function openNotificationsModal() {
+      document.getElementById('notificationsModal').classList.add('open');
+      await loadNotificationsIntoModal();
+    }
+
+    function closeNotificationsModal() {
+      document.getElementById('notificationsModal').classList.remove('open');
+    }
+
+    async function loadNotificationsIntoModal() {
+      const list = document.getElementById('notificationsList');
+      list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Loading…</p>';
+      try {
+        const res = await fetch('/api/items/my-notifications');
+        const data = await res.json();
+        if (!data.success) {
+          list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Could not load notifications.</p>';
+          return;
+        }
+        if (!data.notifications.length) {
+          list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">No finder alerts yet. When someone scans your QR sticker, you\'ll see their message here.</p>';
+          return;
+        }
+
+        list.innerHTML = data.notifications.map(n => `
+          <div class="notif-item${n.read ? '' : ' unread'}" data-id="${n.id}">
+            <div class="notif-header">
+              <strong>🏷️ ${n.itemTitle || n.refCode}</strong>
+              <span class="notif-time">${new Date(n.timestamp).toLocaleString()}</span>
+            </div>
+            <p class="notif-msg">📍 <em>${n.locationFound || 'Location not specified'}</em></p>
+            <p class="notif-msg">💬 ${n.message}</p>
+            ${n.finderContact && n.finderContact !== 'Anonymous Student / Finder'
+              ? `<p class="notif-contact">📞 Finder left optional contact: ${n.finderContact}</p>`
+              : '<p class="notif-contact">🔒 Finder remained anonymous</p>'}
+            ${!n.read ? `<button class="btn-mark-read" onclick="markNotifRead('${n.id}', this)">Mark as read</button>` : ''}
+          </div>
+        `).join('');
+
+        // Update badge
+        const badge = document.getElementById('notifCountBadge');
+        if (badge) {
+          const unread = data.unreadCount || 0;
+          badge.textContent = unread;
+          badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+        }
+      } catch (err) {
+        list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Failed to load notifications.</p>';
+      }
+    }
+
+    async function markNotifRead(notifId, btn) {
+      try {
+        const res = await fetch(`/api/items/notifications/${notifId}/read`, { method: 'PATCH' });
+        const data = await res.json();
+        if (data.success) {
+          const item = btn.closest('.notif-item');
+          if (item) item.classList.remove('unread');
+          btn.remove();
+          await loadMyNotifications(); // refresh badge
+        }
+      } catch (err) {
+        showToast('Could not mark as read.', 'error');
+      }
+    }
+
+    async function loadMyNotifications() {
+      if (!currentUser) return;
+      try {
+        const res = await fetch('/api/items/my-notifications');
+        const data = await res.json();
+        const badge = document.getElementById('notifCountBadge');
+        if (badge && data.success) {
+          const unread = data.unreadCount || 0;
+          badge.textContent = unread;
+          badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+        }
+      } catch (_) {}
+    }
+
     function openImageModal(photoSrc, title) {
       if (!photoSrc) return;
       document.getElementById('imageModalImg').src = photoSrc;

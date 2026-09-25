@@ -126,6 +126,89 @@ router.get('/', (req, res) => {
   });
 });
 
+// GET /api/items/qr-lookup/:refCode - Public lookup for finder scanning QR (privacy-safe, NO phone/email returned)
+router.get('/qr-lookup/:refCode', (req, res) => {
+  const items = getItems();
+  const searchRef = req.params.refCode.toUpperCase().trim();
+  const item = items.find(i =>
+    (i.refCode && i.refCode.toUpperCase().trim() === searchRef) ||
+    String(i.id) === searchRef
+  );
+
+  if (!item) {
+    return res.status(404).json({ success: false, message: 'Item not found for this QR code.' });
+  }
+
+  // Strictly sanitized public payload — NEVER return owner phone, email, or social media!
+  res.json({
+    success: true,
+    item: {
+      id: item.id,
+      refCode: item.refCode,
+      title: item.title,
+      category: item.category,
+      type: item.type,
+      location: item.location,
+      instructions: item.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.',
+      isRegisteredBelonging: item.type === 'registered'
+    }
+  });
+});
+
+// GET /api/items/my-notifications - Retrieve notification inbox for logged-in user's registered items
+router.get('/my-notifications', requireAuth, (req, res) => {
+  const items = getItems();
+  const userId = req.session.user.id;
+  const userItems = items.filter(i => i.reportedBy === userId);
+  const notifications = [];
+
+  userItems.forEach(i => {
+    if (i.notifications && Array.isArray(i.notifications)) {
+      i.notifications.forEach(n => {
+        notifications.push({
+          ...n,
+          itemId: i.id,
+          itemTitle: i.title,
+          refCode: i.refCode
+        });
+      });
+    }
+  });
+
+  notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  res.json({
+    success: true,
+    notifications,
+    unreadCount: notifications.filter(n => !n.read).length
+  });
+});
+
+// PATCH /api/items/notifications/:notifId/read - Mark notification as read
+router.patch('/notifications/:notifId/read', requireAuth, (req, res) => {
+  const items = getItems();
+  const userId = req.session.user.id;
+  const notifId = req.params.notifId;
+  let found = false;
+
+  items.forEach(i => {
+    if (i.reportedBy === userId && i.notifications) {
+      const targetNotif = i.notifications.find(n => n.id === notifId);
+      if (targetNotif) {
+        targetNotif.read = true;
+        found = true;
+      }
+    }
+  });
+
+  if (found) {
+    saveItems(items);
+    return res.json({ success: true, message: 'Notification marked as read.' });
+  }
+
+  res.status(404).json({ success: false, message: 'Notification not found.' });
+});
+
 // GET /api/items/:id - Single item
 router.get('/:id', (req, res) => {
   const items = getItems();
@@ -243,6 +326,9 @@ router.delete('/:id', (req, res) => {
   items = items.filter(i => String(i.id) !== String(req.params.id));
   saveItems(items);
 
+  res.json({ success: true, message: 'Item report deleted.' });
+});
+
 // POST /api/items/register-belonging - Register personal belonging (Auth required)
 router.post('/register-belonging', requireAuth, (req, res) => {
   try {
@@ -293,135 +379,4 @@ router.post('/register-belonging', requireAuth, (req, res) => {
   }
 });
 
-// GET /api/items/qr-lookup/:refCode - Public lookup for finder scanning QR (privacy-safe, NO phone/email returned)
-router.get('/qr-lookup/:refCode', (req, res) => {
-  const items = getItems();
-  const searchRef = req.params.refCode.toUpperCase().trim();
-  const item = items.find(i => 
-    (i.refCode && i.refCode.toUpperCase().trim() === searchRef) || 
-    String(i.id) === searchRef
-  );
-
-  if (!item) {
-    return res.status(404).json({ success: false, message: 'Item not found for this QR code.' });
-  }
-
-  // Strictly sanitized public payload — NEVER return owner phone, email, or social media!
-  res.json({
-    success: true,
-    item: {
-      id: item.id,
-      refCode: item.refCode,
-      title: item.title,
-      category: item.category,
-      type: item.type,
-      location: item.location,
-      instructions: item.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.',
-      isRegisteredBelonging: item.type === 'registered'
-    }
-  });
-});
-
-// POST /api/items/anonymous-notify - Public finder messaging (delivers alert straight to owner's account)
-router.post('/anonymous-notify', (req, res) => {
-  try {
-    const { refCode, message, locationFound, finderContact } = req.body;
-    if (!refCode || !message) {
-      return res.status(400).json({ success: false, message: 'Reference code and message are required.' });
-    }
-
-    const items = getItems();
-    const searchRef = refCode.toUpperCase().trim();
-    const itemIndex = items.findIndex(i => 
-      (i.refCode && i.refCode.toUpperCase().trim() === searchRef) || 
-      String(i.id) === searchRef
-    );
-
-    if (itemIndex === -1) {
-      return res.status(404).json({ success: false, message: 'Item not found with this reference code.' });
-    }
-
-    const item = items[itemIndex];
-    if (!item.notifications) item.notifications = [];
-
-    const newNotification = {
-      id: 'notif-' + Date.now(),
-      refCode: item.refCode,
-      itemTitle: item.title,
-      message: sanitizeString(message),
-      locationFound: sanitizeString(locationFound || 'Campus area'),
-      finderContact: sanitizeString(finderContact || 'Anonymous Student / Finder'),
-      timestamp: new Date().toISOString(),
-      read: false
-    };
-
-    item.notifications.unshift(newNotification);
-    saveItems(items);
-
-    res.json({
-      success: true,
-      message: 'Anonymous alert sent straight to the owner\'s account notification inbox! 📲',
-      itemTitle: item.title,
-      notification: newNotification
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to deliver notification.' });
-  }
-});
-
-// GET /api/items/my-notifications - Retrieve notification inbox for logged-in user's registered items
-router.get('/my-notifications', requireAuth, (req, res) => {
-  const items = getItems();
-  const userId = req.session.user.id;
-  const userItems = items.filter(i => i.reportedBy === userId);
-  const notifications = [];
-
-  userItems.forEach(i => {
-    if (i.notifications && Array.isArray(i.notifications)) {
-      i.notifications.forEach(n => {
-        notifications.push({
-          ...n,
-          itemId: i.id,
-          itemTitle: i.title,
-          refCode: i.refCode
-        });
-      });
-    }
-  });
-
-  notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-  res.json({
-    success: true,
-    notifications,
-    unreadCount: notifications.filter(n => !n.read).length
-  });
-});
-
-// PATCH /api/items/notifications/:notifId/read - Mark notification as read
-router.patch('/notifications/:notifId/read', requireAuth, (req, res) => {
-  const items = getItems();
-  const userId = req.session.user.id;
-  const notifId = req.params.notifId;
-  let found = false;
-
-  items.forEach(i => {
-    if (i.reportedBy === userId && i.notifications) {
-      const targetNotif = i.notifications.find(n => n.id === notifId);
-      if (targetNotif) {
-        targetNotif.read = true;
-        found = true;
-      }
-    }
-  });
-
-  if (found) {
-    saveItems(items);
-    return res.json({ success: true, message: 'Notification marked as read.' });
-  }
-
-  res.status(404).json({ success: false, message: 'Notification not found.' });
-});
-
 module.exports = router;
-)
