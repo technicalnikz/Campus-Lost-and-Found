@@ -61,9 +61,10 @@ lostfound/
 2. Show the status change to "Claimed" with timestamp.
 3. Demonstrate "Restore" to return it to active status.
 
-#### Demo Step 5: Print Claim Slip
-1. Click "Print Claim Slip" on any item.
-2. Show the formatted CSPC-branded claim notice with reference code, signature blocks, and print layout.
+#### Demo Step 5: Digital "Found" QR Code Stickers (Preventive Feature)
+1. Click "🏷️ QR Sticker" on any item or registered personal belonging.
+2. Show the generated unique, anonymous QR code sticker (CSPC-branded, formatted for pasting onto laptops, tumblers, or binders).
+3. Demonstrate the anonymous messaging screen: Finder scans QR to notify the owner directly without revealing phone numbers or social media.
 
 #### Demo Step 6: Security Demonstration
 1. Show that student accounts cannot access admin actions (Mark Claimed, Delete).
@@ -77,7 +78,7 @@ lostfound/
 **Summarize unique features:**
 1. **Smart Match Algorithm** — Automatic keyword + location + category matching between lost and found items.
 2. **CSPC Campus Integration** — Location dropdown uses official CSPC offices from [cspc.edu.ph/offices/](https://cspc.edu.ph/offices/).
-3. **Formal Claim Slips** — Printable SASO-branded claim notices with tracking codes.
+3. **Digital "Found" QR Code Stickers** — Preventive feature allowing students to register belongings before getting lost, generating anonymous QR stickers with privacy-protected messaging.
 4. **Ownership Verification Hints** — Reporters can add private hints for proving ownership.
 5. **Campus Hotspot Statistics** — Dashboard shows which campus locations have the most activity.
 
@@ -90,8 +91,8 @@ lostfound/
 | Team Member | Role | Responsibilities |
 | :--- | :--- | :--- |
 | **Member 1** (Lead Developer) | Backend & Architecture | `server.js`, `routes/authRoutes.js`, `routes/itemRoutes.js`, session/auth flow, data persistence, API design |
-| **Member 2** (Frontend & UX) | UI Implementation | `public/index.html`, `public/login.html`, `public/style.css`, claim slip print layout, responsive design, CSPC branding |
-| **Member 3** (QA & Documentation) | Testing & Compliance | `REQUIREMENTS.md`, `AI_DISCLOSURE.md`, `DEFENSE_GUIDE.md`, `LICENSE`, input validation middleware, end-to-end testing, bug reporting |
+| **Member 2** (Frontend & UX) | UI Implementation | `public/index.html`, `public/login.html`, `public/style.css`, digital QR sticker modal & print layout, responsive design, CSPC branding |
+| **Member 3** (QA & Documentation) | Testing & Compliance | `REQUIREMENTS.md`, `AI_DISCLOSURE.md`, `DEFENSE_GUIDE.md`, input validation middleware, end-to-end testing, bug reporting |
 
 ### Suggested Git Commit Breakdown per Member
 

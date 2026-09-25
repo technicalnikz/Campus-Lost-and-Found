@@ -24,7 +24,7 @@ A Node.js + Express web application that enables students and SASO officers to r
 
 | Stakeholder | Role | System Interaction |
 | :--- | :--- | :--- |
-| **CSPC Students** | Primary end users who lose or find items | Register accounts, report lost/found items, browse listings, print claim slips, verify ownership |
+| **CSPC Students** | Primary end users who lose or find items | Register accounts, report lost/found items, browse listings, generate digital QR stickers, verify ownership |
 | **Student Affairs & Services Office (SASO)** | Administrative oversight of lost-and-found operations | Manage all item records, approve/deny claims, mark items as returned, delete invalid reports |
 | **Campus Security Office** | Physical custodians of found items in some locations | Report found items, assist students with verification at guard posts |
 | **College Deans / Department Heads** | Supervise lost-and-found within their college buildings | Awareness of department-specific loss patterns (via campus hotspot statistics) |
@@ -48,7 +48,7 @@ A Node.js + Express web application that enables students and SASO officers to r
 
 - **Description:** The system shall enforce two user roles: `student` and `admin` (SASO Officer).
 - **Acceptance Criteria:**
-  - Students can report, browse, and print — but cannot delete other users' reports or mark items as claimed/restored.
+  - Students can report, browse, and generate digital QR stickers — but cannot delete other users' reports or mark items as claimed/restored.
   - Admins can perform all student actions plus: mark items claimed, restore claimed items, and delete any report.
   - All protected API endpoints verify session authentication and role permissions via middleware.
 
@@ -92,13 +92,15 @@ A Node.js + Express web application that enables students and SASO officers to r
   - Restoring a claimed item clears claim metadata and sets status back to `active`.
   - Both actions persist immediately to the data store.
 
-### FR-08: Print Claim Notice Slip
+### FR-08: Digital "Found" QR Code Stickers (Optional Add-on Feature)
 
-- **Description:** Users shall be able to generate and print a formal CSPC Lost/Found Claim Notice Slip.
+- **Description:** A preventive feature allowing students to register their personal belongings before they even get lost.
+- **How it works:** Students generate a unique, anonymous QR code sticker from the system to paste onto their laptops, tumblers, or binder folders. If someone finds the item, scanning the QR code opens an anonymous messaging screen that sends a notification straight to the owner's account without revealing their personal phone number or social media.
+- **Why it’s useful:** It enables instant, direct contact between finder and owner while protecting student privacy.
 - **Acceptance Criteria:**
-  - Slip includes CSPC header, reference code, item details, reporter contact, date, and signature blocks.
-  - Formatted for standard letter paper (A4/US Letter) via the browser's native print dialog.
-  - Slip is branded with official CSPC styling.
+  - Generates a branded, printable CSPC sticker with an anonymous item reference code and QR code.
+  - Scanning or testing the QR code opens an anonymous finder contact screen.
+  - Finder cannot see the owner's private phone number or social media accounts.
 
 ---
 
@@ -183,17 +185,17 @@ A Node.js + Express web application that enables students and SASO officers to r
 
 ---
 
-### UC-04: Student Prints a Claim Slip
+### UC-04: Student Generates Digital "Found" QR Code Sticker
 
 **Actor:** CSPC Student  
-**Precondition:** Student has found their item in the system.  
+**Precondition:** Student wants to protect personal belongings (laptop, tumbler, binder) before they get lost.  
 **Flow:**
-1. Student locates their item in the listings.
-2. Student clicks "Print Claim Slip".
-3. System generates a formatted CSPC Claim Notice with reference code, item details, and signature blocks.
-4. Browser print dialog opens for physical printing.
+1. Student registers/locates their item or clicks "QR Sticker".
+2. System generates a unique, anonymous QR code sticker with official CSPC branding.
+3. Student prints or saves the sticker to attach to their personal belongings.
+4. If found by someone, scanning the QR code opens an anonymous messaging screen notifying the owner without revealing personal phone number or social media.
 
-**Postcondition:** Student presents the printed claim slip to the SASO office for physical item retrieval.
+**Postcondition:** Item is labeled with an anonymous preventive QR sticker, ready for privacy-safe recovery if misplaced.
 
 ---
 

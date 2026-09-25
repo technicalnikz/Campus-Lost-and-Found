@@ -46,8 +46,8 @@ The keyword-based matching algorithm (`findMatch` in `itemRoutes.js`) was develo
 
 AI assisted with:
 - Fetch API patterns for connecting the HTML frontend to Express API endpoints
-- Dynamic DOM manipulation for login state, role-aware UI elements, and item rendering
-- Print-friendly claim slip generation using CSS `@media print`
+- Digital "Found" QR Code sticker generation and print layout using CSS `@media print`
+- Anonymous finder-to-owner notification interface
 
 ### 5. Documentation
 
