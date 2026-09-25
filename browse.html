@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSPC Lost & Found — Browse Items</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Filter Bar ── */
+    .filter-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      flex: 1;
+      min-width: 150px;
+    }
+    .filter-group label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--yellow-dark);
+      text-transform: uppercase;
+    }
+    .search-wrap {
+      flex: 2;
+      min-width: 220px;
+    }
+    .search-input-wrap {
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+    .search-input-wrap .form-control { padding-left: 2.4rem; }
+
+    /* ── Results header ── */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .results-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .results-count strong { color: var(--yellow-main); }
+
+    .sort-select {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* ── Grid ── */
+    .browse-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1.1rem;
+    }
+
+    /* ── Type filter tabs ── */
+    .type-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .type-tab {
+      padding: 0.45rem 1.1rem;
+      border-radius: 8px;
+      border: 1.5px solid rgba(250,204,21,0.2);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .type-tab:hover { border-color: rgba(250,204,21,0.5); color: var(--yellow-main); }
+    .type-tab.active {
+      background: rgba(250,204,21,0.12);
+      border-color: var(--yellow-main);
+      color: var(--yellow-main);
+    }
+
+    @media (max-width: 600px) {
+      .filter-bar { flex-direction: column; }
+      .filter-group { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="navMount"></div>
+
+  <div class="page-header">
+    <h1>📋 Browse Items</h1>
+    <p>Search and filter lost &amp; found items reported on campus.</p>
+  </div>
+
+  <div class="page-section" style="padding-top:0;">
+
+    <!-- Type Tabs -->
+    <div class="type-tabs">
+      <button class="type-tab active" data-type="all">All Items</button>
+      <button class="type-tab" data-type="lost">🔍 Lost</button>
+      <button class="type-tab" data-type="found">📦 Found</button>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="filter-group search-wrap">
+        <label>Search</label>
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="form-control" id="searchInput" placeholder="Search by item name, description…" />
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Category</label>
+        <select class="form-control" id="filterCategory">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Location</label>
+        <select class="form-control" id="filterLocation">
+          <option value="">All Locations</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Status</label>
+        <select class="form-control" id="filterStatus">
+          <option value="">All Statuses</option>
+          <option value="lost">Lost</option>
+          <option value="found">Found</option>
+          <option value="claimed">Claimed</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button class="btn btn-outline" id="clearFilters" style="padding:.6rem 1.1rem;font-size:.82rem;">Clear</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-header">
+      <div class="results-count" id="resultsCount"></div>
+      <select class="sort-select" id="sortSelect">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="az">A → Z</option>
+        <option value="za">Z → A</option>
+      </select>
+    </div>
+
+    <div class="browse-grid" id="browseGrid"></div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-left">
+      <p>🔍 CSPC Lost &amp; Found System</p>
+      <p>Camarines Sur Polytechnic Colleges</p>
+    </div>
+    <div class="footer-right">
+      <p>Student Affairs Office</p>
+      <p>Nabua, Camarines Sur</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    let activeType = 'all';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('navMount').innerHTML = renderNav('browse.html');
+      initNav();
+
+      // Populate filters
+      const catSel = document.getElementById('filterCategory');
+      const locSel = document.getElementById('filterLocation');
+      CATEGORIES.forEach(c => catSel.add(new Option(c, c)));
+      LOCATIONS.forEach(l  => locSel.add(new Option(l, l)));
+
+      // Read URL params
+      const typeParam   = getQueryParam('type');
+      const statusParam = getQueryParam('status');
+      if (typeParam && ['lost','found'].includes(typeParam)) {
+        activeType = typeParam;
+        document.querySelectorAll('.type-tab').forEach(tab => {
+          tab.classList.toggle('active', tab.dataset.type === activeType);
+        });
+      }
+      if (statusParam) {
+        document.getElementById('filterStatus').value = statusParam;
+      }
+
+      // Tab clicks
+      document.querySelectorAll('.type-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          activeType = tab.dataset.type;
+          document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          renderGrid();
+        });
+      });
+
+      // Reactive filters
+      ['searchInput','filterCategory','filterLocation','filterStatus','sortSelect'].forEach(id => {
+        document.getElementById(id).addEventListener('input', renderGrid);
+      });
+
+      document.getElementById('clearFilters').addEventListener('click', () => {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filterCategory').value = '';
+        document.getElementById('filterLocation').value = '';
+        document.getElementById('filterStatus').value = '';
+        activeType = 'all';
+        document.querySelectorAll('.type-tab').forEach(t => t.classList.toggle('active', t.dataset.type === 'all'));
+        renderGrid();
+      });
+
+      renderGrid();
+    });
+
+    function renderGrid() {
+      let items = getItems();
+
+      // Type filter
+      if (activeType !== 'all') items = items.filter(i => i.type === activeType);
+
+      // Search
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      if (q) items = items.filter(i =>
+        (i.title || '').toLowerCase().includes(q) ||
+        (i.description || '').toLowerCase().includes(q) ||
+        (i.category || '').toLowerCase().includes(q)
+      );
+
+      // Category
+      const cat = document.getElementById('filterCategory').value;
+      if (cat) items = items.filter(i => i.category === cat);
+
+      // Location
+      const loc = document.getElementById('filterLocation').value;
+      if (loc) items = items.filter(i => i.location === loc);
+
+      // Status
+      const status = document.getElementById('filterStatus').value;
+      if (status) items = items.filter(i => i.status === status);
+
+      // Sort
+      const sort = document.getElementById('sortSelect').value;
+      if (sort === 'newest') items.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      else if (sort === 'oldest') items.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+      else if (sort === 'az') items.sort((a,b) => a.title.localeCompare(b.title));
+      else if (sort === 'za') items.sort((a,b) => b.title.localeCompare(a.title));
+
+      // Count
+      const total = getItems().length;
+      document.getElementById('resultsCount').innerHTML =
+        `Showing <strong>${items.length}</strong> of <strong>${total}</strong> items`;
+
+      // Render
+      const grid = document.getElementById('browseGrid');
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-state-icon">🔍</div>
+            <h3>No items found</h3>
+            <p>Try adjusting your filters or <a href="report-lost.html" style="color:var(--yellow-main)">report a new item</a>.</p>
+          </div>`;
+      } else {
+        grid.innerHTML = items.map(buildItemCard).join('');
+      }
+    }
+  </script>
+</body>
+</html>

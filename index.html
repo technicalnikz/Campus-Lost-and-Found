@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSPC Lost and Found Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── SIMPLE APP ENHANCEMENTS ── */
+    .hero-stats {
+      display: flex;
+      gap: 1.25rem;
+      margin-top: 1.75rem;
+      flex-wrap: wrap;
+    }
+    .stat-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1.4rem;
+      min-width: 110px;
+    }
+    .stat-val {
+      font-size: 1.75rem;
+      font-weight: 900;
+      color: var(--yellow-main);
+      line-height: 1;
+    }
+    .stat-lbl {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-top: 0.35rem;
+    }
+
+    /* ── SIMPLE REPORT FORM ── */
+    .simple-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      position: relative;
+      z-index: 1;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .input-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .input-field label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--yellow-light);
+      letter-spacing: 0.04em;
+    }
+    .input-field input,
+    .input-field select,
+    .input-field textarea {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(250, 204, 21, 0.22);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      color: var(--text-main);
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .input-field input:focus,
+    .input-field select:focus,
+    .input-field textarea:focus {
+      border-color: var(--yellow-main);
+    }
+    .input-field select optgroup {
+      background: #18181b;
+      color: #facc15;
+      font-weight: 800;
+      font-style: normal;
+      font-size: 0.88rem;
+      padding: 0.4rem 0.2rem;
+    }
+    .input-field select option {
+      background: #27272a;
+      color: #f8fafc;
+      font-weight: 500;
+      padding: 0.35rem;
+    }
+    .input-field textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Type radio buttons */
+    .type-switcher {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+    .type-option {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1rem;
+      border: 1.5px solid rgba(250, 204, 21, 0.25);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .type-option input { display: none; }
+    .type-option.active-lost {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+    }
+    .type-option.active-found {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.15);
+      color: #86efac;
+    }
+
+    /* ── SEARCH & FILTER CONTROLS ── */
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 240px;
+    }
+    .search-box input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(250, 204, 21, 0.22);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      color: var(--text-main);
+      font-size: 0.88rem;
+      outline: none;
+    }
+    .search-box input:focus {
+      border-color: var(--yellow-main);
+    }
+    .filter-chips {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: rgba(250, 204, 21, 0.07);
+      border: 1px solid rgba(234, 179, 8, 0.3);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip:hover, .chip.active {
+      border-color: var(--yellow-main);
+      color: var(--yellow-main);
+      background: rgba(250, 204, 21, 0.18);
+    }
+
+    /* ── ITEM CARDS ── */
+    .item-badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .badge-lost {
+      background: rgba(239, 68, 68, 0.18);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    .badge-found {
+      background: rgba(34, 197, 94, 0.18);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+    .badge-claimed {
+      background: rgba(234, 179, 8, 0.18);
+      color: var(--yellow-light);
+      border: 1px solid rgba(234, 179, 8, 0.4);
+    }
+
+    .card-meta-line {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin: 0.35rem 0;
+      padding: 0.5rem 0;
+      border-top: 1px solid rgba(250, 204, 21, 0.08);
+      border-bottom: 1px solid rgba(250, 204, 21, 0.08);
+    }
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: auto;
+      padding-top: 0.5rem;
+    }
+    .btn-sm {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid;
+      background: transparent;
+      transition: all 0.2s;
+    }
+    .btn-claim {
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #86efac;
+    }
+    .btn-claim:hover {
+      background: rgba(34, 197, 94, 0.15);
+    }
+    .btn-del {
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+    }
+    .btn-del:hover {
+      background: rgba(239, 68, 68, 0.15);
+    }
+    .btn-slip {
+      border-color: rgba(250, 204, 21, 0.4);
+      color: var(--yellow-light);
+    }
+    .btn-slip:hover {
+      background: rgba(250, 204, 21, 0.15);
+    }
+
+    .ref-code {
+      font-family: monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .match-banner {
+      background: rgba(234, 179, 8, 0.1);
+      border: 1px dashed rgba(234, 179, 8, 0.45);
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.75rem;
+      color: var(--yellow-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .match-banner button {
+      background: var(--yellow-main);
+      color: #18181b;
+      border: none;
+      border-radius: 4px;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .hotspots-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+    .hotspot-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(250, 204, 21, 0.18);
+      border-radius: 20px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .hotspot-chip:hover, .hotspot-chip.active {
+      border-color: var(--yellow-main);
+      color: var(--yellow-light);
+      background: rgba(250, 204, 21, 0.15);
+    }
+
+    /* Slip Modal */
+    .slip-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .slip-overlay.open {
+      display: flex;
+    }
+    .slip-box {
+      background: #ffffff;
+      color: #18181b;
+      border-radius: 12px;
+      max-width: 520px;
+      width: 100%;
+      padding: 2rem;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .slip-box h2 {
+      color: #0f172a;
+      font-size: 1.05rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.2rem;
+    }
+    .slip-box p {
+      color: #475569;
+      font-size: 0.85rem;
+    }
+    .slip-table {
+      width: 100%;
+      margin: 1.2rem 0;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+    }
+    .slip-table td {
+      padding: 0.45rem 0.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+    .slip-table td:first-child {
+      font-weight: 700;
+      width: 35%;
+      color: #475569;
+    }
+    .slip-signatures {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1.8rem;
+      padding-top: 1rem;
+      border-top: 1px dashed #cbd5e1;
+      font-size: 0.75rem;
+      color: #64748b;
+      text-align: center;
+    }
+    .sig-line {
+      border-top: 1px solid #94a3b8;
+      margin-top: 2.2rem;
+      padding-top: 0.25rem;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #printArea, #printArea * {
+        visibility: visible !important;
+      }
+      #printArea {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: #ffffff !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    /* Toast alert */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #27272a;
+      border: 1px solid var(--yellow-main);
+      color: var(--text-main);
+      padding: 0.8rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      animation: fadeIn 0.3s;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <div class="nav-logo" style="display: flex; align-items: center; gap: 0.65rem;">
+        <img src="cspc-logo.png" alt="CSPC Logo" style="width: 34px; height: 34px; object-fit: contain; border-radius: 50%; background: #ffffff; padding: 2px; box-shadow: 0 0 10px rgba(234,179,8,0.3);" />
+        <span>CSPC Lost &amp; Found Management System</span>
+      </div>
+      <div class="nav-links">
+        <a href="#items">Items</a>
+        <a href="#report">Report Item</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero-section" style="min-height: auto; padding: 4rem 1.5rem 3rem; align-items: center;">
+    <div class="hero-text">
+      <p class="hero-greeting">Camarines Sur Polytechnic Colleges</p>
+      <h1 class="hero-name">Lost &amp; Found Management System</h1>
+      <p class="hero-role">Quickly report lost belongings or register items found on campus.</p>
+      
+      <div class="hero-buttons">
+        <a href="#report" class="btn btn-primary">Report an Item</a>
+        <a href="#items" class="btn btn-outline">Browse All Items</a>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="hero-stats">
+        <div class="stat-box">
+          <div class="stat-val" id="statTotal">0</div>
+          <div class="stat-lbl">Total Items</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statLost" style="color: #f87171;">0</div>
+          <div class="stat-lbl">Lost</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statFound" style="color: #4ade80;">0</div>
+          <div class="stat-lbl">Found</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statClaimed" style="color: var(--yellow-main);">0</div>
+          <div class="stat-lbl">Claimed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CSPC Logo in Hero -->
+    <div class="hero-avatar" style="flex-shrink: 0; text-align: center;">
+      <div style="width: 150px; height: 150px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 35px rgba(234, 179, 8, 0.25); margin: 0 auto; backdrop-filter: blur(8px);">
+        <img src="cspc-logo.png" alt="CSPC Official Logo" style="width: 125px; height: 125px; object-fit: contain; border-radius: 50%;" />
+      </div>
+    </div>
+  </header>
+
+  <hr class="section-divider" />
+
+  <!-- BROWSE & SEARCH ITEMS -->
+  <section class="projects-section" id="items">
+    <h2>Items on Campus</h2>
+
+    <!-- Search & Filter Controls -->
+    <div class="filter-row">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search by item name, location, or details..." oninput="renderItems()" />
+      </div>
+      <div class="filter-chips">
+        <button class="chip active" onclick="setFilter('all', this)">All</button>
+        <button class="chip" onclick="setFilter('lost', this)">Lost</button>
+        <button class="chip" onclick="setFilter('found', this)">Found</button>
+        <button class="chip" onclick="setFilter('claimed', this)">Claimed</button>
+      </div>
+    </div>
+
+    <!-- Campus Location Hotspots based on CSPC Offices -->
+    <div class="hotspots-row">
+      <span style="font-weight: 700; color: var(--yellow-dark); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em;">CSPC Offices &amp; Areas:</span>
+      <button class="hotspot-chip active" onclick="setLocationFilter('', this)">All Offices</button>
+      <button class="hotspot-chip" onclick="setLocationFilter('Engineering', this)">CEA (College of Engineering and Architecture)</button>
+        <button class="hotspot-chip" onclick="setLocationFilter('Computer Studies', this)">CCS (College of Computer Studies)</button>
+      <button class="hotspot-chip" onclick="setLocationFilter('Library', this)">Library</button>
+      <button class="hotspot-chip" onclick="setLocationFilter('Student Affairs', this)">Student Affairs Office (SASO)</button>
+      <button class="hotspot-chip" onclick="setLocationFilter('Health Services', this)">Clinic</button>
+      <button class="hotspot-chip" onclick="setLocationFilter('Sports', this)">Gymnasium</button>
+      <button class="hotspot-chip" onclick="setLocationFilter('Administration', this)">Administration</button>
+      <button class="hotspot-chip" onclick="setLocationFilter('Production', this)">Canteen</button>
+    </div>
+
+    <!-- Items Grid -->
+    <div class="projects-grid" id="itemsGrid">
+      <!-- Generated via JS -->
+    </div>
+  </section>
+
+  <hr class="section-divider" />
+
+  <!-- SIMPLE REPORT FORM -->
+  <section class="tools-section" id="report">
+    <h2>Report an Item</h2>
+
+    <div class="simple-card">
+      <form id="itemForm" onsubmit="handleFormSubmit(event)">
+        
+        <!-- Type Selection -->
+        <div class="input-field" style="margin-bottom: 1.25rem;">
+          <label>What are you reporting?</label>
+          <div class="type-switcher">
+            <label class="type-option active-lost" id="lblLost">
+              <input type="radio" name="itemType" value="lost" checked onchange="updateTypeRadio()" />
+              I Lost Something
+            </label>
+            <label class="type-option" id="lblFound">
+              <input type="radio" name="itemType" value="found" onchange="updateTypeRadio()" />
+              I Found Something
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="input-field">
+            <label for="itemTitle">Item Name *</label>
+            <input type="text" id="itemTitle" placeholder="e.g., Casio Scientific Calculator" required />
+          </div>
+          <div class="input-field">
+            <label for="itemCategory">Category *</label>
+            <select id="itemCategory" required>
+              <option value="Electronics">Electronics</option>
+              <option value="ID / Cards">ID / Cards</option>
+              <option value="Bags & Wallets">Bags & Wallets</option>
+              <option value="Books & Documents">Books & Documents</option>
+              <option value="Keys">Keys</option>
+              <option value="Clothing & Accessories">Clothing & Accessories</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="input-field">
+            <label for="itemLocation">CSPC Office / Campus Location *</label>
+            <select id="itemLocation" required>
+              <option value="">Select CSPC Office / Location...</option>
+              <optgroup label="Academic Colleges & Schools">
+                <option value="College of Computer Studies (CCS)">College of Computer Studies (CCS)</option>
+                <option value="College of Engineering and Architecture (CEA)">College of Engineering and Architecture (CEA)</option>
+                <option value="College of Health Sciences (CHS)">College of Health Sciences (CHS)</option>
+                <option value="College of Tourism, Hospitality and Business Management (CTHBM)">College of Tourism, Hospitality and Business Management (CTHBM)</option>
+                <option value="College of Technological and Developmental Education (CTDE)">College of Technological and Developmental Education (CTDE)</option>
+                <option value="College of Arts and Sciences (CAS)">College of Arts and Sciences (CAS)</option>
+                <option value="Graduate School">Graduate School</option>
+                <option value="Buhi Campus">Buhi Campus</option>
+              </optgroup>
+              <optgroup label="Student & Academic Support Offices">
+                <option value="Student Affairs and Services (SAS)">Student Affairs and Services Office (SASO)</option>
+                <option value="Learning Resources and Development (Library)">Learning Resources and Development (Library)</option>
+                <option value="Student Registration and Records (Registrar)">Student Registration and Records (Registrar)</option>
+                <option value="Student Testing and Admission">Student Testing and Admission</option>
+                <option value="Guidance and Counseling Unit">Guidance and Counseling Unit</option>
+                <option value="Sports Development Unit (Gymnasium)">Sports Development Unit (Gymnasium)</option>
+                <option value="Cultural Affairs Unit">Cultural Affairs Unit</option>
+                <option value="National Service Training Program (NSTP)">National Service Training Program (NSTP)</option>
+                <option value="Academic Center for Continuing Enrichment for Students">Academic Center for Continuing Enrichment for Students</option>
+                <option value="Training and Assessment Center">Training and Assessment Center</option>
+              </optgroup>
+              <optgroup label="Administration & Finance">
+                <option value="Office of the President">Office of the President</option>
+                <option value="Vice President for Administration and Finance">Vice President for Administration and Finance</option>
+                <option value="Vice President for Academic Affairs">Vice President for Academic Affairs</option>
+                <option value="VP for Research, Innovation and Collaboration">VP for Research, Innovation and Collaboration</option>
+                <option value="Health Services Unit (Campus Clinic)">Health Services Unit (Campus Clinic)</option>
+                <option value="General Services Unit (GSU / Security Desk)">General Services Unit (GSU / Security Desk)</option>
+                <option value="Information and Communications Technology Unit (ICTU)">Information and Communications Technology Unit (ICTU)</option>
+                <option value="Cash Unit">Cash Unit</option>
+                <option value="Accounting Unit">Accounting Unit</option>
+                <option value="Budget Unit">Budget Unit</option>
+                <option value="Supply and Property Management Unit">Supply and Property Management Unit</option>
+                <option value="Procurement Unit / Bids and Awards Committee">Procurement Unit / Bids and Awards Committee</option>
+                <option value="Human Resource Management and Development Unit">Human Resource Management and Development Unit</option>
+                <option value="Records and Freedom of Information Unit">Records and Freedom of Information Unit</option>
+                <option value="Project Management Unit">Project Management Unit</option>
+                <option value="Institutional Planning and Development Unit">Institutional Planning and Development Unit</option>
+                <option value="Internal Audit Unit">Internal Audit Unit</option>
+                <option value="Legal Affairs Unit">Legal Affairs Unit</option>
+                <option value="Center for International Relations and Linkages">Center for International Relations and Linkages</option>
+              </optgroup>
+              <optgroup label="Research, Innovation & Centers (RIC)">
+                <option value="Research Development Services Office">Research Development Services Office</option>
+                <option value="Extension and Community Services Office">Extension and Community Services Office</option>
+                <option value="Production and Auxiliary Services (Canteen / Commercial)">Production and Auxiliary Services (Canteen / Commercial)</option>
+                <option value="Technology Transfer Office">Technology Transfer Office</option>
+                <option value="AI Research Center for Community Development">AI Research Center for Community Development</option>
+                <option value="Center for Futures Energy and Sustainable Technology">Center for Futures Energy and Sustainable Technology</option>
+                <option value="Center for Rinconada Culture and the Arts">Center for Rinconada Culture and the Arts</option>
+                <option value="Rinconada Center for Environmental Sustainability">Rinconada Center for Environmental Sustainability</option>
+                <option value="Center for Human Rights Education">Center for Human Rights Education</option>
+                <option value="Center for Gender and Development">Center for Gender and Development</option>
+              </optgroup>
+              <optgroup label="Other Campus Grounds">
+                <option value="Campus Main Grounds / Quadrangle">Campus Main Grounds / Quadrangle</option>
+                <option value="Campus Main Gate / Entrance">Campus Main Gate / Entrance</option>
+                <option value="Campus Parking Area">Campus Parking Area</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="input-field">
+            <label for="itemLocationDetails">Room or Specific Spot (Optional)</label>
+            <input type="text" id="itemLocationDetails" placeholder="e.g., Room 302, 2nd floor lobby, Study table 4" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="input-field" style="grid-column: 1 / -1;">
+            <label for="itemContact">Contact Information (Name &amp; Phone/Email) *</label>
+            <input type="text" id="itemContact" placeholder="e.g., Juan Dela Cruz - 09123456789" required />
+          </div>
+        </div>
+
+        <div class="input-field" style="margin-bottom: 1rem;">
+          <label for="itemVerification">Secret Ownership Verification Detail (Optional)</label>
+          <input type="text" id="itemVerification" placeholder="e.g., Lock screen wallpaper, serial ending digits, or secret detail to verify claimant" />
+        </div>
+
+        <div class="input-field" style="margin-bottom: 1rem;">
+          <label for="itemPhotoInput">Upload Photo (Optional)</label>
+          <input type="file" id="itemPhotoInput" accept="image/*" onchange="handlePhotoSelect(event)" style="padding: 0.45rem 0.65rem;" />
+          <div id="photoPreviewBox" style="display: none; margin-top: 0.5rem; position: relative;">
+            <img id="photoPreviewImg" src="" alt="Photo Preview" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--yellow-main); object-fit: cover; width: 100%;" />
+            <button type="button" onclick="removePhoto()" style="position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; padding: 0.25rem 0.55rem; font-size: 0.72rem; cursor: pointer; font-weight: 700;">✕ Remove Photo</button>
+          </div>
+        </div>
+
+        <div class="input-field" style="margin-bottom: 1.5rem;">
+          <label for="itemDesc">Description &amp; Identifying Details *</label>
+          <textarea id="itemDesc" placeholder="Describe color, brand, special marks, stickers, or where to claim it..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; border: none; cursor: pointer;">
+          Submit Report
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- CAMPUS NOTICE SLIP MODAL -->
+  <div class="slip-overlay" id="slipModal" onclick="if(event.target===this) closeSlipModal()">
+    <div class="slip-box" id="printArea">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 0.8rem; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <img src="cspc-logo.png" alt="CSPC Logo" style="width: 44px; height: 44px; object-fit: contain;" />
+          <div>
+            <h2 style="margin: 0; font-size: 1rem; color: #0f172a;">Camarines Sur Polytechnic Colleges</h2>
+            <p style="font-size: 0.74rem; color: #64748b; margin: 0;">Student Affairs &amp; Services Office · Lost &amp; Found Unit</p>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-family: monospace; font-weight: 800; font-size: 0.85rem; color: #0f172a;" id="slipRefCode">CSPC-LF-000</div>
+          <div style="font-size: 0.7rem; color: #64748b;" id="slipDate">Date</div>
+        </div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.5rem 0.8rem; margin-bottom: 1rem; text-align: center;">
+        <span style="font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; color: #0f172a;" id="slipTypeHeader">Official Notice</span>
+      </div>
+
+      <table class="slip-table">
+        <tr>
+          <td>Item Name:</td>
+          <td id="slipItemTitle" style="font-weight: 700;">—</td>
+        </tr>
+        <tr>
+          <td>Category:</td>
+          <td id="slipCategory">—</td>
+        </tr>
+        <tr>
+          <td>Campus Location:</td>
+          <td id="slipLocation">—</td>
+        </tr>
+        <tr>
+          <td>Reported By:</td>
+          <td id="slipContact">—</td>
+        </tr>
+        <tr>
+          <td>Description:</td>
+          <td id="slipDesc">—</td>
+        </tr>
+        <tr id="slipVerificationRow">
+          <td>Verification Detail:</td>
+          <td id="slipVerification">—</td>
+        </tr>
+        <tr id="slipPhotoRow" style="display: none;">
+          <td>Item Photo:</td>
+          <td><img id="slipPhotoImg" src="" alt="Item Photo" style="max-height: 120px; border-radius: 6px; border: 1px solid #cbd5e1; object-fit: cover;" /></td>
+        </tr>
+      </table>
+
+      <div class="slip-signatures">
+        <div>
+          <p>Reported By (Claimant / Finder)</p>
+          <div class="sig-line">Signature Over Printed Name</div>
+        </div>
+        <div>
+          <p>Approved / Recorded By</p>
+          <div class="sig-line">SAO Officer / Security Desk</div>
+        </div>
+      </div>
+
+      <div class="no-print" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button class="btn btn-outline" style="color: #475569; border-color: #cbd5e1; padding: 0.45rem 1rem;" onclick="closeSlipModal()">Close</button>
+        <button class="btn btn-primary" style="padding: 0.45rem 1.25rem;" onclick="window.print()">Print Notice Slip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL IMAGE VIEWER LIGHTBOX MODAL -->
+  <div class="slip-overlay" id="imageModal" onclick="if(event.target===this) closeImageModal()">
+    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; max-width: 650px; width: 92%; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid rgba(250,204,21,0.15); padding-bottom: 0.75rem;">
+        <h3 id="imageModalTitle" style="font-size: 1.05rem; font-weight: 700; color: var(--yellow-main); margin: 0; text-align: left;">Item Photo View</h3>
+        <button type="button" onclick="closeImageModal()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; cursor: pointer; font-weight: 700;">✕ Close</button>
+      </div>
+      <div style="max-height: 70vh; overflow: hidden; border-radius: 10px; border: 1px solid rgba(250,204,21,0.2); background: #000; display: flex; align-items: center; justify-content: center;">
+        <img id="imageModalImg" src="" alt="Full Item View" style="max-width: 100%; max-height: 70vh; object-fit: contain;" />
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div class="slip-overlay" id="deleteConfirmModal" onclick="if(event.target===this) closeDeleteModal()">
+    <div style="background: #18181b; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 1.75rem; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🗑️</div>
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: #fca5a5; margin-bottom: 0.5rem;">Remove Item Report?</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;" id="deleteConfirmText">Are you sure you want to permanently delete this report from campus records?</p>
+      <div style="display: flex; gap: 0.75rem; justify-content: center;">
+        <button type="button" class="btn btn-outline" onclick="closeDeleteModal()" style="padding: 0.5rem 1.25rem;">Cancel</button>
+        <button type="button" class="btn" onclick="executeDelete()" style="background: #ef4444; color: white; border: none; padding: 0.5rem 1.25rem; font-weight: 700; border-radius: 8px; cursor: pointer;">Remove Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLAIM / UNCLAIM CONFIRMATION MODAL -->
+  <div class="slip-overlay" id="claimConfirmModal" onclick="if(event.target===this) closeClaimModal()">
+    <div style="background: #18181b; border: 1px solid rgba(250, 204, 21, 0.4); border-radius: 16px; padding: 1.75rem; max-width: 440px; width: 90%; text-align: left; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid rgba(250,204,21,0.15); padding-bottom: 0.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--yellow-main); margin: 0;" id="claimModalTitle">Confirm Item Claim</h3>
+        <button type="button" onclick="closeClaimModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer;">✕</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 1rem;" id="claimModalSubtitle">Mark this item as successfully returned to owner or finder.</p>
+      
+      <div id="claimVerificationBox" style="display: none; background: rgba(250,204,21,0.06); border: 1px solid rgba(250,204,21,0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;">
+        <div style="font-size: 0.76rem; font-weight: 700; color: var(--yellow-light); margin-bottom: 0.25rem;">Verification Hint from Reporter:</div>
+        <div style="font-size: 0.82rem; color: var(--text-main); font-style: italic;" id="claimModalHint">"Hint text"</div>
+      </div>
+
+      <div class="input-field" id="claimProofGroup" style="margin-bottom: 1.25rem;">
+        <label for="claimProofInput">Claimant Proof / Verification Answer</label>
+        <input type="text" id="claimProofInput" placeholder="Enter proof, ID details, or verification answer..." style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(250,204,21,0.25); border-radius: 8px; padding: 0.6rem; color: var(--text-main);" />
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button type="button" class="btn btn-outline" onclick="closeClaimModal()" style="padding: 0.5rem 1rem;">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="executeClaimToggle()" style="padding: 0.5rem 1.25rem;" id="claimModalBtn">Confirm Claim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORT SUCCESS CONFIRMATION MODAL -->
+  <div class="slip-overlay" id="reportSuccessModal" onclick="if(event.target===this) closeReportSuccessModal()">
+    <div style="background: #18181b; border: 1.5px solid var(--yellow-main); border-radius: 18px; padding: 2rem; max-width: 460px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
+      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✅</div>
+      <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--yellow-main); margin-bottom: 0.4rem;">Report Submitted Successfully!</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Your report has been saved into official CSPC campus records.</p>
+      
+      <div style="background: rgba(250,204,21,0.08); border: 1px solid rgba(250,204,21,0.3); border-radius: 10px; padding: 0.85rem; margin-bottom: 1.25rem;">
+        <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Tracking Reference Code</div>
+        <div style="font-family: monospace; font-size: 1.35rem; font-weight: 900; color: var(--yellow-main); margin-top: 0.2rem;" id="successRefCode">CSPC-LF-2026-000</div>
+      </div>
+
+      <div id="successMatchAlert" style="display: none; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.35); border-radius: 8px; padding: 0.75rem; margin-bottom: 1.25rem; text-align: left; font-size: 0.8rem; color: #86efac;">
+        🎯 <strong>Potential Smart Match Detected!</strong> A matching item report was found in campus records.
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline" onclick="closeReportSuccessModal()">Close</button>
+        <button type="button" class="btn btn-primary" id="successPrintBtn" onclick="printFromSuccessModal()">Print Claim Slip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-left" style="display: flex; align-items: center; gap: 0.85rem;">
+      <img src="cspc-logo.png" alt="CSPC Logo" style="width: 38px; height: 38px; object-fit: contain; border-radius: 50%; background: #ffffff; padding: 2px;" />
+      <div>
+        <p style="font-weight: 700; color: var(--text-main);">Camarines Sur Polytechnic Colleges</p>
+        <p>Lost &amp; Found Management System</p>
+      </div>
+    </div>
+    <div class="footer-right">
+      <p>Nabua, Camarines Sur</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPT -->
+  <script>
+    const STORAGE_KEY = 'cspc_simple_lostfound_v2';
+
+    // Default sample data with official CSPC reference tracking codes
+    const INITIAL_ITEMS = [
+      {
+        id: 1,
+        refCode: "CSPC-LF-2026-001",
+        title: "Casio FX-991ES Scientific Calculator",
+        category: "Electronics",
+        type: "lost",
+        location: "College of Engineering and Architecture (CEA) (Room 302)",
+        contact: "Juan Dela Cruz (0917-111-2233)",
+        desc: "Silver cover with name sticker on the back. Lost during morning class.",
+        verification: "Student ID number etched inside battery lid",
+        date: "Sep 12, 2026",
+        claimed: false
+      },
+      {
+        id: 2,
+        refCode: "CSPC-LF-2026-002",
+        title: "Blue Jansport Backpack",
+        category: "Bags & Wallets",
+        type: "found",
+        location: "Learning Resources and Development (Library) (Study Area)",
+        contact: "Turned over to Library Front Desk",
+        desc: "Contains notebooks and a pencil case. Can be claimed at the library counter.",
+        verification: "Chemistry notebook inside front pocket",
+        date: "Sep 13, 2026",
+        claimed: false
+      },
+      {
+        id: 3,
+        refCode: "CSPC-LF-2026-003",
+        title: "CSPC Student ID Card",
+        category: "ID / Cards",
+        type: "lost",
+        location: "Production and Auxiliary Services (Canteen / Commercial)",
+        contact: "Maria Santos (BSIT 3B)",
+        desc: "Lost near the beverage station around lunch time.",
+        verification: "ID number starts with 2024-",
+        date: "Sep 13, 2026",
+        claimed: true
+      },
+      {
+        id: 4,
+        refCode: "CSPC-LF-2026-004",
+        title: "Key Ring with 3 Keys & Red Lanyard",
+        category: "Keys",
+        type: "found",
+        location: "Sports Development Unit (Gymnasium) (Bleachers)",
+        contact: "Security Guard Post 1",
+        desc: "Found after intramural practice. Inquire at the main gate.",
+        verification: "Small brass padlock key attached",
+        date: "Sep 14, 2026",
+        claimed: false
+      },
+      {
+        id: 5,
+        refCode: "CSPC-LF-2026-005",
+        title: "Casio Scientific Calculator FX-991ES",
+        category: "Electronics",
+        type: "found",
+        location: "College of Engineering and Architecture (CEA) (Ground Floor)",
+        contact: "Turned over to CE Dept Office",
+        desc: "Found on the bench outside CE laboratory. Silver case.",
+        verification: "Has initials JDC on battery compartment",
+        date: "Sep 14, 2026",
+        claimed: false
+      }
+    ];
+
+    let currentFilter = 'all';
+    let currentLocationFilter = '';
+
+    function getItems() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_ITEMS));
+        return INITIAL_ITEMS;
+      }
+      const items = JSON.parse(saved);
+      // Ensure all items have refCodes
+      items.forEach((item, idx) => {
+        if (!item.refCode) {
+          item.refCode = "CSPC-LF-2026-" + String(idx + 1).padStart(3, '0');
+        }
+      });
+      return items;
+    }
+
+    function saveItems(items) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function updateTypeRadio() {
+      const isLost = document.querySelector('input[name="itemType"]:checked').value === 'lost';
+      const lblLost = document.getElementById('lblLost');
+      const lblFound = document.getElementById('lblFound');
+
+      if (isLost) {
+        lblLost.className = 'type-option active-lost';
+        lblFound.className = 'type-option';
+      } else {
+        lblLost.className = 'type-option';
+        lblFound.className = 'type-option active-found';
+      }
+    }
+
+    function setFilter(filter, el) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderItems();
+    }
+
+    function setLocationFilter(loc, el) {
+      currentLocationFilter = loc.toLowerCase();
+      document.querySelectorAll('.hotspot-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderItems();
+    }
+
+    // UNIQUE FEATURE: Smart Match & Reconciliation Detector
+    function findMatch(item, allItems) {
+      if (item.claimed) return null;
+      const targetType = item.type === 'lost' ? 'found' : 'lost';
+
+      const keywords = item.title.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .split(/\s+/)
+        .filter(w => w.length > 3 && !['with','case','blue','black','item'].includes(w));
+
+      return allItems.find(other => {
+        if (other.id === item.id || other.type !== targetType || other.claimed) return false;
+
+        const otherTitle = other.title.toLowerCase();
+        const hasKeywordMatch = keywords.some(k => otherTitle.includes(k));
+        const sameCategory = other.category === item.category;
+        const sameLocation = other.location.toLowerCase().includes(item.location.toLowerCase().split(' ')[0]);
+
+        return hasKeywordMatch || (sameCategory && sameLocation);
+      });
+    }
+
+    function renderItems() {
+      const items = getItems();
+      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      const grid = document.getElementById('itemsGrid');
+
+      // Update counters
+      const total = items.length;
+      const lostCount = items.filter(i => i.type === 'lost').length;
+      const foundCount = items.filter(i => i.type === 'found').length;
+      const claimedCount = items.filter(i => i.claimed || i.status === 'claimed').length;
+
+      document.getElementById('statTotal').innerText = total;
+      document.getElementById('statLost').innerText = lostCount;
+      document.getElementById('statFound').innerText = foundCount;
+      document.getElementById('statClaimed').innerText = claimedCount;
+
+      // Filter by type
+      let filtered = items.filter(item => {
+        if (currentFilter === 'lost') return item.type === 'lost' && !item.claimed;
+        if (currentFilter === 'found') return item.type === 'found' && !item.claimed;
+        if (currentFilter === 'claimed') return item.claimed;
+        return true;
+      });
+
+      // Filter by location hotspot
+      if (currentLocationFilter) {
+        filtered = filtered.filter(item => item.location.toLowerCase().includes(currentLocationFilter));
+      }
+
+      // Filter by search text
+      if (search) {
+        filtered = filtered.filter(item =>
+          item.title.toLowerCase().includes(search) ||
+          item.location.toLowerCase().includes(search) ||
+          item.desc.toLowerCase().includes(search) ||
+          item.category.toLowerCase().includes(search) ||
+          (item.refCode && item.refCode.toLowerCase().includes(search))
+        );
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            <p style="font-size: 1.1rem; font-weight: 600;">No items found</p>
+            <p style="font-size: 0.85rem; margin-top: 0.35rem;">Try clearing your search or location filter.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        let badgeHtml = '';
+        if (item.claimed) {
+          badgeHtml = '<span class="item-badge badge-claimed">Claimed</span>';
+        } else if (item.type === 'lost') {
+          badgeHtml = '<span class="item-badge badge-lost">Lost</span>';
+        } else {
+          badgeHtml = '<span class="item-badge badge-found">Found</span>';
+        }
+
+        const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
+
+        // Check for smart matches
+        const match = findMatch(item, items);
+        let matchBannerHtml = '';
+        if (match) {
+          const matchTypeLabel = match.type === 'found' ? 'Found item' : 'Lost item';
+          matchBannerHtml = `
+            <div class="match-banner">
+              <div>
+                <strong>Potential Match:</strong> ${escapeHtml(match.title)} (${escapeHtml(match.location)})
+              </div>
+              <button onclick="openSlipModal(${match.id})">View</button>
+            </div>
+          `;
+        }
+
+        const verificationHtml = item.verification ? `
+          <span><strong>Verification Hint:</strong> ${escapeHtml(item.verification)}</span>
+        ` : '';
+
+        const photoHtml = item.photo ? `
+          <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin: 0.6rem 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(250,204,21,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;" onclick="openImageModal('${escapeHtml(item.photo)}', '${escapeHtml(item.title)}')">
+            <img src="${item.photo}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover;" />
+            <span style="position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.75); color: var(--yellow-light); font-size: 0.68rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; backdrop-filter: blur(4px);">🔍 View Photo</span>
+          </div>
+        ` : '';
+
+        return `
+          <div class="project-card" id="item-card-${item.id}">
+            <div class="project-card-header">
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                  <div>
+                    <span class="project-type">${escapeHtml(item.category)}</span>
+                    <span class="ref-code" style="margin-left: 0.4rem;">${escapeHtml(item.refCode || '')}</span>
+                  </div>
+                  ${badgeHtml}
+                </div>
+                <h3 style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
+              </div>
+            </div>
+
+            ${matchBannerHtml}
+            ${photoHtml}
+
+            <p style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
+
+            <div class="card-meta-line">
+              <span><strong>Location:</strong> ${escapeHtml(item.location)}</span>
+              <span><strong>Contact:</strong> ${escapeHtml(item.contact)}</span>
+              <span><strong>Date:</strong> ${escapeHtml(item.date || 'Recently')}${item.createdAt ? ` <span style="color:var(--text-muted);font-size:0.72rem;">· ${timeAgo(item.createdAt)}</span>` : ''}</span>
+              ${verificationHtml}
+            </div>
+
+            <div class="card-actions">
+              <button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${claimBtnText}</button>
+              <button class="btn-sm btn-slip" onclick="openSlipModal(${item.id})">Print Slip</button>
+              <button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // UNIQUE FEATURE: Campus Notice & Claim Slip Modal
+    function openSlipModal(id) {
+      const item = getItems().find(i => i.id === id);
+      if (!item) return;
+
+      document.getElementById('slipRefCode').innerText = item.refCode || 'CSPC-LF-2026';
+      document.getElementById('slipDate').innerText = item.date || 'Today';
+      document.getElementById('slipTypeHeader').innerText = item.type === 'lost'
+        ? 'Official Lost Item Report Slip'
+        : 'Official Found Item Submission Notice';
+      document.getElementById('slipItemTitle').innerText = item.title;
+      document.getElementById('slipCategory').innerText = item.category;
+      document.getElementById('slipLocation').innerText = item.location;
+      document.getElementById('slipContact').innerText = item.contact;
+      document.getElementById('slipDesc').innerText = item.desc;
+
+      const verifRow = document.getElementById('slipVerificationRow');
+      if (item.verification) {
+        verifRow.style.display = 'table-row';
+        document.getElementById('slipVerification').innerText = item.verification;
+      } else {
+        verifRow.style.display = 'none';
+      }
+
+      const photoRow = document.getElementById('slipPhotoRow');
+      if (item.photo) {
+        photoRow.style.display = 'table-row';
+        const imgEl = document.getElementById('slipPhotoImg');
+        imgEl.src = item.photo;
+        imgEl.style.cursor = 'pointer';
+        imgEl.onclick = () => openImageModal(item.photo, item.title);
+      } else {
+        photoRow.style.display = 'none';
+      }
+
+      document.getElementById('slipModal').classList.add('open');
+    }
+
+    function closeSlipModal() {
+      document.getElementById('slipModal').classList.remove('open');
+    }
+
+    function openImageModal(photoSrc, title) {
+      if (!photoSrc) return;
+      document.getElementById('imageModalImg').src = photoSrc;
+      document.getElementById('imageModalTitle').innerText = title || 'Item Photo View';
+      document.getElementById('imageModal').classList.add('open');
+    }
+
+    function closeImageModal() {
+      document.getElementById('imageModal').classList.remove('open');
+    }
+
+    let currentPhotoBase64 = '';
+
+    function handlePhotoSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Image file size must be less than 5MB.', true);
+        e.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        currentPhotoBase64 = evt.target.result;
+        document.getElementById('photoPreviewImg').src = currentPhotoBase64;
+        document.getElementById('photoPreviewBox').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removePhoto() {
+      currentPhotoBase64 = '';
+      const input = document.getElementById('itemPhotoInput');
+      if (input) input.value = '';
+      document.getElementById('photoPreviewBox').style.display = 'none';
+      document.getElementById('photoPreviewImg').src = '';
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const type = document.querySelector('input[name="itemType"]:checked').value;
+      const title = document.getElementById('itemTitle').value.trim();
+      const category = document.getElementById('itemCategory').value;
+      const officeLocation = document.getElementById('itemLocation').value;
+      const locationDetails = document.getElementById('itemLocationDetails').value.trim();
+      const location = locationDetails ? `${officeLocation} (${locationDetails})` : officeLocation;
+      const contact = document.getElementById('itemContact').value.trim();
+      const desc = document.getElementById('itemDesc').value.trim();
+      const verification = document.getElementById('itemVerification').value.trim();
+
+      const items = getItems();
+      const nextNum = items.length + 1;
+      const refCode = "CSPC-LF-2026-" + String(nextNum).padStart(3, '0');
+
+      const newItem = {
+        id: Date.now(),
+        refCode,
+        title,
+        category,
+        type,
+        location,
+        contact,
+        desc,
+        verification,
+        photo: currentPhotoBase64,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        claimed: false
+      };
+
+      items.unshift(newItem);
+      saveItems(items);
+      removePhoto();
+
+      // Check if new report matches any existing item
+      const match = findMatch(newItem, items);
+
+      // Reset form
+      document.getElementById('itemForm').reset();
+      updateTypeRadio();
+      renderItems();
+
+      openReportSuccessModal(refCode, newItem.id, match);
+
+      // Scroll to items
+      document.getElementById('items').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    let targetDeleteId = null;
+    let targetClaimId = null;
+    let lastCreatedItemId = null;
+
+    function openReportSuccessModal(refCode, itemId, match) {
+      lastCreatedItemId = itemId;
+      document.getElementById('successRefCode').innerText = refCode || 'CSPC-LF-2026';
+      
+      const matchAlert = document.getElementById('successMatchAlert');
+      if (match) {
+        matchAlert.style.display = 'block';
+        matchAlert.innerHTML = `🎯 <strong>Potential Smart Match Detected!</strong> Matching ${match.type} item "${escapeHtml(match.title)}" (${escapeHtml(match.location)}) found.`;
+      } else {
+        matchAlert.style.display = 'none';
+      }
+
+      document.getElementById('reportSuccessModal').classList.add('open');
+    }
+
+    function closeReportSuccessModal() {
+      document.getElementById('reportSuccessModal').classList.remove('open');
+    }
+
+    function printFromSuccessModal() {
+      closeReportSuccessModal();
+      if (lastCreatedItemId) {
+        openSlipModal(lastCreatedItemId);
+      }
+    }
+
+    function openDeleteModal(id) {
+      const items = getItems();
+      const item = items.find(i => i.id === id);
+      targetDeleteId = id;
+      const textEl = document.getElementById('deleteConfirmText');
+      if (item) {
+        textEl.innerText = `Are you sure you want to permanently delete "${item.title}" (${item.refCode || ''}) from campus records?`;
+      } else {
+        textEl.innerText = `Are you sure you want to permanently delete this report from campus records?`;
+      }
+      document.getElementById('deleteConfirmModal').classList.add('open');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteConfirmModal').classList.remove('open');
+      targetDeleteId = null;
+    }
+
+    function executeDelete() {
+      if (!targetDeleteId) return;
+      const id = targetDeleteId;
+      closeDeleteModal();
+
+      let items = getItems();
+      items = items.filter(i => i.id !== id);
+      saveItems(items);
+      renderItems();
+      showToast('Item removed.');
+    }
+
+    function deleteItem(id) {
+      openDeleteModal(id);
+    }
+
+    function openClaimModal(id) {
+      const items = getItems();
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+      targetClaimId = id;
+
+      const titleEl = document.getElementById('claimModalTitle');
+      const subtitleEl = document.getElementById('claimModalSubtitle');
+      const hintBox = document.getElementById('claimVerificationBox');
+      const hintText = document.getElementById('claimModalHint');
+      const proofGroup = document.getElementById('claimProofGroup');
+      const proofInput = document.getElementById('claimProofInput');
+      const btnEl = document.getElementById('claimModalBtn');
+
+      proofInput.value = '';
+
+      if (item.claimed) {
+        titleEl.innerText = 'Restore Item to Active Status';
+        subtitleEl.innerText = `Restore "${item.title}" (${item.refCode || ''}) back to active lost/found listings?`;
+        hintBox.style.display = 'none';
+        proofGroup.style.display = 'none';
+        btnEl.innerText = 'Restore Item';
+      } else {
+        titleEl.innerText = 'Confirm Item Claim';
+        subtitleEl.innerText = `Mark "${item.title}" (${item.refCode || ''}) as successfully claimed/returned.`;
+        proofGroup.style.display = 'block';
+        btnEl.innerText = 'Confirm Claim';
+
+        if (item.verification) {
+          hintBox.style.display = 'block';
+          hintText.innerText = `"${item.verification}"`;
+        } else {
+          hintBox.style.display = 'none';
+        }
+      }
+
+      document.getElementById('claimConfirmModal').classList.add('open');
+    }
+
+    function closeClaimModal() {
+      document.getElementById('claimConfirmModal').classList.remove('open');
+      targetClaimId = null;
+    }
+
+    function executeClaimToggle() {
+      if (!targetClaimId) return;
+      const id = targetClaimId;
+      closeClaimModal();
+
+      const items = getItems();
+      const item = items.find(i => i.id === id);
+      if (item) {
+        item.claimed = !item.claimed;
+        saveItems(items);
+        renderItems();
+        showToast(item.claimed ? `Item ${item.refCode || ''} marked as claimed.` : 'Status restored to active.');
+      }
+    }
+
+    function toggleClaim(id) {
+      openClaimModal(id);
+    }
+
+    function timeAgo(isoStr) {
+      if (!isoStr) return '';
+      const diff  = Date.now() - new Date(isoStr).getTime();
+      const mins  = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days  = Math.floor(diff / 86400000);
+      if (mins < 1)   return 'Just now';
+      if (mins < 60)  return `${mins}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 30)  return `${days}d ago`;
+      return new Date(isoStr).toLocaleDateString();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    function showToast(msg) {
+      const old = document.querySelector('.toast');
+      if (old) old.remove();
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerText = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3200);
+    }
+
+    // Initial render
+    document.addEventListener('DOMContentLoaded', () => {
+      renderItems();
+    });
+  </script>
+</body>
+</html>

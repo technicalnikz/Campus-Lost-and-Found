@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSPC Lost & Found — Item Detail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Breadcrumb ── */
+    .breadcrumb {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+    .breadcrumb a {
+      color: var(--yellow-dark);
+      text-decoration: none;
+    }
+    .breadcrumb a:hover { color: var(--yellow-main); text-decoration: underline; }
+    .breadcrumb span { margin: 0 0.4rem; }
+
+    /* ── Detail Layout ── */
+    .detail-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    /* ── Detail Card ── */
+    .detail-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .detail-image {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+    }
+    .detail-image-placeholder {
+      width: 100%;
+      height: 280px;
+      background: rgba(250,204,21,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+    }
+    .detail-body { padding: 1.75rem; }
+    .detail-badges { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.9rem; }
+    .detail-title {
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+      font-weight: 900;
+      color: var(--text-main);
+      line-height: 1.2;
+      margin-bottom: 0.3rem;
+    }
+    .detail-category {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--yellow-dark);
+      letter-spacing: 0.06em;
+      margin-bottom: 1.25rem;
+    }
+
+    .detail-row {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(250,204,21,0.08);
+      font-size: 0.875rem;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row-label {
+      font-weight: 700;
+      color: var(--text-muted);
+      min-width: 120px;
+      flex-shrink: 0;
+    }
+    .detail-row-value { color: var(--text-main); line-height: 1.5; }
+
+    /* ── Sidebar Card ── */
+    .sidebar-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .sidebar-card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--yellow-main);
+      margin-bottom: 1.1rem;
+    }
+    .contact-row {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      margin-bottom: 0.7rem;
+      font-size: 0.85rem;
+    }
+    .contact-row-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .contact-row-text { color: var(--text-muted); line-height: 1.4; }
+    .contact-row-text strong { color: var(--text-main); font-weight: 700; display: block; font-size:.78rem; margin-bottom:.1rem; }
+
+    /* ── Status Timeline ── */
+    .status-timeline { display:flex; flex-direction:column; gap:0; }
+    .st-item {
+      display:flex; gap:.75rem; align-items:flex-start;
+      padding-bottom:.9rem; position:relative;
+    }
+    .st-item:not(:last-child)::after {
+      content:''; position:absolute;
+      left:10px; top:22px; bottom:0;
+      width:2px; background:rgba(250,204,21,0.15);
+    }
+    .st-dot {
+      width:22px; height:22px; border-radius:50%;
+      background: linear-gradient(135deg,#facc15,#eab308);
+      flex-shrink:0; display:flex; align-items:center; justify-content:center;
+      font-size:.65rem; font-weight:900; color:#422006;
+    }
+    .st-info { flex:1; }
+    .st-label { font-size:.82rem; font-weight:700; color:var(--text-main); }
+    .st-time  { font-size:.72rem; color:var(--text-muted); }
+
+    /* ── Claimed Banner ── */
+    .claimed-banner {
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      font-size: .85rem;
+      color: #4ade80;
+      font-weight: 700;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+    @media (max-width: 760px) {
+      .detail-layout { grid-template-columns: 1fr; }
+    }
+
+    /* ── Claim form inside modal ── */
+    .claim-form-grid { display:flex; flex-direction:column; gap:1rem; margin-top:1rem; }
+  </style>
+</head>
+<body>
+  <div id="navMount"></div>
+
+  <div class="page-section" style="padding-top:2rem;" id="mainContent">
+    <div class="breadcrumb">
+      <a href="index.html">Dashboard</a>
+      <span>›</span>
+      <a href="browse.html">Browse</a>
+      <span>›</span>
+      <span id="breadcrumbTitle">Item Detail</span>
+    </div>
+
+    <!-- Rendered by JS -->
+    <div id="detailMount"></div>
+  </div>
+
+  <!-- Claim Modal -->
+  <div class="modal-backdrop" id="claimModal">
+    <div class="modal">
+      <button class="modal-close" id="closeModal">✕</button>
+      <h3>🤝 Submit a Claim</h3>
+      <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.5rem;">Fill in your details and describe why you believe this item belongs to you.</p>
+      <div class="claim-form-grid">
+        <div class="form-group">
+          <label class="form-label">Your Full Name <span class="required">*</span></label>
+          <input type="text" class="form-control" id="claimName" placeholder="Juan dela Cruz" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Number <span class="required">*</span></label>
+          <input type="tel" class="form-control" id="claimContact" placeholder="09XX XXX XXXX" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" id="claimEmail" placeholder="you@cspc.edu.ph" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Proof of Ownership <span class="required">*</span></label>
+          <textarea class="form-control" id="claimProof" rows="3"
+            placeholder="Describe identifying details only the owner would know (e.g., what's inside the bag, scratches, stickers, etc.)"></textarea>
+        </div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.5rem;">
+          <button class="btn btn-primary" id="submitClaim">Submit Claim</button>
+          <button class="btn btn-outline" id="cancelClaim">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-left">
+      <p>🔍 CSPC Lost &amp; Found System</p>
+      <p>Camarines Sur Polytechnic Colleges</p>
+    </div>
+    <div class="footer-right">
+      <p>Student Affairs Office</p>
+      <p>Nabua, Camarines Sur</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    let currentItem = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('navMount').innerHTML = renderNav('browse.html');
+      initNav();
+
+      const id = getQueryParam('id');
+      if (!id) { showNotFound(); return; }
+
+      currentItem = getItemById(id);
+      if (!currentItem) { showNotFound(); return; }
+
+      renderDetail(currentItem);
+
+      // Modal controls
+      document.getElementById('closeModal').addEventListener('click',  closeModal);
+      document.getElementById('cancelClaim').addEventListener('click', closeModal);
+      document.getElementById('claimModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('claimModal')) closeModal();
+      });
+      document.getElementById('submitClaim').addEventListener('click', submitClaim);
+    });
+
+    function renderDetail(item) {
+      document.title = `CSPC Lost & Found — ${item.title}`;
+      document.getElementById('breadcrumbTitle').textContent = item.title;
+
+      const dateLabel   = item.type === 'lost'
+        ? `<div class="detail-row"><div class="detail-row-label">📅 Date Lost</div><div class="detail-row-value">${formatDate(item.dateLost)}</div></div>`
+        : `<div class="detail-row"><div class="detail-row-label">📅 Date Found</div><div class="detail-row-value">${formatDate(item.dateFound)}</div></div>`;
+
+      const imageBlock = item.imageUrl
+        ? `<img src="${item.imageUrl}" class="detail-image" alt="${escHtml(item.title)}">`
+        : `<div class="detail-image-placeholder">${categoryIcon(item.category)}</div>`;
+
+      const canClaim = item.status !== 'claimed';
+      const claimBtnHtml = canClaim
+        ? `<button class="btn btn-primary" id="openClaimBtn" style="width:100%">🤝 Submit a Claim</button>`
+        : `<div class="claimed-banner">✅ This item has been claimed</div>`;
+
+      const relatedItems = getItems()
+        .filter(i => i.category === item.category && i.id !== item.id && i.status !== 'claimed')
+        .slice(0, 3);
+
+      const relatedHtml = relatedItems.length > 0 ? `
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Similar Items</div>
+          <div style="display:flex;flex-direction:column;gap:.75rem;">
+            ${relatedItems.map(r => `
+              <a href="item-detail.html?id=${r.id}" style="text-decoration:none;display:flex;gap:.6rem;align-items:center;padding:.5rem;border-radius:8px;transition:background .2s;" onmouseover="this.style.background='rgba(250,204,21,0.06)'" onmouseout="this.style.background=''">
+                <div style="font-size:1.4rem;flex-shrink:0;">${categoryIcon(r.category)}</div>
+                <div>
+                  <div style="font-size:.82rem;font-weight:700;color:var(--text-main);line-height:1.2;">${escHtml(r.title)}</div>
+                  <div style="font-size:.72rem;color:var(--text-muted);">${r.type === 'lost' ? '🔍 Lost' : '📦 Found'} · ${escHtml(r.location)}</div>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        </div>` : '';
+
+      document.getElementById('detailMount').innerHTML = `
+        <div class="detail-layout">
+          <!-- Main card -->
+          <div>
+            <div class="detail-card">
+              ${imageBlock}
+              <div class="detail-body">
+                <div class="detail-badges">
+                  ${typeBadge(item.type)}
+                  ${statusBadge(item.status)}
+                </div>
+                <h1 class="detail-title">${escHtml(item.title)}</h1>
+                <div class="detail-category">${categoryIcon(item.category)} ${escHtml(item.category)}</div>
+
+                <div class="detail-row"><div class="detail-row-label">📍 Location</div><div class="detail-row-value">${escHtml(item.location)}</div></div>
+                ${dateLabel}
+                <div class="detail-row"><div class="detail-row-label">🕐 Reported</div><div class="detail-row-value">${formatDate(item.createdAt)} (${timeAgo(item.createdAt)})</div></div>
+                <div class="detail-row" style="align-items:flex-start;"><div class="detail-row-label">📝 Description</div><div class="detail-row-value">${escHtml(item.description)}</div></div>
+              </div>
+            </div>
+
+            <!-- Status Timeline -->
+            <div class="sidebar-card" style="margin-top:1rem;">
+              <div class="sidebar-card-title">Status History</div>
+              <div class="status-timeline">
+                <div class="st-item">
+                  <div class="st-dot">1</div>
+                  <div class="st-info">
+                    <div class="st-label">${item.type === 'lost' ? 'Reported as Lost' : 'Reported as Found'}</div>
+                    <div class="st-time">${formatDate(item.createdAt)} · ${timeAgo(item.createdAt)}</div>
+                  </div>
+                </div>
+                ${item.status === 'claimed' ? `
+                <div class="st-item">
+                  <div class="st-dot">2</div>
+                  <div class="st-info">
+                    <div class="st-label" style="color:#4ade80;">Marked as Claimed</div>
+                    <div class="st-time">${formatDate(item.updatedAt || item.createdAt)}</div>
+                  </div>
+                </div>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div>
+            <!-- Claim action -->
+            <div class="sidebar-card">
+              <div class="sidebar-card-title">${item.type === 'lost' ? 'Found This Item?' : 'Is This Yours?'}</div>
+              <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.6;">
+                ${item.type === 'lost'
+                  ? 'If you have found this item, click below to contact the owner.'
+                  : 'If this item belongs to you, submit a claim and we will connect you with the finder.'}
+              </p>
+              ${claimBtnHtml}
+            </div>
+
+            <!-- Reporter contact -->
+            <div class="sidebar-card">
+              <div class="sidebar-card-title">Reporter Information</div>
+              <div class="contact-row">
+                <div class="contact-row-icon">👤</div>
+                <div class="contact-row-text"><strong>Name</strong>${escHtml(item.reporterName)}</div>
+              </div>
+              <div class="contact-row">
+                <div class="contact-row-icon">📞</div>
+                <div class="contact-row-text"><strong>Contact</strong>${escHtml(item.reporterContact)}</div>
+              </div>
+              ${item.reporterEmail ? `
+              <div class="contact-row">
+                <div class="contact-row-icon">✉️</div>
+                <div class="contact-row-text"><strong>Email</strong><a href="mailto:${escHtml(item.reporterEmail)}" style="color:var(--yellow-main);text-decoration:none;">${escHtml(item.reporterEmail)}</a></div>
+              </div>` : ''}
+            </div>
+
+            ${relatedHtml}
+
+            <div style="text-align:center;margin-top:.5rem;">
+              <a href="browse.html" style="font-size:.8rem;color:var(--text-muted);text-decoration:none;" onmouseover="this.style.color='#eab308'" onmouseout="this.style.color=''">← Back to Browse</a>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Attach claim button
+      const claimBtn = document.getElementById('openClaimBtn');
+      if (claimBtn) claimBtn.addEventListener('click', openModal);
+    }
+
+    function showNotFound() {
+      document.getElementById('detailMount').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">❓</div>
+          <h3>Item Not Found</h3>
+          <p>This item may have been removed or the link is invalid.</p>
+          <a href="browse.html" class="btn btn-primary" style="margin-top:1rem;">Browse All Items</a>
+        </div>`;
+    }
+
+    function openModal() {
+      document.getElementById('claimModal').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('claimModal').classList.remove('open');
+    }
+
+    function submitClaim() {
+      const name    = document.getElementById('claimName').value.trim();
+      const contact = document.getElementById('claimContact').value.trim();
+      const email   = document.getElementById('claimEmail').value.trim();
+      const proof   = document.getElementById('claimProof').value.trim();
+
+      if (!name || !contact || !proof) {
+        showToast('Please fill in all required fields.', 'error');
+        return;
+      }
+
+      addClaim({
+        itemId:    currentItem.id,
+        itemTitle: currentItem.title,
+        claimerName:    name,
+        claimerContact: contact,
+        claimerEmail:   email,
+        proof,
+      });
+
+      closeModal();
+      showToast(`Claim submitted for "${currentItem.title}". The reporter will contact you.`);
+
+      // Clear form
+      ['claimName','claimContact','claimEmail','claimProof'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+    }
+  </script>
+</body>
+</html>

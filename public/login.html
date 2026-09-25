@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSPC Lost &amp; Found — Account Login &amp; Registration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .auth-container {
+      min-height: calc(100vh - 120px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    .auth-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 2.5rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .auth-header img {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: #ffffff;
+      padding: 3px;
+      margin-bottom: 0.8rem;
+      box-shadow: 0 0 18px rgba(234, 179, 8, 0.3);
+    }
+    .auth-header h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.25rem;
+    }
+    .auth-header p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.75rem;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 0.5rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .auth-tab.active {
+      color: var(--yellow-main);
+      background: rgba(250, 204, 21, 0.12);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-bottom: 1.1rem;
+    }
+    .form-group label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--yellow-light);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-group input,
+    .form-group select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(250, 204, 21, 0.22);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      color: var(--text-main);
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--yellow-main);
+    }
+    .form-group select option {
+      background: #27272a;
+      color: var(--text-main);
+    }
+
+    .demo-creds {
+      background: rgba(250, 204, 21, 0.06);
+      border: 1px dashed rgba(250, 204, 21, 0.3);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-top: 1.25rem;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .demo-creds strong {
+      color: var(--yellow-main);
+    }
+
+    .error-msg {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .password-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .password-wrap input {
+      padding-right: 4.2rem !important;
+    }
+    .btn-toggle-pw {
+      position: absolute;
+      right: 8px;
+      background: rgba(250, 204, 21, 0.12);
+      border: 1px solid rgba(250, 204, 21, 0.3);
+      color: var(--yellow-main);
+      border-radius: 6px;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+    }
+    .btn-toggle-pw:hover {
+      background: rgba(250, 204, 21, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <div class="nav-logo" style="display: flex; align-items: center; gap: 0.65rem;">
+        <img src="cspc-logo.png" alt="CSPC Logo" style="width: 34px; height: 34px; object-fit: contain; border-radius: 50%; background: #ffffff; padding: 2px;" />
+        <span>CSPC Lost &amp; Found Management System</span>
+      </div>
+      <div class="nav-links">
+        <a href="/">Back to Dashboard</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <img src="cspc-logo.png" alt="CSPC Seal" />
+        <h1>CSPC Account Access</h1>
+        <p>Student Affairs &amp; Services Office (SASO)</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">Register Account</button>
+      </div>
+
+      <div class="error-msg" id="authError"></div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Institutional / Student Email</label>
+          <input type="email" id="loginEmail" placeholder="e.g., student@cspc.edu.ph" required />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="password-wrap">
+            <input type="password" id="loginPassword" placeholder="Enter your password" required />
+            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('loginPassword', this)">Show</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; border: none; cursor: pointer; margin-top: 0.5rem;">
+          Sign In
+        </button>
+
+        <div class="demo-creds">
+          <strong>Demo Accounts Available:</strong><br />
+          Admin / SAO: <code>admin@cspc.edu.ph</code> (Password: <code>AdminPassword123!</code>)<br />
+          Student: <code>student@cspc.edu.ph</code> (Password: <code>StudentPassword123!</code>)
+        </div>
+      </form>
+
+      <!-- REGISTRATION FORM -->
+      <form id="registerForm" style="display: none;" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="regFullName" placeholder="e.g., Maria Santos" required />
+        </div>
+        <div class="form-group">
+          <label>Student ID Number *</label>
+          <input type="text" id="regStudentId" placeholder="e.g., 2024-10542" required />
+        </div>
+        <div class="form-group">
+          <label>College Department *</label>
+          <select id="regDepartment" required>
+            <option value="College of Computer Studies (CCS)">College of Computer Studies (CCS)</option>
+            <option value="College of Engineering and Architecture (CEA)">College of Engineering and Architecture (CEA)</option>
+            <option value="College of Health Sciences (CHS)">College of Health Sciences (CHS)</option>
+            <option value="College of Tourism, Hospitality and Business Management (CTHBM)">College of Tourism, Hospitality and Business Management (CTHBM)</option>
+            <option value="College of Technological and Developmental Education (CTDE)">College of Technological and Developmental Education (CTDE)</option>
+            <option value="College of Arts and Sciences (CAS)">College of Arts and Sciences (CAS)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Institutional Email *</label>
+          <input type="email" id="regEmail" placeholder="e.g., maria.santos@cspc.edu.ph" required />
+        </div>
+        <div class="form-group">
+          <label>Password (min 6 characters) *</label>
+          <div class="password-wrap">
+            <input type="password" id="regPassword" placeholder="Create a secure password" minlength="6" required />
+            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('regPassword', this)">Show</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; border: none; cursor: pointer; margin-top: 0.5rem;">
+          Create Student Account
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-left" style="display: flex; align-items: center; gap: 0.85rem;">
+      <img src="cspc-logo.png" alt="CSPC Logo" style="width: 38px; height: 38px; object-fit: contain; border-radius: 50%; background: #ffffff; padding: 2px;" />
+      <div>
+        <p style="font-weight: 700; color: var(--text-main);">Camarines Sur Polytechnic Colleges</p>
+        <p>Lost &amp; Found Management System</p>
+      </div>
+    </div>
+    <div class="footer-right">
+      <p>Nabua, Camarines Sur</p>
+    </div>
+  </footer>
+
+  <script>
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerText = 'Hide';
+        btn.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+        btn.style.color = '#fca5a5';
+        btn.style.background = 'rgba(239, 68, 68, 0.15)';
+      } else {
+        input.type = 'password';
+        btn.innerText = 'Show';
+        btn.style.borderColor = 'rgba(250, 204, 21, 0.3)';
+        btn.style.color = 'var(--yellow-main)';
+        btn.style.background = 'rgba(250, 204, 21, 0.12)';
+      }
+    }
+
+    function switchTab(tab) {
+      const isLogin = tab === 'login';
+      document.getElementById('tabLogin').classList.toggle('active', isLogin);
+      document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+      document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
+      document.getElementById('registerForm').style.display = isLogin ? 'none' : 'block';
+      hideError();
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('authError');
+      box.innerText = msg;
+      box.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('authError').style.display = 'none';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      hideError();
+
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = '/';
+        } else {
+          showError(data.message || 'Login failed. Please check your credentials.');
+        }
+      } catch (err) {
+        showError('Network error connecting to authentication service.');
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      hideError();
+
+      const fullName = document.getElementById('regFullName').value.trim();
+      const studentId = document.getElementById('regStudentId').value.trim();
+      const department = document.getElementById('regDepartment').value;
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName, studentId, department, email, password })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = '/';
+        } else {
+          showError(data.message || (data.errors ? data.errors.join(' ') : 'Registration failed.'));
+        }
+      } catch (err) {
+        showError('Network error connecting to registration service.');
+      }
+    }
+  </script>
+</body>
+</html>
