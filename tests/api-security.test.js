@@ -544,6 +544,45 @@ test('production requires a secret and persists secure sessions', async () => {
   }
 });
 
+test('production admin password reset is explicit and only affects the configured admin', async () => {
+  const usersPath = path.join(dataDir, 'users.json');
+  const originalUsers = fs.readFileSync(usersPath, 'utf8');
+  const originalStudentPasswordHash = JSON.parse(originalUsers)
+    .find(user => user.email === 'student@my.cspc.edu.ph').passwordHash;
+  const environmentKeys = ['NODE_ENV', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'ADMIN_PASSWORD_RESET'];
+  const originalEnvironment = Object.fromEntries(environmentKeys.map(key => [key, process.env[key]]));
+
+  try {
+    process.env.NODE_ENV = 'production';
+    process.env.ADMIN_EMAIL = 'admin@cspc.edu.ph';
+    process.env.ADMIN_PASSWORD = 'NewAdminPassword123!';
+    process.env.ADMIN_PASSWORD_RESET = 'true';
+
+    const authRoutes = require('../routes/authRoutes');
+    authRoutes.ensureDefaultAdminAccount();
+
+    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    const admin = users.find(user => user.email === 'admin@cspc.edu.ph');
+    const student = users.find(user => user.email === 'student@my.cspc.edu.ph');
+    assert.equal(await bcrypt.compare('NewAdminPassword123!', admin.passwordHash), true);
+    assert.equal(student.passwordHash, originalStudentPasswordHash);
+
+    process.env.ADMIN_PASSWORD_RESET = 'false';
+    process.env.ADMIN_PASSWORD = 'DifferentAdminPassword456!';
+    authRoutes.ensureDefaultAdminAccount();
+    const unchangedAdmin = JSON.parse(fs.readFileSync(usersPath, 'utf8'))
+      .find(user => user.email === 'admin@cspc.edu.ph');
+    assert.equal(await bcrypt.compare('NewAdminPassword123!', unchangedAdmin.passwordHash), true);
+    assert.equal(await bcrypt.compare('DifferentAdminPassword456!', unchangedAdmin.passwordHash), false);
+  } finally {
+    fs.writeFileSync(usersPath, originalUsers);
+    environmentKeys.forEach(key => {
+      if (originalEnvironment[key] === undefined) delete process.env[key];
+      else process.env[key] = originalEnvironment[key];
+    });
+  }
+});
+
 test('production server starts when loaded as a hosting entry module', async () => {
   const bootDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cspc-lostfound-boot-'));
   fs.writeFileSync(path.join(bootDataDir, 'users.json'), JSON.stringify([

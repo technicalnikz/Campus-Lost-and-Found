@@ -51,6 +51,16 @@ function ensureDefaultAdminAccount() {
     if (existingAdmin.role !== 'admin') {
       throw new Error(`${adminEmail} is reserved for the administrator account.`);
     }
+    if (process.env.NODE_ENV === 'production' && process.env.ADMIN_PASSWORD_RESET === 'true') {
+      const password = process.env.ADMIN_PASSWORD;
+      if (!password || password.length < 12) {
+        throw new Error('ADMIN_PASSWORD must be configured with at least 12 characters to reset the production admin password.');
+      }
+
+      existingAdmin.passwordHash = bcrypt.hashSync(password, 10);
+      saveUsers(users);
+      console.info(`Production admin password reset completed for ${adminEmail}. Set ADMIN_PASSWORD_RESET=false after verifying login.`);
+    }
     return;
   }
 
