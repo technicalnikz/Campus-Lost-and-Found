@@ -41,19 +41,29 @@ function saveUsers(users) {
 
 function ensureDefaultAdminAccount() {
   const users = getUsers();
-  const existingAdmin = users.find(user => user.email.toLowerCase() === 'admin@cspc.edu.ph');
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@cspc.edu.ph').trim().toLowerCase();
+  if (!/^[^\s@]+@cspc\.edu\.ph$/.test(adminEmail)) {
+    throw new Error('ADMIN_EMAIL must be a valid @cspc.edu.ph address.');
+  }
+
+  const existingAdmin = users.find(user => user.email.toLowerCase() === adminEmail);
   if (existingAdmin) {
     if (existingAdmin.role !== 'admin') {
-      throw new Error('admin@cspc.edu.ph is reserved for the administrator account.');
+      throw new Error(`${adminEmail} is reserved for the administrator account.`);
     }
     return;
   }
 
+  const password = process.env.ADMIN_PASSWORD;
+  if (process.env.NODE_ENV === 'production' && (!password || password.length < 12)) {
+    throw new Error('ADMIN_PASSWORD must be configured with at least 12 characters in production.');
+  }
+
   users.push({
-    id: 'usr-admin-default',
-    email: 'admin@cspc.edu.ph',
-    passwordHash: bcrypt.hashSync('admin123', 10),
-    fullName: 'CSPC Administrator',
+    id: `usr-admin-${Date.now()}`,
+    email: adminEmail,
+    passwordHash: bcrypt.hashSync(password || 'admin123', 10),
+    fullName: sanitizeString(process.env.ADMIN_NAME || 'CSPC Administrator'),
     studentId: 'N/A',
     role: 'admin',
     department: 'Administration',

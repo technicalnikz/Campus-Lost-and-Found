@@ -565,7 +565,9 @@ test('production server starts when loaded as a hosting entry module', async () 
       DATA_DIR: bootDataDir,
       NODE_ENV: 'production',
       PORT: String(port),
-      SESSION_SECRET: 'test-module-start-secret'
+      SESSION_SECRET: 'test-module-start-secret',
+      ADMIN_EMAIL: 'admin@cspc.edu.ph',
+      ADMIN_PASSWORD: 'ProductionStrongTestPass1!'
     },
     stdio: ['ignore', 'pipe', 'pipe']
   });
@@ -595,12 +597,17 @@ test('production server starts when loaded as a hosting entry module', async () 
     const response = await fetch(`http://127.0.0.1:${port}/api/items`);
     assert.equal(response.status, 200);
     const users = JSON.parse(fs.readFileSync(path.join(bootDataDir, 'users.json'), 'utf8'));
-    assert.deepEqual(users.map(user => user.id), ['usr-admin-01', 'kept-user', 'usr-admin-default']);
+    assert.deepEqual(users.map(user => user.email), [
+      'legacy-admin@example.edu',
+      'student@my.cspc.edu.ph',
+      'admin@cspc.edu.ph'
+    ]);
+    assert.match(users[2].id, /^usr-admin-/);
 
     const loginResponse = await fetch(`http://127.0.0.1:${port}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Forwarded-Proto': 'https' },
-      body: JSON.stringify({ email: 'admin@cspc.edu.ph', password: 'admin123' })
+      body: JSON.stringify({ email: 'admin@cspc.edu.ph', password: 'ProductionStrongTestPass1!' })
     });
     assert.equal(loginResponse.status, 200);
     assert.equal((await loginResponse.json()).user.role, 'admin');
