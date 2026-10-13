@@ -39,31 +39,37 @@ function escapeHtml(value) {
   })[character]);
 }
 
-async function sendRegistrationEmail(user) {
-  const transport = createTransport();
-  const name = user.fullName || 'there';
-  const safeName = escapeHtml(name);
-
-  await transport.sendMail({
-    from: process.env.SMTP_FROM,
-    to: user.email,
-    subject: 'Your Back2You account was created',
-    text: `Hi ${name},\n\nYour Back2You account has been created successfully using ${user.email}.\n\nYou can now sign in to Back2You to report or find campus items.\n\nThe Back2You Team`,
-    html: `<p>Hi ${safeName},</p><p>Your Back2You account has been created successfully using <strong>${escapeHtml(user.email)}</strong>.</p><p>You can now sign in to Back2You to report or find campus items.</p><p>The Back2You Team</p>`
-  });
-}
-
-async function sendPossibleMatchEmail(user, foundRefCode, foundItemId) {
+function getAppUrl(pathname) {
   const appBaseUrl = process.env.APP_BASE_URL;
   if (!appBaseUrl) {
-    throw new Error('APP_BASE_URL must be configured to send possible-match emails.');
+    throw new Error('APP_BASE_URL must be configured to send account emails.');
   }
 
   const parsedBaseUrl = new URL(appBaseUrl);
   if (!['http:', 'https:'].includes(parsedBaseUrl.protocol)) {
     throw new Error('APP_BASE_URL must use HTTP or HTTPS.');
   }
-  const matchUrl = new URL('/', parsedBaseUrl);
+
+  return new URL(pathname, parsedBaseUrl).toString();
+}
+
+async function sendRegistrationEmail(user) {
+  const transport = createTransport();
+  const name = user.fullName || 'there';
+  const safeName = escapeHtml(name);
+  const signInUrl = getAppUrl('/login');
+
+  await transport.sendMail({
+    from: process.env.SMTP_FROM,
+    to: user.email,
+    subject: 'Welcome to Back2You — your account is ready',
+    text: `Hi ${name},\n\nWelcome to Back2You! Your account has been created successfully.\n\nYou can now sign in to report a lost item, report an item you found, and receive alerts if a found item may match your lost-item report. You can also register personal belongings to create QR recovery stickers.\n\nA possible match is only a suggestion—not confirmation of ownership. Please verify your item with campus staff before arranging a handover.\n\nSign in to Back2You: ${signInUrl}\n\nWe hope Back2You helps reunite you with your belongings.\n\nBest,\nThe Back2You Team`,
+    html: `<p>Hi ${safeName},</p><p>Welcome to Back2You! Your account has been created successfully.</p><p>You can now sign in to report a lost item, report an item you found, and receive alerts if a found item may match your lost-item report. You can also register personal belongings to create QR recovery stickers.</p><p>A possible match is only a suggestion—not confirmation of ownership. Please verify your item with campus staff before arranging a handover.</p><p><a href="${escapeHtml(signInUrl)}">Sign in to Back2You</a></p><p>We hope Back2You helps reunite you with your belongings.</p><p>Best,<br>The Back2You Team</p>`
+  });
+}
+
+async function sendPossibleMatchEmail(user, foundRefCode, foundItemId) {
+  const matchUrl = new URL(getAppUrl('/'));
   matchUrl.searchParams.set('search', foundRefCode);
   matchUrl.searchParams.set('matchItemId', String(foundItemId));
   matchUrl.hash = 'items';
