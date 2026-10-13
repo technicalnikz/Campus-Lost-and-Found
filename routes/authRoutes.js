@@ -62,7 +62,7 @@ function ensureDefaultAdminAccount() {
   users.push({
     id: `usr-admin-${Date.now()}`,
     email: adminEmail,
-    passwordHash: bcrypt.hashSync(password || 'admin123', 10),
+    passwordHash: bcrypt.hashSync(password || 'admin@_123bAck2u', 10),
     fullName: sanitizeString(process.env.ADMIN_NAME || 'CSPC Administrator'),
     studentId: 'N/A',
     role: 'admin',
