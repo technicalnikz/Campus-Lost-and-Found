@@ -603,32 +603,27 @@
     </div>
   </div>
 
-  <!-- SMART MATCH HANDOVER QR MODAL -->
+  <!-- SMART MATCH REFERENCE QR MODAL -->
   <div class="slip-overlay" id="matchQrModal" onclick="if(event.target===this) closeMatchQrModal()">
     <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 1.8rem; max-width: 520px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
       <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
         <div>
-          <span style="font-size: 0.68rem; font-weight: 800; background: rgba(59,130,246,0.18); color: var(--blue-main); padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">Smart Match Handover Token</span>
-          <h2 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0.4rem 0 0.2rem;">🤝 Match Verification QR</h2>
+          <span style="font-size: 0.68rem; font-weight: 800; background: rgba(59,130,246,0.18); color: var(--blue-main); padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">Match Reference</span>
+          <h2 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0.4rem 0 0.2rem;">🤝 Match Reference QR</h2>
           <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">Automated reconciliation between Lost and Found reports.</p>
         </div>
         <button onclick="closeMatchQrModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
       </div>
 
       <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); border-radius: 10px; padding: 0.8rem; margin-bottom: 1.2rem; font-size: 0.78rem; line-height: 1.45;">
-        <strong style="color: var(--blue-main); display: block; margin-bottom: 0.5rem;">📌 How the User Verifies a Match:</strong>
-        <ol style="margin: 0; padding-left: 1.1rem; display: grid; gap: 0.38rem;">
-          <li><strong>Side-by-Side Comparison:</strong> Scanning the QR code opens a reconciliation record that displays the Lost Report and Found Report side by side.</li>
-          <li><strong>Private Verification Hints:</strong> The system compares unique, non-public details entered during reporting, such as a specific sticker (&quot;awa na lang talaga&quot;), a lock screen wallpaper, a serial number, or private verification text (&quot;kulot&quot; or &quot;ea&quot;).</li>
-          <li><strong>Location &amp; Timestamp Alignment:</strong> The user checks whether the location and date/time of the lost item align logically with where and when the item was turned in.</li>
-          <li><strong>Visual &amp; Description Cross-Check:</strong> The administrator or user verifies photos and secondary physical descriptions before authorizing the physical handover.</li>
-        </ol>
+        <strong style="color: var(--blue-main); display: block; margin-bottom: 0.25rem;">📌 What this QR does:</strong>
+        <span>It contains the two report reference codes for staff lookup only. It does not verify ownership or authorize a handover. After the student reviews a possible match, campus staff must verify identity and private proof in person before returning the item.</span>
       </div>
 
       <div id="matchPrintArea" style="background: #ffffff; color: #0f172a; border-radius: 12px; padding: 1.25rem; text-align: center; border: 2px dashed #0f172a; margin-bottom: 1.2rem;">
         <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.4rem;">
           <img src="cspc-logo.png" alt="CSPC Logo" style="width: 26px; height: 26px; object-fit: contain;" />
-          <span style="font-weight: 900; font-size: 0.8rem; text-transform: uppercase;">CSPC Custody Handover Verification</span>
+          <span style="font-weight: 900; font-size: 0.8rem; text-transform: uppercase;">CSPC Lost &amp; Found Match References</span>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem; margin: 0.6rem 0; text-align: left; font-size: 0.75rem;">
@@ -647,12 +642,12 @@
         <div style="display: inline-block; padding: 0.5rem; background: #ffffff; border: 1.5px solid #0f172a; border-radius: 8px; margin-bottom: 0.5rem;">
           <img id="matchQrImage" src="" alt="Match Verification QR" style="width: 130px; height: 130px; display: block;" />
         </div>
-        <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Scan to Authorize Handover</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Reference lookup only — not handover approval</div>
       </div>
 
       <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end;">
         <button class="btn btn-outline" onclick="closeMatchQrModal()">Close</button>
-        <button class="btn btn-primary" onclick="printMatchQr()">🖨️ Print Handover Token</button>
+        <button class="btn btn-primary" onclick="printMatchQr()">🖨️ Print Match Reference</button>
       </div>
     </div>
   </div>
@@ -964,7 +959,7 @@
               <div>
                 <strong>Potential Match:</strong> ${escapeHtml(match.title)} (${escapeHtml(match.location)})
               </div>
-              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${match.id})">🤝 Match Handover QR</button>
+              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${match.id})">🤝 Match Reference QR</button>
             </div>
           `;
         }
@@ -1248,7 +1243,7 @@
       document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
 
       const matchPayload = encodeURIComponent(
-        `CSPC Match | Lost: ${lost.refCode} | Found: ${found.refCode} | Verify ownership before handover`
+        `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
       );
       document.getElementById('matchQrImage').src =
         `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${matchPayload}`;

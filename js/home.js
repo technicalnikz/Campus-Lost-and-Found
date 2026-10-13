@@ -123,6 +123,7 @@ let currentUser = null;
     async function fetchAndRenderItems() {
       currentPage = 1;
       const search = document.getElementById('searchInput').value.trim();
+      const matchItemId = new URLSearchParams(window.location.search).get('matchItemId');
       const params = new URLSearchParams();
 
       if (currentFilter === 'lost') params.append('type', 'lost');
@@ -138,6 +139,10 @@ let currentUser = null;
         if (data.success) {
           loadedItems = data.items;
           renderItemsGrid(loadedItems);
+          if (matchItemId) {
+            const matchCard = document.getElementById(`item-card-${matchItemId}`);
+            if (matchCard) matchCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
           fetchStats();
         }
       } catch (err) {
@@ -172,7 +177,6 @@ let currentUser = null;
         grid.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
             <p style="font-size: 1.1rem; font-weight: 600;">No items found</p>
-            <p style="font-size: 0.85rem; margin-top: 0.35rem;">Try clearing your search keyword or location filter.</p>
           </div>
         `;
         return;
@@ -243,7 +247,7 @@ let currentUser = null;
               <div>
                 <strong>Potential Match:</strong> ${escapeHtml(item.potentialMatch.title)} (${escapeHtml(item.potentialMatch.location)})
               </div>
-              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${item.potentialMatch.id})">🤝 Match Handover QR</button>
+              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${item.potentialMatch.id})">🤝 Match Reference QR</button>
             </div>
           `;
         }
@@ -596,7 +600,7 @@ let currentUser = null;
         document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
 
         const matchPayload = encodeURIComponent(
-          `CSPC Match | Lost: ${lost.refCode} | Found: ${found.refCode} | Verify ownership before handover`
+          `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
         );
         document.getElementById('matchQrImage').src =
           `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${matchPayload}`;
@@ -646,9 +650,13 @@ let currentUser = null;
               <strong>🏷️ ${n.itemTitle || n.refCode}</strong>
               <span class="notif-time">${new Date(n.timestamp).toLocaleString()}</span>
             </div>
-            ${n.notificationType === 'claim'
-              ? `<p class="notif-msg">Claim request update</p><p class="notif-msg">${n.message}</p>`
-              : `<p class="notif-msg">📍 <em>${n.locationFound || 'Location not specified'}</em></p>
+            ${n.notificationType === 'match'
+              ? `<p class="notif-msg"><strong>Possible match—not confirmed</strong></p>
+                 <p class="notif-msg">${escapeHtml(n.message)}</p>
+                 <a class="btn-mark-read" style="display:inline-block;text-decoration:none;" href="/?search=${encodeURIComponent(n.matchRefCode || '')}&amp;matchItemId=${encodeURIComponent(n.matchItemId || '')}#items">Review possible match</a>`
+              : n.notificationType === 'claim'
+                ? `<p class="notif-msg">Claim request update</p><p class="notif-msg">${n.message}</p>`
+                : `<p class="notif-msg">📍 <em>${n.locationFound || 'Location not specified'}</em></p>
                  <p class="notif-msg">💬 ${n.message}</p>
                  ${n.finderContact && n.finderContact !== 'Anonymous Student / Finder'
                    ? `<p class="notif-contact">📞 Finder left optional contact: ${n.finderContact}</p>`
@@ -688,14 +696,18 @@ let currentUser = null;
       if (!currentUser) return;
       try {
         const res = await fetch('/api/items/my-notifications');
+        if (!res.ok) throw new Error('Notification refresh request failed.');
         const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Notification refresh failed.');
         const badge = document.getElementById('notifCountBadge');
-        if (badge && data.success) {
+        if (badge) {
           const unread = data.unreadCount || 0;
           badge.textContent = unread;
           badge.style.display = unread > 0 ? 'inline-flex' : 'none';
         }
-      } catch (_) {}
+      } catch (error) {
+        console.error('Could not refresh notification count:', error);
+      }
     }
 
     function openImageModal(photoSrc, title) {
@@ -1084,8 +1096,13 @@ let currentUser = null;
 
     // Initial load
     document.addEventListener('DOMContentLoaded', () => {
+      const matchParams = new URLSearchParams(window.location.search);
+      if (matchParams.get('matchItemId') && matchParams.get('search')) {
+        document.getElementById('searchInput').value = matchParams.get('search');
+      }
       checkAuthSession();
       fetchStats();
+      window.setInterval(loadMyNotifications, 30000);
       fetchAndRenderItems();
 
       const reportType = new URLSearchParams(window.location.search).get('report');

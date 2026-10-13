@@ -14,7 +14,7 @@ let createApp;
 
 const adminPassword = 'AdminPass1!';
 const studentPassword = 'StudentPass1!';
-const smtpEnvironmentKeys = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
+const smtpEnvironmentKeys = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'APP_BASE_URL'];
 const originalSmtpEnvironment = Object.fromEntries(
   smtpEnvironmentKeys.map(key => [key, process.env[key]])
 );
@@ -45,15 +45,19 @@ async function login(email, password) {
   return cookie;
 }
 
-function reportFormData(photo) {
+function reportFormData(photo, overrides = {}) {
   const form = new FormData();
-  form.set('title', 'Test umbrella');
-  form.set('category', 'Others');
-  form.set('type', 'lost');
-  form.set('location', 'Main Building');
-  form.set('contact', 'test@example.edu');
-  form.set('desc', 'Black umbrella with a wooden handle.');
-  form.set('verification', 'Private mark on the handle');
+  const fields = {
+    title: 'Test umbrella',
+    category: 'Others',
+    type: 'lost',
+    location: 'Main Building',
+    contact: 'test@example.edu',
+    desc: 'Black umbrella with a wooden handle.',
+    verification: 'Private mark on the handle',
+    ...overrides
+  };
+  Object.entries(fields).forEach(([key, value]) => form.set(key, value));
   if (photo) form.set('photo', photo, 'test-image.png');
   return form;
 }
@@ -67,7 +71,8 @@ test.before(async () => {
 
   const users = [
     fixtureUser('admin-test', 'admin@cspc.edu.ph', adminPassword, 'admin'),
-    fixtureUser('student-test', 'student@my.cspc.edu.ph', studentPassword, 'student')
+    fixtureUser('student-test', 'student@my.cspc.edu.ph', studentPassword, 'student'),
+    fixtureUser('match-student-test', 'match.student@my.cspc.edu.ph', studentPassword, 'student')
   ];
   fs.writeFileSync(path.join(dataDir, 'users.json'), JSON.stringify(users));
   fs.writeFileSync(path.join(dataDir, 'items.json'), JSON.stringify([
@@ -414,6 +419,75 @@ test('rejected claims restore availability and notify the claimant', async () =>
   const { notifications } = await notificationsResponse.json();
   assert.equal(notifications[0].notificationType, 'claim');
   assert.match(notifications[0].message, /does not match/);
+});
+
+test('possible-match alerts notify the lost-report student whether the found report is earlier or later', async () => {
+  const studentCookie = await login('match.student@my.cspc.edu.ph', studentPassword);
+  const firstPair = {
+    title: 'Cerulean astrophotography camera',
+    category: 'Electronics',
+    location: 'College of Computer Studies (CCS)',
+    contact: 'match.student@my.cspc.edu.ph',
+    desc: 'Engraved constellation map on the battery cover.',
+    verification: 'Gold comet sticker under the hinge'
+  };
+
+  const firstLostResponse = await fetch(`${baseUrl}/api/items`, {
+    method: 'POST',
+    headers: { Cookie: studentCookie },
+    body: reportFormData(null, { ...firstPair, type: 'lost' })
+  });
+  assert.equal(firstLostResponse.status, 201);
+  const firstLost = (await firstLostResponse.json()).item;
+
+  const firstFoundResponse = await fetch(`${baseUrl}/api/items`, {
+    method: 'POST',
+    body: reportFormData(null, { ...firstPair, type: 'found' })
+  });
+  assert.equal(firstFoundResponse.status, 201);
+  const firstFound = (await firstFoundResponse.json()).item;
+
+  const secondPair = {
+    title: 'Silver robotics team hoodie',
+    category: 'Clothing & Accessories',
+    location: 'College of Engineering and Architecture (CEA)',
+    contact: 'match.student@my.cspc.edu.ph',
+    desc: 'Embroidered blue gear on the left sleeve.',
+    verification: 'Initials R K inside the collar'
+  };
+  const secondFoundResponse = await fetch(`${baseUrl}/api/items`, {
+    method: 'POST',
+    body: reportFormData(null, { ...secondPair, type: 'found' })
+  });
+  assert.equal(secondFoundResponse.status, 201);
+  const secondFound = (await secondFoundResponse.json()).item;
+
+  const secondLostResponse = await fetch(`${baseUrl}/api/items`, {
+    method: 'POST',
+    headers: { Cookie: studentCookie },
+    body: reportFormData(null, { ...secondPair, type: 'lost' })
+  });
+  assert.equal(secondLostResponse.status, 201);
+  const secondLost = (await secondLostResponse.json()).item;
+
+  const notificationsResponse = await fetch(`${baseUrl}/api/items/my-notifications`, {
+    headers: { Cookie: studentCookie }
+  });
+  assert.equal(notificationsResponse.status, 200);
+  const { notifications, unreadCount } = await notificationsResponse.json();
+  const matchNotifications = notifications.filter(notification => notification.notificationType === 'match');
+  assert.equal(matchNotifications.length, 2);
+  assert.equal(unreadCount, 2);
+  assert.deepEqual(
+    new Set(matchNotifications.map(notification => notification.matchItemId)),
+    new Set([firstFound.id, secondFound.id])
+  );
+  assert.deepEqual(
+    new Set(matchNotifications.map(notification => notification.itemTitle)),
+    new Set([firstLost.title, secondLost.title])
+  );
+  assert.ok(matchNotifications.every(notification => /may match/i.test(notification.message)));
+  assert.ok(matchNotifications.every(notification => !Object.hasOwn(notification, 'verification')));
 });
 
 test('image upload stores a bounded image file and rejects invalid uploads', async () => {

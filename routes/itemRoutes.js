@@ -8,10 +8,12 @@ const multer = require('multer');
 const { validateItemReport, sanitizeString } = require('../middleware/validate');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
+const { sendPossibleMatchEmail } = require('../services/email');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const ITEMS_FILE = path.join(DATA_DIR, 'items.json');
 const CLAIMS_FILE = path.join(DATA_DIR, 'claims.json');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 const IMAGE_EXTENSIONS = {
   'image/jpeg': 'jpg',
@@ -165,7 +167,7 @@ function scorePotentialMatch(item, other) {
 }
 
 function findMatch(item, allItems) {
-  if (item.claimed) return null;
+  if (isItemClaimed(item)) return null;
   const targetType = item.type === 'lost' ? 'found' : 'lost';
 
   let bestMatch = null;
@@ -173,7 +175,7 @@ function findMatch(item, allItems) {
   let bestMeta = null;
 
   for (const other of allItems) {
-    if (other.id === item.id || other.type !== targetType || other.claimed) continue;
+    if (other.id === item.id || other.type !== targetType || isItemClaimed(other)) continue;
 
     const meta = scorePotentialMatch(item, other);
     if (meta.score > bestScore) {
@@ -580,7 +582,7 @@ router.post('/:id/claim-requests', requireAuth, (req, res) => {
 });
 
 // POST /api/items - Create item report
-router.post('/', upload.single('photo'), validateItemReport, (req, res) => {
+router.post('/', upload.single('photo'), validateItemReport, async (req, res) => {
   try {
     const items = getItems();
     const nextSeq = items.length + 1;
@@ -612,9 +614,52 @@ router.post('/', upload.single('photo'), validateItemReport, (req, res) => {
     };
 
     items.unshift(newItem);
+    const match = findMatch(newItem, items);
+    let matchNotification = null;
+    let matchNotificationRecipient = null;
+    if (match) {
+      const lostItem = newItem.type === 'lost' ? newItem : match;
+      const foundItem = newItem.type === 'found' ? newItem : match;
+      const student = readJsonArray(USERS_FILE).find(user =>
+        user.id === lostItem.reportedBy && user.role === 'student'
+      );
+      const notifications = Array.isArray(lostItem.notifications) ? lostItem.notifications : [];
+      const alreadyNotified = notifications.some(notification =>
+        notification.notificationType === 'match' &&
+        String(notification.matchItemId) === String(foundItem.id)
+      );
+
+      if (student && !alreadyNotified) {
+        matchNotificationRecipient = student;
+        matchNotification = {
+          id: `notif-${crypto.randomUUID()}`,
+          notificationType: 'match',
+          itemTitle: lostItem.title,
+          refCode: lostItem.refCode,
+          matchItemId: foundItem.id,
+          matchItemTitle: foundItem.title,
+          matchRefCode: foundItem.refCode,
+          message: 'A found item may match your lost-item report. Sign in to review it.',
+          timestamp: new Date().toISOString(),
+          read: false
+        };
+        lostItem.notifications = [matchNotification, ...notifications].slice(0, 100);
+      }
+    }
+
     saveItems(items);
 
-    const match = findMatch(newItem, items);
+    if (matchNotification && matchNotificationRecipient) {
+      try {
+        await sendPossibleMatchEmail(
+          matchNotificationRecipient,
+          matchNotification.matchRefCode,
+          matchNotification.matchItemId
+        );
+      } catch (error) {
+        console.error('Possible-match notification email could not be sent:', error.message);
+      }
+    }
 
     res.status(201).json({
       success: true,

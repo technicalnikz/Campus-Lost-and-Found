@@ -41,6 +41,21 @@ function togglePasswordVisibility(inputId, btn) {
       updateThemeIcon();
     }
 
+    function getPostLoginUrl(user) {
+      const requestedPath = new URLSearchParams(window.location.search).get('redirect');
+      if (requestedPath) {
+        const destination = new URL(requestedPath, window.location.origin);
+        if (
+          destination.origin === window.location.origin &&
+          destination.pathname.startsWith('/') &&
+          !(user.role !== 'admin' && destination.pathname === '/admin.html')
+        ) {
+          return `${destination.pathname}${destination.search}${destination.hash}`;
+        }
+      }
+      return user.role === 'admin' ? '/admin.html' : '/';
+    }
+
     document.addEventListener('DOMContentLoaded', loadTheme);
 
     function switchTab(tab) {
@@ -100,7 +115,7 @@ function togglePasswordVisibility(inputId, btn) {
           if (data.emailSent === false) window.alert(data.message);
           sessionStorage.setItem('currentUser', JSON.stringify(data.user));
           sessionStorage.setItem('userRole', data.user.role);
-          window.location.href = data.user.role === 'admin' ? '/admin.html' : '/';
+          window.location.href = getPostLoginUrl(data.user);
         } else {
           showError(data.message || 'Login failed. Please check your credentials.');
         }

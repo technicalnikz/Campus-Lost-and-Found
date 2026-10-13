@@ -351,7 +351,7 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
               <div>
                 <strong>Potential Match:</strong> ${escapeHtml(match.title)} (${escapeHtml(match.location)})
               </div>
-              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${match.id})">🤝 Match Handover QR</button>
+              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${match.id})">🤝 Match Reference QR</button>
             </div>
           `;
         }
@@ -635,7 +635,7 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
       document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
 
       const matchPayload = encodeURIComponent(
-        `CSPC Match | Lost: ${lost.refCode} | Found: ${found.refCode} | Verify ownership before handover`
+        `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
       );
       document.getElementById('matchQrImage').src =
         `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${matchPayload}`;
