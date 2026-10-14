@@ -1506,7 +1506,10 @@
           openReportSuccessModal(data.item.refCode, data.item.id, data.potentialMatch);
           document.getElementById('items').scrollIntoView({ behavior: 'smooth' });
         } else {
-          showToast(data.message || (data.errors ? data.errors.join(' ') : 'Validation error'), true);
+          const message = Array.isArray(data.errors) && data.errors.length
+            ? data.errors.join(' ')
+            : data.message || 'Validation error';
+          showToast(message, true);
         }
       } catch (err) {
         showToast('Network error while saving report.', true);
