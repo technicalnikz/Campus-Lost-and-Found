@@ -166,36 +166,99 @@ function scorePotentialMatch(item, other) {
   return { score, categoryMatch, sameLocation, nameSimilarity, descSimilarity, verificationScore };
 }
 
-function findMatch(item, allItems) {
-  if (isItemClaimed(item)) return null;
+function isStrongPotentialMatch(meta) {
+  const hasStrongNameSimilarity = meta.nameSimilarity >= 0.28;
+  const hasStrongDescriptionSimilarity = meta.descSimilarity >= 0.22;
+  const hasVerificationOverlap = meta.verificationScore > 0;
+  const hasStrongKeywordOverlap =
+    (meta.nameSimilarity >= 0.55 && meta.descSimilarity >= 0.35) ||
+    (meta.descSimilarity >= 0.55 && meta.nameSimilarity >= 0.35);
+  const hasStrongLocationAndKeywordOverlap =
+    meta.sameLocation && Math.max(meta.nameSimilarity, meta.descSimilarity) >= 0.55;
+
+  return (
+    meta.categoryMatch &&
+    (hasStrongNameSimilarity || hasStrongDescriptionSimilarity || hasVerificationOverlap) &&
+    meta.score >= 0.58
+  ) || (
+    !meta.categoryMatch &&
+    (hasStrongKeywordOverlap || hasStrongLocationAndKeywordOverlap)
+  );
+}
+
+function findMatches(item, allItems) {
+  if (isItemClaimed(item)) return [];
   const targetType = item.type === 'lost' ? 'found' : 'lost';
+  return allItems
+    .filter(other =>
+      other.id !== item.id &&
+      other.type === targetType &&
+      !isItemClaimed(other)
+    )
+    .map(other => ({ item: other, meta: scorePotentialMatch(item, other) }))
+    .filter(({ meta }) => isStrongPotentialMatch(meta))
+    .sort((a, b) => b.meta.score - a.meta.score)
+    .map(({ item: match }) => match);
+}
 
-  let bestMatch = null;
-  let bestScore = 0;
-  let bestMeta = null;
+function findMatch(item, allItems) {
+  return findMatches(item, allItems)[0] || null;
+}
 
-  for (const other of allItems) {
-    if (other.id === item.id || other.type !== targetType || isItemClaimed(other)) continue;
+function addMatchLink(item, other, matchedAt) {
+  if (!Array.isArray(item.matches)) item.matches = [];
+  if (item.matches.some(match => String(match.itemId) === String(other.id))) return;
 
-    const meta = scorePotentialMatch(item, other);
-    if (meta.score > bestScore) {
-      bestScore = meta.score;
-      bestMatch = other;
-      bestMeta = meta;
-    }
+  item.matches.push({
+    itemId: other.id,
+    refCode: other.refCode,
+    type: other.type,
+    status: 'possible',
+    matchedAt
+  });
+}
+
+function createMatchNotification(lostItem, foundItem) {
+  const notifications = Array.isArray(lostItem.notifications) ? lostItem.notifications : [];
+  if (notifications.some(notification =>
+    notification.notificationType === 'match' &&
+    String(notification.matchItemId) === String(foundItem.id)
+  )) {
+    return null;
   }
 
-  const hasStrongCategory = !!(bestMeta && bestMeta.categoryMatch);
-  const hasStrongNameSimilarity = !!(bestMeta && bestMeta.nameSimilarity >= 0.28);
-  const hasStrongDescriptionSimilarity = !!(bestMeta && bestMeta.descSimilarity >= 0.22);
-  const hasVerificationOverlap = !!(bestMeta && bestMeta.verificationScore > 0);
+  const notification = {
+    id: `notif-${crypto.randomUUID()}`,
+    notificationType: 'match',
+    itemTitle: lostItem.title,
+    refCode: lostItem.refCode,
+    matchItemId: foundItem.id,
+    matchItemTitle: foundItem.title,
+    matchRefCode: foundItem.refCode,
+    message: 'A found item may match your lost-item report. Sign in to review it.',
+    timestamp: new Date().toISOString(),
+    read: false
+  };
+  lostItem.notifications = [notification, ...notifications].slice(0, 100);
+  return notification;
+}
 
-  if (!bestMatch || !bestMeta) return null;
-  if (!hasStrongCategory) return null;
-  if (!hasStrongNameSimilarity && !hasStrongDescriptionSimilarity && !hasVerificationOverlap) return null;
-  if (bestScore < 0.58) return null;
+function getStudentReporter(lostItem, users) {
+  if (!lostItem.reportedBy || lostItem.reportedBy === 'guest') return null;
+  return users.find(user =>
+    user.id === lostItem.reportedBy &&
+    user.role === 'student' &&
+    /^[^\s@]+@my\.cspc\.edu\.ph$/i.test(user.email || '')
+  ) || null;
+}
 
-  return bestMatch;
+/*
+ * Persist match references on both reports. Private verification hints stay out
+ * of the link records and are never included in notification emails.
+ */
+function linkMatchedItems(lostItem, foundItem, matchedAt) {
+  addMatchLink(lostItem, foundItem, matchedAt);
+  addMatchLink(foundItem, lostItem, matchedAt);
 }
 
 // GET /api/stats - High-level overview
@@ -614,48 +677,31 @@ router.post('/', upload.single('photo'), validateItemReport, async (req, res) =>
     };
 
     items.unshift(newItem);
-    const match = findMatch(newItem, items);
-    let matchNotification = null;
-    let matchNotificationRecipient = null;
-    if (match) {
-      const lostItem = newItem.type === 'lost' ? newItem : match;
-      const foundItem = newItem.type === 'found' ? newItem : match;
-      const student = readJsonArray(USERS_FILE).find(user =>
-        user.id === lostItem.reportedBy && user.role === 'student'
-      );
-      const notifications = Array.isArray(lostItem.notifications) ? lostItem.notifications : [];
-      const alreadyNotified = notifications.some(notification =>
-        notification.notificationType === 'match' &&
-        String(notification.matchItemId) === String(foundItem.id)
-      );
+    const matches = findMatches(newItem, items);
+    const match = matches[0] || null;
+    const matchedAt = new Date().toISOString();
+    const emailNotifications = [];
+    const users = readJsonArray(USERS_FILE);
 
-      if (student && !alreadyNotified) {
-        matchNotificationRecipient = student;
-        matchNotification = {
-          id: `notif-${crypto.randomUUID()}`,
-          notificationType: 'match',
-          itemTitle: lostItem.title,
-          refCode: lostItem.refCode,
-          matchItemId: foundItem.id,
-          matchItemTitle: foundItem.title,
-          matchRefCode: foundItem.refCode,
-          message: 'A found item may match your lost-item report. Sign in to review it.',
-          timestamp: new Date().toISOString(),
-          read: false
-        };
-        lostItem.notifications = [matchNotification, ...notifications].slice(0, 100);
+    for (const matchedItem of matches) {
+      const lostItem = newItem.type === 'lost' ? newItem : matchedItem;
+      const foundItem = newItem.type === 'found' ? newItem : matchedItem;
+      linkMatchedItems(lostItem, foundItem, matchedAt);
+
+      const student = getStudentReporter(lostItem, users);
+      if (student) {
+        createMatchNotification(lostItem, foundItem);
+        if (newItem.type === 'found') {
+          emailNotifications.push({ student, lostItem, foundItem });
+        }
       }
     }
 
     saveItems(items);
 
-    if (matchNotification && matchNotificationRecipient) {
+    for (const { student, lostItem, foundItem } of emailNotifications) {
       try {
-        await sendPossibleMatchEmail(
-          matchNotificationRecipient,
-          matchNotification.matchRefCode,
-          matchNotification.matchItemId
-        );
+        await sendPossibleMatchEmail(student, lostItem, foundItem);
       } catch (error) {
         console.error('Possible-match notification email could not be sent:', error.message);
       }

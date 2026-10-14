@@ -68,26 +68,28 @@ async function sendRegistrationEmail(user) {
   });
 }
 
-async function sendPossibleMatchEmail(user, foundRefCode, foundItemId) {
+async function sendPossibleMatchEmail(user, lostItem, foundItem) {
   const matchUrl = new URL(getAppUrl('/'));
-  matchUrl.searchParams.set('search', foundRefCode);
-  matchUrl.searchParams.set('matchItemId', String(foundItemId));
+  matchUrl.searchParams.set('search', foundItem.refCode);
+  matchUrl.searchParams.set('matchItemId', String(foundItem.id));
   matchUrl.hash = 'items';
-  const reviewUrl = new URL('/login', parsedBaseUrl);
+  const reviewUrl = new URL(getAppUrl('/login'));
   reviewUrl.searchParams.set('redirect', `${matchUrl.pathname}${matchUrl.search}${matchUrl.hash}`);
 
   const transport = createTransport();
   const name = user.fullName || 'there';
   const safeName = escapeHtml(name);
   const link = reviewUrl.toString();
-  const message = 'A found item may match a lost-item report associated with your account. Sign in to review the possible match and verify ownership with campus staff. An automated match is not confirmation of ownership.';
+  const instructions = 'Sign in to Back2You to review the possible match. If you believe the found item is yours, contact the Student Affairs and Services (SAS) office or the General Services Unit / Campus Security Desk. Bring your student ID and both report reference codes. Campus staff will verify ownership before any item is returned; this automated match is not confirmation of ownership.';
+  const lostDetails = `Lost report: ${lostItem.title} (${lostItem.refCode})`;
+  const foundDetails = `Found report: ${foundItem.title} (${foundItem.refCode}) at ${foundItem.location}`;
 
   await transport.sendMail({
     from: process.env.SMTP_FROM,
     to: user.email,
     subject: 'Possible match for your Back2You lost-item report',
-    text: `Hi ${name},\n\n${message}\n\nReview the possible match: ${link}\n\nThe Back2You Team`,
-    html: `<p>Hi ${safeName},</p><p>${escapeHtml(message)}</p><p><a href="${escapeHtml(link)}">Review possible match</a></p><p>An automated match is not confirmation of ownership. Please verify ownership with campus staff before any handover.</p><p>The Back2You Team</p>`
+    text: `Hi ${name},\n\nA found item may match your lost-item report. This is only a possible match, not confirmation of ownership.\n\n${lostDetails}\n${foundDetails}\n\n${instructions}\n\nReview the possible match: ${link}\n\nThe Back2You Team`,
+    html: `<p>Hi ${safeName},</p><p>A found item may match your lost-item report. This is only a possible match, not confirmation of ownership.</p><ul><li>${escapeHtml(lostDetails)}</li><li>${escapeHtml(foundDetails)}</li></ul><p>${escapeHtml(instructions)}</p><p><a href="${escapeHtml(link)}">Review the possible match</a></p><p>The Back2You Team</p>`
   });
 }
 

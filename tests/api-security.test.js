@@ -62,6 +62,59 @@ function reportFormData(photo, overrides = {}) {
   return form;
 }
 
+async function startSmtpCaptureServer() {
+  const messages = [];
+  let recipient;
+  const server = net.createServer(socket => {
+    let input = '';
+    let dataLines = [];
+    let inData = false;
+    socket.write('220 localhost ESMTP\r\n');
+
+    socket.on('data', chunk => {
+      input += chunk.toString();
+      let lineEnd = input.indexOf('\r\n');
+      while (lineEnd !== -1) {
+        const line = input.slice(0, lineEnd);
+        input = input.slice(lineEnd + 2);
+
+        if (inData) {
+          if (line === '.') {
+            inData = false;
+            messages.push({ recipient, content: dataLines.join('\r\n') });
+            dataLines = [];
+            socket.write('250 Message accepted\r\n');
+          } else {
+            dataLines.push(line.startsWith('..') ? line.slice(1) : line);
+          }
+        } else if (/^EHLO /i.test(line) || /^HELO /i.test(line)) {
+          socket.write('250 localhost\r\n');
+        } else if (/^MAIL FROM:/i.test(line)) {
+          socket.write('250 Sender accepted\r\n');
+        } else if (/^RCPT TO:/i.test(line)) {
+          recipient = line;
+          socket.write('250 Recipient accepted\r\n');
+        } else if (/^DATA$/i.test(line)) {
+          inData = true;
+          socket.write('354 End data with <CR><LF>.<CR><LF>\r\n');
+        } else if (/^QUIT$/i.test(line)) {
+          socket.write('221 Bye\r\n');
+        } else {
+          socket.write('250 OK\r\n');
+        }
+
+        lineEnd = input.indexOf('\r\n');
+      }
+    });
+  });
+
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  return { server, messages, port: server.address().port };
+}
+
 test.before(async () => {
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cspc-lostfound-test-'));
   process.env.DATA_DIR = dataDir;
@@ -440,12 +493,42 @@ test('possible-match alerts notify the lost-report student whether the found rep
   assert.equal(firstLostResponse.status, 201);
   const firstLost = (await firstLostResponse.json()).item;
 
-  const firstFoundResponse = await fetch(`${baseUrl}/api/items`, {
-    method: 'POST',
-    body: reportFormData(null, { ...firstPair, type: 'found' })
-  });
+  const smtp = await startSmtpCaptureServer();
+  const mailEnvironment = Object.fromEntries(
+    ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'APP_BASE_URL']
+      .map(key => [key, process.env[key]])
+  );
+  process.env.SMTP_HOST = '127.0.0.1';
+  process.env.SMTP_PORT = String(smtp.port);
+  process.env.SMTP_SECURE = 'false';
+  process.env.SMTP_FROM = 'Back2You <noreply@example.edu>';
+  process.env.APP_BASE_URL = baseUrl;
+  delete process.env.SMTP_USER;
+  delete process.env.SMTP_PASS;
+
+  let firstFoundResponse;
+  try {
+    firstFoundResponse = await fetch(`${baseUrl}/api/items`, {
+      method: 'POST',
+      body: reportFormData(null, { ...firstPair, type: 'found' })
+    });
+  } finally {
+    await new Promise((resolve, reject) => smtp.server.close(error => error ? reject(error) : resolve()));
+    Object.entries(mailEnvironment).forEach(([key, value]) => {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    });
+  }
   assert.equal(firstFoundResponse.status, 201);
   const firstFound = (await firstFoundResponse.json()).item;
+  assert.equal(smtp.messages.length, 1);
+  assert.match(smtp.messages[0].recipient, /match\.student@my\.cspc\.edu\.ph/i);
+  assert.match(smtp.messages[0].content, /Possible match for your Back2You lost-item report/i);
+  assert.ok(smtp.messages[0].content.includes(firstLost.refCode));
+  assert.ok(smtp.messages[0].content.includes(firstFound.refCode));
+  assert.match(smtp.messages[0].content, /Student Affairs and Services/i);
+  assert.match(smtp.messages[0].content, /Campus Security Desk/i);
+  assert.doesNotMatch(smtp.messages[0].content, /Gold comet sticker under the hinge/);
 
   const secondPair = {
     title: 'Silver robotics team hoodie',
@@ -470,6 +553,33 @@ test('possible-match alerts notify the lost-report student whether the found rep
   assert.equal(secondLostResponse.status, 201);
   const secondLost = (await secondLostResponse.json()).item;
 
+  const mismatchedCategoryPair = {
+    title: 'Graphing scientific calculator',
+    location: 'Library',
+    contact: 'guest@example.edu',
+    desc: 'Casio fx calculator with a cracked lower-right corner.'
+  };
+  const mismatchedCategoryLostResponse = await fetch(`${baseUrl}/api/items`, {
+    method: 'POST',
+    body: reportFormData(null, {
+      ...mismatchedCategoryPair,
+      type: 'lost',
+      category: 'Electronics'
+    })
+  });
+  assert.equal(mismatchedCategoryLostResponse.status, 201);
+  const mismatchedCategoryLost = (await mismatchedCategoryLostResponse.json()).item;
+  const mismatchedCategoryFoundResponse = await fetch(`${baseUrl}/api/items`, {
+    method: 'POST',
+    body: reportFormData(null, {
+      ...mismatchedCategoryPair,
+      type: 'found',
+      category: 'Others'
+    })
+  });
+  assert.equal(mismatchedCategoryFoundResponse.status, 201);
+  const mismatchedCategoryFound = (await mismatchedCategoryFoundResponse.json()).item;
+
   const notificationsResponse = await fetch(`${baseUrl}/api/items/my-notifications`, {
     headers: { Cookie: studentCookie }
   });
@@ -488,6 +598,24 @@ test('possible-match alerts notify the lost-report student whether the found rep
   );
   assert.ok(matchNotifications.every(notification => /may match/i.test(notification.message)));
   assert.ok(matchNotifications.every(notification => !Object.hasOwn(notification, 'verification')));
+
+  const savedItems = JSON.parse(fs.readFileSync(path.join(dataDir, 'items.json'), 'utf8'));
+  const savedLost = savedItems.find(item => String(item.id) === String(firstLost.id));
+  const savedFound = savedItems.find(item => String(item.id) === String(firstFound.id));
+  assert.ok(savedLost.matches.some(match => String(match.itemId) === String(firstFound.id)));
+  assert.ok(savedFound.matches.some(match => String(match.itemId) === String(firstLost.id)));
+  const savedMismatchedCategoryLost = savedItems.find(item =>
+    String(item.id) === String(mismatchedCategoryLost.id)
+  );
+  const savedMismatchedCategoryFound = savedItems.find(item =>
+    String(item.id) === String(mismatchedCategoryFound.id)
+  );
+  assert.ok(savedMismatchedCategoryLost.matches.some(match =>
+    String(match.itemId) === String(mismatchedCategoryFound.id)
+  ));
+  assert.ok(savedMismatchedCategoryFound.matches.some(match =>
+    String(match.itemId) === String(mismatchedCategoryLost.id)
+  ));
 });
 
 test('image upload stores a bounded image file and rejects invalid uploads', async () => {
