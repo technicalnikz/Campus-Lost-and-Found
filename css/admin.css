@@ -394,7 +394,8 @@
       .admin-navbar .nav-links { top: 100%; width: auto; justify-content: flex-start; gap: 1.5rem; }
       .admin-navbar .nav-logo-short { font-size: .72rem; }
       .admin-profile .user-name { max-width: 105px; font-size: .7rem; }
-      .admin-profile { gap: .35rem; padding: 0 .5rem; }
+      .admin-profile { max-width: 122px; gap: .2rem; padding: 0 .3rem; }
+      .admin-profile .user-pill-logout { display: inline-flex; font-size: .58rem; padding-inline: .2rem; }
       .claim-review-grid { grid-template-columns: 1fr; }
       .claim-review-dialog { padding: 1rem; }
       .pending-claim-card { grid-template-columns:1fr; }
