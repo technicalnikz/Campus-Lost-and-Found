@@ -598,8 +598,8 @@ router.get('/match-reference-token', requireRole(['admin', 'staff']), (req, res)
   });
 });
 
-// GET /api/items/match-reference/:token - Resolve a staff-only QR link.
-router.get('/match-reference/:token', requireRole(['admin', 'staff']), (req, res) => {
+// GET /api/items/match-reference/:token - Resolve a QR link with role-appropriate detail.
+router.get('/match-reference/:token', requireAuth, (req, res) => {
   const reference = parseMatchReferenceToken(req.params.token);
   if (!reference || reference.expiresAt <= Date.now()) {
     return res.status(410).json({ success: false, message: 'This match reference has expired. Generate a new QR code.' });
@@ -611,11 +611,23 @@ router.get('/match-reference/:token', requireRole(['admin', 'staff']), (req, res
   if (!lost || !found) return res.status(404).json({ success: false, message: 'Match reports are no longer available.' });
 
   const claims = getClaims();
+  const status = getMatchReferenceStatus(found, claims);
+  if (!['admin', 'staff'].includes(req.session.user.role)) {
+    return res.json({
+      success: true,
+      view: 'status-only',
+      issuedAt: new Date(reference.issuedAt).toISOString(),
+      expiresAt: new Date(reference.expiresAt).toISOString(),
+      status
+    });
+  }
+
   res.json({
     success: true,
+    view: 'staff',
     issuedAt: new Date(reference.issuedAt).toISOString(),
     expiresAt: new Date(reference.expiresAt).toISOString(),
-    status: getMatchReferenceStatus(found, claims),
+    status,
     lost: publicItemView(lost),
     found: publicItemView(found),
     pendingClaims: claims.filter(claim => String(claim.itemId) === String(found.id) && claim.status === 'pending').length
