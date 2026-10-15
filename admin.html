@@ -100,12 +100,6 @@
           <span id="selectedItemsCount">0 selected</span>
           <button class="action-btn action-btn-claim" id="bulkClaimBtn" disabled>Mark Claimed</button>
           <button class="action-btn action-btn-outline" id="bulkArchiveBtn" disabled>Archive Selected</button>
-          <select class="form-control bulk-status-select" id="bulkStatusSelect" aria-label="Bulk status update" disabled>
-            <option value="">Bulk Status…</option>
-            <option value="active">Active</option>
-            <option value="claimed">Claimed</option>
-            <option value="archived">Archived</option>
-          </select>
           <button class="action-btn action-btn-delete" id="bulkDeleteBtn" disabled>Delete Selected</button>
           <button class="btn btn-outline" id="exportSelectedBtn" disabled>Export Selected</button>
         </div>
@@ -185,6 +179,17 @@
       <div style="display:flex;gap:.75rem;justify-content:center;">
         <button class="btn btn-outline" id="cancelDelete">Cancel</button>
         <button class="action-btn action-btn-delete" id="confirmDelete" style="padding:.6rem 1.2rem;font-size:.85rem;">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="del-modal-backdrop" id="actionConfirmModal">
+    <div class="del-modal">
+      <h3 id="actionConfirmTitle">Confirm Action</h3>
+      <p id="actionConfirmMsg">Are you sure?</p>
+      <div style="display:flex;gap:.75rem;justify-content:center;">
+        <button class="btn btn-outline" id="cancelActionConfirm">Cancel</button>
+        <button class="btn btn-primary" id="confirmActionConfirm">Continue</button>
       </div>
     </div>
   </div>

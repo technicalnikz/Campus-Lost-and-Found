@@ -6,6 +6,7 @@ let deleteTargetId = null;
     let activeClaimReviewId = null;
     let adminRefreshInProgress = false;
     let adminItemsSignature = null;
+    let actionConfirmResolver = null;
     let cachedServerItems = [];
     const selectedItemIds = new Set();
     let adminSort = { key: 'date', direction: 'desc' };
@@ -73,15 +74,13 @@ let deleteTargetId = null;
       document.getElementById('bulkClaimBtn').addEventListener('click', () => runBulkAction('claim'));
       document.getElementById('bulkArchiveBtn').addEventListener('click', () => runBulkAction('archive'));
       document.getElementById('bulkDeleteBtn').addEventListener('click', () => runBulkAction('delete'));
-      document.getElementById('bulkStatusSelect').addEventListener('change', event => {
-        if (event.target.value) runBulkAction('status', event.target.value);
-        event.target.value = '';
-      });
       document.getElementById('exportSelectedBtn').addEventListener('click', () => exportCSV([...selectedItemIds]));
       document.getElementById('refreshClaimsBtn').addEventListener('click', refreshAdminClaims);
       document.getElementById('sendBroadcastBtn').addEventListener('click', sendBroadcast);
       document.getElementById('saveActivityNote').addEventListener('click', saveActivityNote);
       document.getElementById('activityModal').addEventListener('click', event => { if (event.target.id === 'activityModal') closeActivityModal(); });
+      document.getElementById('cancelActionConfirm').addEventListener('click', closeActionConfirm);
+      document.getElementById('actionConfirmModal').addEventListener('click', event => { if (event.target.id === 'actionConfirmModal') closeActionConfirm(); });
       document.getElementById('selectAllItems').addEventListener('change', toggleSelectAllVisible);
       document.getElementById('adminFilterDate').addEventListener('change', () => { adminCurrentPage = 1; renderItemsTable(); });
       document.querySelectorAll('.sort-button').forEach(button => button.addEventListener('click', () => {
@@ -153,6 +152,7 @@ let deleteTargetId = null;
         adminClaimsSignature = nextSignature;
         claimRequests = data.claims;
         document.getElementById('pendingClaimsTabCount').textContent = claimRequests.filter(claim => claim.status === 'pending').length;
+        renderAdminPanel(adminItems);
         renderItemsTable();
         renderPendingClaims();
       } catch (error) {
@@ -174,7 +174,7 @@ let deleteTargetId = null;
         <div class="stat-card"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
         <div class="stat-card"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
         <div class="stat-card"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
-        <div class="stat-card"><div class="stat-number">${pending}</div><div class="stat-label">Pending</div></div>
+        <div class="stat-card"><div class="stat-number">${staleActive}</div><div class="stat-label">Unresolved</div></div>
         <div class="stat-card"><div class="stat-number">${pendingClaims.length}</div><div class="stat-label">Pending Claims</div></div>
         <div class="stat-card action-needed-card"><div class="stat-number">${pending}</div><div class="stat-label">Action Needed</div></div>
       `;
@@ -591,16 +591,35 @@ let deleteTargetId = null;
     function updateBulkToolbar() {
       const count = selectedItemIds.size;
       document.getElementById('selectedItemsCount').textContent = `${count} selected`;
-      ['bulkClaimBtn', 'bulkArchiveBtn', 'bulkDeleteBtn', 'exportSelectedBtn', 'bulkStatusSelect'].forEach(id => { document.getElementById(id).disabled = count === 0; });
+      ['bulkClaimBtn', 'bulkArchiveBtn', 'bulkDeleteBtn', 'exportSelectedBtn'].forEach(id => { document.getElementById(id).disabled = count === 0; });
     }
 
-    async function runBulkAction(action, status = '') {
+    function openActionConfirm(title, message) {
+      return new Promise(resolve => {
+        const modal = document.getElementById('actionConfirmModal');
+        const confirmButton = document.getElementById('confirmActionConfirm');
+        document.getElementById('actionConfirmTitle').textContent = title;
+        document.getElementById('actionConfirmMsg').textContent = message;
+        modal.classList.add('open');
+        const finish = value => { modal.classList.remove('open'); actionConfirmResolver = null; resolve(value); };
+        actionConfirmResolver = () => finish(false);
+        confirmButton.onclick = () => finish(true);
+        document.getElementById('cancelActionConfirm').onclick = () => finish(false);
+      });
+    }
+
+    function closeActionConfirm() {
+      if (actionConfirmResolver) actionConfirmResolver();
+      else document.getElementById('actionConfirmModal').classList.remove('open');
+    }
+
+    async function runBulkAction(action) {
       const ids = [...selectedItemIds];
       if (!ids.length) return;
-      const actionText = action === 'delete' ? 'delete' : action === 'archive' ? 'archive' : status ? `set to ${status}` : 'mark as claimed';
-      if (!window.confirm(`Are you sure you want to ${actionText} ${ids.length} selected item(s)?`)) return;
+      const actionText = action === 'delete' ? 'delete' : action === 'archive' ? 'archive' : 'mark as claimed';
+      if (!await openActionConfirm('Confirm Bulk Action', `Are you sure you want to ${actionText} ${ids.length} selected item(s)?`)) return;
       try {
-        const response = await adminFetch('/api/items/bulk', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, action, status }) });
+        const response = await adminFetch('/api/items/bulk', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, action }) });
         const data = await response.json();
         if (!response.ok || !data.success) throw new Error(data.message || 'Bulk operation failed.');
         ids.forEach(id => selectedItemIds.delete(id));
@@ -614,7 +633,7 @@ let deleteTargetId = null;
       const subject = document.getElementById('broadcastSubject').value.trim();
       const message = document.getElementById('broadcastMessage').value.trim();
       if (subject.length < 3 || message.length < 5) return showToast('Enter a subject and message first.', 'error');
-      if (!window.confirm('Send this announcement to all registered students?')) return;
+      if (!await openActionConfirm('Confirm Broadcast', 'Send this announcement to all registered students?')) return;
       const button = document.getElementById('sendBroadcastBtn');
       button.disabled = true;
       try {
