@@ -31,7 +31,7 @@ let currentUser = null;
           sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
           sessionStorage.setItem('userRole', currentUser.role);
           const isAdmin = currentUser.role === 'admin';
-          const roleLabel = isAdmin ? 'SAO ADMIN' : 'Student';
+          const roleLabel = isAdmin ? 'CSPC ADMIN' : 'Student';
           document.getElementById('userNavSlot').innerHTML = `
             <button type="button" id="notifBellBtn" onclick="openNotificationsModal()" class="notif-bell-btn" title="View QR Recovery Alerts">
               🔔 <span id="notifCountBadge" class="notif-badge" style="display:none;">0</span>

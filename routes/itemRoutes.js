@@ -646,8 +646,8 @@ router.get('/match-reference-token', requireAuth, (req, res) => {
   if (!lost || !found) {
     return res.status(404).json({ success: false, message: 'The matched lost and found reports could not be found.' });
   }
-  const isStaff = ['admin', 'staff'].includes(req.session.user.role);
-  if (!isStaff && !findMatches(lost, items).some(match => String(match.id) === String(found.id))) {
+  const isAdmin = req.session.user.role === 'admin';
+  if (!isAdmin && !findMatches(lost, items).some(match => String(match.id) === String(found.id))) {
     return res.status(403).json({ success: false, message: 'This report pair is not an available match reference.' });
   }
 
@@ -658,7 +658,7 @@ router.get('/match-reference-token', requireAuth, (req, res) => {
   const status = getMatchReferenceStatus(found, getClaims());
   const baseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get('host')}`;
   const url = `${baseUrl.replace(/\/$/, '')}/match-reference?token=${encodeURIComponent(token)}`;
-  if (!isStaff) {
+  if (!isAdmin) {
     return res.json({
       success: true,
       view: 'status-only',
@@ -707,7 +707,7 @@ router.get('/match-reference/:token', (req, res) => {
   });
   found.matchScanLog = found.matchScanLog.slice(0, 100);
   saveItems(items);
-  if (!['admin', 'staff'].includes(req.session?.user?.role)) {
+  if (req.session?.user?.role !== 'admin') {
     return res.json({
       success: true,
       view: 'status-only',
@@ -721,7 +721,7 @@ router.get('/match-reference/:token', (req, res) => {
 
   res.json({
     success: true,
-    view: 'staff',
+    view: 'admin',
     issuedAt: new Date(reference.issuedAt).toISOString(),
     expiresAt: new Date(reference.expiresAt).toISOString(),
     referenceId,
