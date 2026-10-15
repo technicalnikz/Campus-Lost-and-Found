@@ -575,8 +575,13 @@ router.get('/my-notifications', requireAuth, (req, res) => {
 // GET /api/items/match-reference-token - Create a short-lived verification link.
 router.get('/match-reference-token', requireAuth, (req, res) => {
   const items = getItems();
-  const lost = items.find(item => String(item.id) === String(req.query.lostId) && item.type === 'lost');
-  const found = items.find(item => String(item.id) === String(req.query.foundId) && item.type === 'found');
+  const first = items.find(item => String(item.id) === String(req.query.lostId) || String(item.id) === String(req.query.foundId));
+  const second = items.find(item =>
+    String(item.id) !== String(first?.id) &&
+    (String(item.id) === String(req.query.lostId) || String(item.id) === String(req.query.foundId))
+  );
+  const lost = [first, second].find(item => item?.type === 'lost');
+  const found = [first, second].find(item => item?.type === 'found');
   if (!lost || !found) {
     return res.status(404).json({ success: false, message: 'The matched lost and found reports could not be found.' });
   }
