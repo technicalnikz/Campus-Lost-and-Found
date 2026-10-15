@@ -77,8 +77,6 @@ let deleteTargetId = null;
       document.getElementById('exportSelectedBtn').addEventListener('click', () => exportCSV([...selectedItemIds]));
       document.getElementById('refreshClaimsBtn').addEventListener('click', refreshAdminClaims);
       document.getElementById('sendBroadcastBtn').addEventListener('click', sendBroadcast);
-      document.getElementById('saveActivityNote').addEventListener('click', saveActivityNote);
-      document.getElementById('activityModal').addEventListener('click', event => { if (event.target.id === 'activityModal') closeActivityModal(); });
       document.getElementById('cancelActionConfirm').addEventListener('click', closeActionConfirm);
       document.getElementById('actionConfirmModal').addEventListener('click', event => { if (event.target.id === 'actionConfirmModal') closeActionConfirm(); });
       document.getElementById('selectAllItems').addEventListener('change', toggleSelectAllVisible);
@@ -322,18 +320,6 @@ let deleteTargetId = null;
         if (input.checked) selectedItemIds.add(id); else selectedItemIds.delete(id);
         updateBulkToolbar();
       }));
-      tbody.querySelectorAll('tr').forEach((row, index) => {
-        const item = pageItems[index];
-        if (!item) return;
-        const statusCell = row.querySelector('.status-cell');
-        statusCell.insertAdjacentHTML('afterbegin', `<select class="inline-status-select" data-item-id="${escHtml(item.id)}" aria-label="Update status for ${escHtml(item.title)}"><option value="active" ${!['claimed', 'archived'].includes(item.status) ? 'selected' : ''}>Active</option><option value="claimed" ${item.status === 'claimed' ? 'selected' : ''}>Claimed</option><option value="archived" ${item.status === 'archived' ? 'selected' : ''}>Archived</option></select>`);
-        row.querySelector('.action-buttons').insertAdjacentHTML('afterbegin', `<button class="action-btn action-btn-outline" onclick="openActivityModal('${item.id}')">History</button>`);
-        row.querySelector('.inline-status-select').addEventListener('change', event => {
-          if (event.target.value === 'archived') updateItemStatus(item.id, 'archived');
-          else if (event.target.value === 'claimed') updateItemClaimStatus(item.id, 'Inline status update by moderator.');
-          else if (item.status === 'claimed' || item.status === 'archived') updateItemStatus(item.id, 'active');
-        });
-      });
       updateBulkToolbar();
     }
 

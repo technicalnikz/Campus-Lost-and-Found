@@ -162,15 +162,6 @@
     </div>
   </div>
 
-  <div class="activity-modal-backdrop" id="activityModal" role="dialog" aria-modal="true" aria-labelledby="activityTitle">
-    <div class="activity-dialog">
-      <div class="claim-review-header"><h2 id="activityTitle">Item Activity</h2><button class="claim-review-close" onclick="closeActivityModal()">&times;</button></div>
-      <div id="activityContent"></div>
-      <textarea id="activityNote" class="claim-review-input" maxlength="500" rows="2" placeholder="Add an accountability note..."></textarea>
-      <button class="btn btn-primary" id="saveActivityNote">Save Note</button>
-    </div>
-  </div>
-
   <!-- Delete Confirm Modal -->
   <div class="del-modal-backdrop" id="deleteModal">
     <div class="del-modal">
@@ -212,9 +203,12 @@
 
   <!-- Footer -->
   <footer class="site-footer">
-    <div class="footer-left">
-      <p>CSPC Lost &amp; Found System</p>
-      <p>Camarines Sur Polytechnic Colleges</p>
+    <div class="footer-left" style="display:flex;align-items:center;gap:.85rem;">
+      <img src="cspc-logo.png" alt="CSPC Logo" style="width:38px;height:38px;object-fit:contain;border-radius:50%;background:#fff;padding:2px;" />
+      <div>
+        <p style="font-weight:700;color:var(--text-main);">Camarines Sur Polytechnic Colleges</p>
+        <p>Back2You</p>
+      </div>
     </div>
     <div class="footer-right">
       <p>Nabua, Camarines Sur</p>

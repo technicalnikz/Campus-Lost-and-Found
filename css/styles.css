@@ -40,6 +40,7 @@ html {
 body {
   background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark2) 100%);
   min-height: 100vh;
+  padding-bottom: 104px;
   color: var(--text-main);
 }
 
@@ -882,17 +883,26 @@ h2 {
 
 /* ── FOOTER ── */
 .site-footer {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 900;
+  width: min(900px, calc(100% - 2rem));
+  min-height: 88px;
+  padding: 1.25rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 1rem;
   border-top: 1px solid var(--border);
-  position: relative;
-  z-index: 1;
+  background: linear-gradient(135deg, rgba(24,24,27,.98), rgba(39,39,42,.98));
+  box-shadow: 0 -10px 30px rgba(0,0,0,.18);
+}
+
+[data-theme='light'] .site-footer {
+  background: rgba(248,250,252,.98);
 }
 
 .footer-left p,
@@ -1073,6 +1083,8 @@ select option {
 }
 
 @media (max-width: 768px) {
+  body { padding-bottom: 128px; }
+  .site-footer { width: calc(100% - 1rem); min-height: 112px; padding: 1rem; }
   .nav-actions > .nav-register-btn {
     display: none !important;
   }
