@@ -654,6 +654,7 @@ router.get('/match-reference-token', requireAuth, (req, res) => {
   const issuedAt = Date.now();
   const expiresAt = issuedAt + MATCH_REFERENCE_TTL_MS;
   const token = createMatchReferenceToken(lost.id, found.id, issuedAt);
+  const referenceId = `MR-${issuedAt.toString(36).toUpperCase()}`;
   const status = getMatchReferenceStatus(found, getClaims());
   const baseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get('host')}`;
   const url = `${baseUrl.replace(/\/$/, '')}/match-reference?token=${encodeURIComponent(token)}`;
@@ -663,6 +664,7 @@ router.get('/match-reference-token', requireAuth, (req, res) => {
       view: 'status-only',
       token,
       url,
+      referenceId,
       issuedAt: new Date(issuedAt).toISOString(),
       expiresAt: new Date(expiresAt).toISOString(),
       status
@@ -672,6 +674,7 @@ router.get('/match-reference-token', requireAuth, (req, res) => {
     success: true,
     token,
     url,
+    referenceId,
     issuedAt: new Date(issuedAt).toISOString(),
     expiresAt: new Date(expiresAt).toISOString(),
     status,
@@ -694,12 +697,22 @@ router.get('/match-reference/:token', (req, res) => {
 
   const claims = getClaims();
   const status = getMatchReferenceStatus(found, claims);
+  const referenceId = `MR-${reference.issuedAt.toString(36).toUpperCase()}`;
+  if (!Array.isArray(found.matchScanLog)) found.matchScanLog = [];
+  found.matchScanLog.unshift({
+    scannedAt: new Date().toISOString(),
+    scannerId: req.session?.user?.id || 'anonymous',
+    scannerRole: req.session?.user?.role || 'anonymous'
+  });
+  found.matchScanLog = found.matchScanLog.slice(0, 100);
+  saveItems(items);
   if (!['admin', 'staff'].includes(req.session?.user?.role)) {
     return res.json({
       success: true,
       view: 'status-only',
       issuedAt: new Date(reference.issuedAt).toISOString(),
       expiresAt: new Date(reference.expiresAt).toISOString(),
+      referenceId,
       status
     });
   }
@@ -709,6 +722,9 @@ router.get('/match-reference/:token', (req, res) => {
     view: 'staff',
     issuedAt: new Date(reference.issuedAt).toISOString(),
     expiresAt: new Date(reference.expiresAt).toISOString(),
+    referenceId,
+    scanCount: found.matchScanLog.length,
+    lastScannedAt: found.matchScanLog[0].scannedAt,
     status,
     lost: publicItemView(lost),
     found: publicItemView(found),
