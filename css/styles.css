@@ -1792,8 +1792,12 @@ select::placeholder,
 }
 
 .photo-preview-box button {
-  top: 0.65rem !important;
-  right: 0.65rem !important;
+  top: 50% !important;
+  right: 0.55rem !important;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: 999px !important;
   width: 2rem;
@@ -1805,7 +1809,7 @@ select::placeholder,
 
 .photo-preview-box button::before {
   content: '×';
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   line-height: 1;
 }
 
