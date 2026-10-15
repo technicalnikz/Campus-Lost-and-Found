@@ -329,7 +329,7 @@
     [data-theme='light'] .del-modal p  { color: #475569; }
 
     .admin-navbar .navbar-container { max-width: 1280px; }
-    .admin-navbar .nav-links { gap: 1.15rem; }
+    .admin-navbar .nav-links { gap: 1.75rem; }
     .admin-navbar .nav-links a { font-size: .78rem; }
     .admin-navbar .nav-actions { gap: .5rem; }
     .admin-profile { gap: .5rem; }
@@ -385,7 +385,7 @@
       #adminPanel .page-header h1 { font-size: 1.8rem; }
       .admin-navbar .navbar-container { flex-wrap: wrap; gap: .35rem; padding: .45rem .75rem; }
       .admin-navbar .nav-actions { width: 100%; justify-content: flex-end; flex-wrap: wrap; }
-      .admin-navbar .nav-links { top: 100%; gap: 1rem; }
+      .admin-navbar .nav-links { top: 100%; gap: 1.5rem; }
       .admin-navbar .nav-logo-short { font-size: .72rem; }
       .admin-profile .user-name { max-width: 105px; font-size: .7rem; }
       .admin-profile { gap: .35rem; padding: 0 .5rem; }
