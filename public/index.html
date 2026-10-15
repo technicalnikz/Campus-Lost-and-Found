@@ -660,12 +660,15 @@
 
         <div style="display: inline-block; padding: 0.5rem; background: #ffffff; border: 1.5px solid #0f172a; border-radius: 8px; margin-bottom: 0.5rem;">
           <img id="matchQrImage" src="" alt="Match Verification QR" style="width: 130px; height: 130px; display: block;" />
+        <div id="matchQrStatus" style="margin-top: 0.55rem; font-size: 0.78rem; font-weight: 900; color: #2563eb;">Status: Pending Verification</div>
+        <div id="matchQrDates" style="margin-top: 0.25rem; font-size: 0.68rem; color: #64748b;">Generated: — · Expires: —</div>
         </div>
         <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Reference lookup only — not handover approval</div>
       </div>
 
       <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end;">
         <button class="btn btn-outline" onclick="closeMatchQrModal()">Close</button>
+        <a class="btn btn-outline" id="matchStaffAction" href="#" target="_blank" rel="noopener">Open Staff Verification</a>
         <button class="btn btn-primary" onclick="printMatchQr()">🖨️ Print Match Reference</button>
       </div>
     </div>
@@ -1268,29 +1271,30 @@
     // ── Match QR Modal ────────────────────────────────────────────────────────
     async function openMatchQrModal(lostId, foundId) {
       try {
-        const [r1, r2] = await Promise.all([
-          fetch(`/api/items/${lostId}`).then(r => r.json()),
-          fetch(`/api/items/${foundId}`).then(r => r.json())
-        ]);
-        const first = r1.item || {};
-        const second = r2.item || {};
-        const lost = first.type === 'lost' ? first : second;
-        const found = first.type === 'found' ? first : second;
+        const response = await fetch(`/api/items/match-reference-token?lostId=${encodeURIComponent(lostId)}&foundId=${encodeURIComponent(foundId)}`);
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'Could not create match reference.');
+        const { lost, found } = data;
 
         document.getElementById('matchLostTitle').textContent  = lost.title  || '—';
         document.getElementById('matchFoundTitle').textContent = found.title || '—';
         document.getElementById('matchLostRef').textContent    = lost.refCode  || '—';
         document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
 
-        const matchPayload = encodeURIComponent(
+        document.getElementById('matchQrStatus').textContent = `Status: ${data.status.label}`;
+        document.getElementById('matchQrDates').textContent = `Generated: ${formatTimestamp(data.issuedAt)} · Expires: ${formatTimestamp(data.expiresAt)}`;
+        document.getElementById('matchStaffAction').href = data.url;
+
+        const legacyMatchPayload = encodeURIComponent(
           `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
         );
+        const matchPayload = encodeURIComponent(data.url);
         document.getElementById('matchQrImage').src =
           `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${matchPayload}`;
 
         document.getElementById('matchQrModal').classList.add('open');
       } catch (err) {
-        showToast('Could not generate match QR. Please try again.', 'error');
+        showToast(err.message || 'Could not generate match QR. Please try again.', 'error');
       }
     }
 
@@ -1300,6 +1304,32 @@
 
     function printMatchQr() {
       window.print();
+    }
+
+    async function openMatchReferenceFromQr(token) {
+      if (!token) return;
+      try {
+        const response = await fetch(`/api/items/match-reference/${encodeURIComponent(token)}`, { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          if (response.status === 401 || response.status === 403) {
+            showToast('Staff sign-in is required to open this verification reference.', 'error');
+            return;
+          }
+          throw new Error(data.message || 'This match reference is unavailable.');
+        }
+        document.getElementById('matchLostTitle').textContent = data.lost.title || '—';
+        document.getElementById('matchFoundTitle').textContent = data.found.title || '—';
+        document.getElementById('matchLostRef').textContent = data.lost.refCode || '—';
+        document.getElementById('matchFoundRef').textContent = data.found.refCode || '—';
+        document.getElementById('matchQrStatus').textContent = `Status: ${data.status.label}`;
+        document.getElementById('matchQrDates').textContent = `Generated: ${formatTimestamp(data.issuedAt)} · Expires: ${formatTimestamp(data.expiresAt)}`;
+        document.getElementById('matchStaffAction').href = window.location.href;
+        document.getElementById('matchQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
+        document.getElementById('matchQrModal').classList.add('open');
+      } catch (error) {
+        showToast(error.message || 'Could not open match verification.', 'error');
+      }
     }
 
     // ── Notifications Modal ───────────────────────────────────────────────────
@@ -1752,6 +1782,7 @@
       fetchStats();
       window.setInterval(loadMyNotifications, 30000);
       const matchParams = new URLSearchParams(window.location.search);
+      openMatchReferenceFromQr(matchParams.get('token'));
       if (matchParams.get('matchItemId') && matchParams.get('search')) {
         document.getElementById('searchInput').value = matchParams.get('search');
       }

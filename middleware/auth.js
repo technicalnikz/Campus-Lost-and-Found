@@ -11,6 +11,7 @@ function requireAuth(req, res, next) {
 }
 
 function requireRole(role) {
+  const allowedRoles = Array.isArray(role) ? role : [role];
   return function (req, res, next) {
     if (!req.session || !req.session.user) {
       return res.status(401).json({
@@ -19,10 +20,10 @@ function requireRole(role) {
       });
     }
 
-    if (req.session.user.role !== role && req.session.user.role !== 'admin') {
+    if (!allowedRoles.includes(req.session.user.role) && req.session.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message: `Forbidden: This action requires the '${role}' role.`
+        message: `Forbidden: This action requires one of these roles: ${allowedRoles.join(', ')}.`
       });
     }
     next();

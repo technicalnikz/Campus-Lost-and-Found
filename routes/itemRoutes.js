@@ -93,6 +93,43 @@ function saveClaims(claims) {
   writeJsonArray(CLAIMS_FILE, claims);
 }
 
+const MATCH_REFERENCE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+function matchReferenceSecret() {
+  return process.env.SESSION_SECRET || 'cspc-lostfound-development-only';
+}
+
+function createMatchReferenceToken(lostId, foundId, issuedAt = Date.now()) {
+  const expiresAt = issuedAt + MATCH_REFERENCE_TTL_MS;
+  const payload = `${lostId}.${foundId}.${issuedAt}.${expiresAt}`;
+  const signature = crypto.createHmac('sha256', matchReferenceSecret()).update(payload).digest('hex');
+  return `${payload}.${signature}`;
+}
+
+function parseMatchReferenceToken(token) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 5) return null;
+  const [lostId, foundId, issuedAtText, expiresAtText, signature] = parts;
+  const issuedAt = Number(issuedAtText);
+  const expiresAt = Number(expiresAtText);
+  if (!lostId || !foundId || !Number.isSafeInteger(issuedAt) || !Number.isSafeInteger(expiresAt) || !signature) return null;
+
+  const payload = `${lostId}.${foundId}.${issuedAt}.${expiresAt}`;
+  const expected = crypto.createHmac('sha256', matchReferenceSecret()).update(payload).digest('hex');
+  if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  return { lostId, foundId, issuedAt, expiresAt };
+}
+
+function getMatchReferenceStatus(foundItem, claims) {
+  if (isItemClaimed(foundItem) || claims.some(claim => String(claim.itemId) === String(foundItem.id) && claim.status === 'approved')) {
+    return { key: 'approved', label: 'Approved for Claim' };
+  }
+  if (claims.some(claim => String(claim.itemId) === String(foundItem.id) && claim.status === 'pending')) {
+    return { key: 'review', label: 'Under Review' };
+  }
+  return { key: 'pending', label: 'Pending Verification' };
+}
+
 // Helper: Smart Match & Reconciliation Detector
 function normalizeText(value) {
   return String(value || '')
@@ -532,6 +569,56 @@ router.get('/my-notifications', requireAuth, (req, res) => {
     success: true,
     notifications,
     unreadCount: notifications.filter(n => !n.read).length
+  });
+});
+
+// GET /api/items/match-reference-token - Create a short-lived staff verification link.
+router.get('/match-reference-token', requireRole(['admin', 'staff']), (req, res) => {
+  const items = getItems();
+  const lost = items.find(item => String(item.id) === String(req.query.lostId) && item.type === 'lost');
+  const found = items.find(item => String(item.id) === String(req.query.foundId) && item.type === 'found');
+  if (!lost || !found) {
+    return res.status(404).json({ success: false, message: 'The matched lost and found reports could not be found.' });
+  }
+
+  const issuedAt = Date.now();
+  const expiresAt = issuedAt + MATCH_REFERENCE_TTL_MS;
+  const token = createMatchReferenceToken(lost.id, found.id, issuedAt);
+  const status = getMatchReferenceStatus(found, getClaims());
+  const baseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get('host')}`;
+  res.json({
+    success: true,
+    token,
+    url: `${baseUrl.replace(/\/$/, '')}/match-reference?token=${encodeURIComponent(token)}`,
+    issuedAt: new Date(issuedAt).toISOString(),
+    expiresAt: new Date(expiresAt).toISOString(),
+    status,
+    lost: { id: lost.id, title: lost.title, refCode: lost.refCode },
+    found: { id: found.id, title: found.title, refCode: found.refCode }
+  });
+});
+
+// GET /api/items/match-reference/:token - Resolve a staff-only QR link.
+router.get('/match-reference/:token', requireRole(['admin', 'staff']), (req, res) => {
+  const reference = parseMatchReferenceToken(req.params.token);
+  if (!reference || reference.expiresAt <= Date.now()) {
+    return res.status(410).json({ success: false, message: 'This match reference has expired. Generate a new QR code.' });
+  }
+
+  const items = getItems();
+  const lost = items.find(item => String(item.id) === reference.lostId && item.type === 'lost');
+  const found = items.find(item => String(item.id) === reference.foundId && item.type === 'found');
+  if (!lost || !found) return res.status(404).json({ success: false, message: 'Match reports are no longer available.' });
+
+  const claims = getClaims();
+  res.json({
+    success: true,
+    issuedAt: new Date(reference.issuedAt).toISOString(),
+    expiresAt: new Date(reference.expiresAt).toISOString(),
+    status: getMatchReferenceStatus(found, claims),
+    lost: publicItemView(lost),
+    found: publicItemView(found),
+    pendingClaims: claims.filter(claim => String(claim.itemId) === String(found.id) && claim.status === 'pending').length
   });
 });
 

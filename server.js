@@ -63,6 +63,7 @@ function createApp() {
   app.get(['/browse.html', '/item-detail.html'], (req, res) => res.redirect(302, '/#items'));
   app.get('/report-lost.html', (req, res) => res.redirect(302, '/?report=lost#itemForm'));
   app.get('/report-found.html', (req, res) => res.redirect(302, '/?report=found#itemForm'));
+  app.get('/match-reference', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(['/data', '/routes', '/middleware', '/tests', '/node_modules', '/.git', '/server.js', '/package.json', '/package-lock.json'], (req, res) => res.sendStatus(404));
