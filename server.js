@@ -1,5 +1,6 @@
 // server.js - CSPC Lost & Found Management System (Node.js & Express)
-if (process.env.NODE_ENV !== 'test') require('dotenv').config();
+// Hostinger injects production variables directly; load .env only for local development.
+if (!['test', 'production'].includes(process.env.NODE_ENV)) require('dotenv').config();
 
 const express = require('express');
 const session = require('express-session');
