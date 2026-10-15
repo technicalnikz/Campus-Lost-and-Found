@@ -572,13 +572,17 @@ router.get('/my-notifications', requireAuth, (req, res) => {
   });
 });
 
-// GET /api/items/match-reference-token - Create a short-lived staff verification link.
-router.get('/match-reference-token', requireRole(['admin', 'staff']), (req, res) => {
+// GET /api/items/match-reference-token - Create a short-lived verification link.
+router.get('/match-reference-token', requireAuth, (req, res) => {
   const items = getItems();
   const lost = items.find(item => String(item.id) === String(req.query.lostId) && item.type === 'lost');
   const found = items.find(item => String(item.id) === String(req.query.foundId) && item.type === 'found');
   if (!lost || !found) {
     return res.status(404).json({ success: false, message: 'The matched lost and found reports could not be found.' });
+  }
+  const isStaff = ['admin', 'staff'].includes(req.session.user.role);
+  if (!isStaff && !findMatches(lost, items).some(match => String(match.id) === String(found.id))) {
+    return res.status(403).json({ success: false, message: 'This report pair is not an available match reference.' });
   }
 
   const issuedAt = Date.now();
@@ -586,10 +590,22 @@ router.get('/match-reference-token', requireRole(['admin', 'staff']), (req, res)
   const token = createMatchReferenceToken(lost.id, found.id, issuedAt);
   const status = getMatchReferenceStatus(found, getClaims());
   const baseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get('host')}`;
+  const url = `${baseUrl.replace(/\/$/, '')}/match-reference?token=${encodeURIComponent(token)}`;
+  if (!isStaff) {
+    return res.json({
+      success: true,
+      view: 'status-only',
+      token,
+      url,
+      issuedAt: new Date(issuedAt).toISOString(),
+      expiresAt: new Date(expiresAt).toISOString(),
+      status
+    });
+  }
   res.json({
     success: true,
     token,
-    url: `${baseUrl.replace(/\/$/, '')}/match-reference?token=${encodeURIComponent(token)}`,
+    url,
     issuedAt: new Date(issuedAt).toISOString(),
     expiresAt: new Date(expiresAt).toISOString(),
     status,

@@ -929,7 +929,7 @@
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
 
         let matchBannerHtml = '';
-         if (item.potentialMatch && ['admin', 'staff'].includes(currentUser?.role)) {
+         if (item.potentialMatch && currentUser) {
           matchBannerHtml = `
             <div class="match-banner">
               <div>
@@ -1275,7 +1275,13 @@
         const response = await fetch(`/api/items/match-reference-token?lostId=${encodeURIComponent(lostId)}&foundId=${encodeURIComponent(foundId)}`);
         const data = await response.json();
         if (!response.ok || !data.success) throw new Error(data.message || 'Could not create match reference.');
-        const { lost, found } = data;
+        const statusOnly = data.view === 'status-only';
+        const lost = data.lost || { title: 'Private staff-only details', refCode: 'Hidden' };
+        const found = data.found || { title: 'Private staff-only details', refCode: 'Hidden' };
+        document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
+        document.getElementById('matchStaffAction').style.display = statusOnly ? 'none' : '';
+        const printAction = document.querySelector('button[onclick="printMatchQr()"]');
+        if (printAction) printAction.style.display = statusOnly ? 'none' : '';
 
         document.getElementById('matchLostTitle').textContent  = lost.title  || '—';
         document.getElementById('matchFoundTitle').textContent = found.title || '—';
