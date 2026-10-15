@@ -1087,6 +1087,13 @@ select option {
 @media (max-width: 768px) {
   body { padding-bottom: 128px; }
   .site-footer { width: 100%; min-height: 112px; padding: 1rem; }
+  .navbar-container { padding-inline: .5rem; gap: .25rem; }
+  .nav-actions { gap: .25rem; min-width: 0; }
+  #userNavSlot, .user-nav-slot { gap: .25rem; min-width: 0; }
+  .user-pill { max-width: 126px; gap: .25rem; padding-inline: .45rem; overflow: hidden; }
+  .user-pill .user-name { max-width: 68px; }
+  .user-pill .role-badge { max-width: 48px; overflow: hidden; padding-inline: .3rem; font-size: .52rem; }
+  .user-pill-logout { display: none; }
   .nav-actions > .nav-register-btn {
     display: none !important;
   }
