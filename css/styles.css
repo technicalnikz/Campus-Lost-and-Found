@@ -1185,7 +1185,7 @@ select option {
 
 @media (max-width: 380px) {
   .navbar-container { flex-wrap: wrap; min-height: 76px; padding-block: .4rem; }
-  .navbar-container .nav-actions { flex: 1 0 100%; justify-content: flex-end; }
+  .navbar:not(.admin-navbar) .nav-actions { flex: 1 0 100%; width: 100%; justify-content: space-between; }
   .user-pill { max-width: 150px; }
   .user-pill .user-name { max-width: 72px; }
   .user-pill-logout { display: inline-flex; }
