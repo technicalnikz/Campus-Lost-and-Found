@@ -344,18 +344,6 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
 
         // Check for smart matches
         const match = findMatch(item, items);
-        let matchBannerHtml = '';
-        if (match) {
-          matchBannerHtml = `
-            <div class="match-banner">
-              <div>
-                <strong>Potential Match:</strong> ${escapeHtml(match.title)} (${escapeHtml(match.location)})
-              </div>
-              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${match.id})">🤝 Match Reference QR</button>
-            </div>
-          `;
-        }
-
         const verificationHtml = item.verification ? `
           <span><strong>Verification Hint:</strong> ${escapeHtml(item.verification)}</span>
         ` : '';
@@ -382,7 +370,6 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
               </div>
             </div>
 
-            ${matchBannerHtml}
             ${photoHtml}
 
             <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
@@ -848,7 +835,7 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
       document.getElementById('successRefCode').innerText = refCode || 'CSPC-LF-2026';
 
       const matchAlert = document.getElementById('successMatchAlert');
-      if (match) {
+      if (false && match) {
         matchAlert.style.display = 'block';
         matchAlert.innerHTML = `🎯 <strong>Potential Smart Match Detected!</strong> Matching ${match.type} item "${escapeHtml(match.title)}" (${escapeHtml(match.location)}) found.`;
       } else {

@@ -240,18 +240,6 @@ let currentUser = null;
         const canRequestClaim = item.type === 'found' && !item.claimed && (!currentUser || item.reportedBy !== currentUser.id);
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
 
-        let matchBannerHtml = '';
-        if (item.potentialMatch) {
-          matchBannerHtml = `
-            <div class="match-banner">
-              <div>
-                <strong>Potential Match:</strong> ${escapeHtml(item.potentialMatch.title)} (${escapeHtml(item.potentialMatch.location)})
-              </div>
-              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${item.potentialMatch.id})">🤝 Match Reference QR</button>
-            </div>
-          `;
-        }
-
         const canDelete = currentUser?.role === 'admin';
         const delBtnHtml = canDelete
           ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>`
@@ -284,7 +272,6 @@ let currentUser = null;
               </div>
             </div>
 
-            ${matchBannerHtml}
             ${photoHtml}
 
             <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
@@ -808,7 +795,7 @@ let currentUser = null;
           fetchStats();
           fetchAndRenderItems();
 
-          if (data.potentialMatch) {
+        if (false && data.potentialMatch) {
             showToast(`Report saved (${data.item.refCode})! Potential matching ${data.potentialMatch.type} item detected.`);
           } else {
             showToast(`Report saved with Tracking Code: ${data.item.refCode}`);
@@ -837,7 +824,7 @@ let currentUser = null;
       document.getElementById('successRefCode').innerText = refCode || 'CSPC-LF-2026';
 
       const matchAlert = document.getElementById('successMatchAlert');
-      if (potentialMatch) {
+      if (false && potentialMatch) {
         matchAlert.style.display = 'block';
         matchAlert.innerHTML = `🎯 <strong>Potential Smart Match Detected!</strong> Matching ${potentialMatch.type} item "${escapeHtml(potentialMatch.title)}" (${escapeHtml(potentialMatch.location)}) found.`;
       } else {
