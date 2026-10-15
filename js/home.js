@@ -752,7 +752,7 @@ let currentUser = null;
       currentPhotoPreviewUrl = URL.createObjectURL(file);
       document.getElementById('photoPreviewImg').src = currentPhotoPreviewUrl;
       document.getElementById('photoPreviewMeta').textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
-      document.getElementById('photoPreviewBox').style.display = 'block';
+      document.getElementById('photoPreviewBox').style.display = 'flex';
     }
 
     function removePhoto() {
