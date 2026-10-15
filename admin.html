@@ -61,6 +61,7 @@
 
       <!-- Stats -->
       <div class="admin-stats" id="adminStats" style="margin-top: 1rem;"></div>
+      <div class="admin-insights" id="adminInsights"></div>
 
       <!-- Tabs -->
       <div class="admin-tabs">
@@ -84,7 +85,20 @@
             <option value="found">Found</option>
             <option value="claimed">Claimed</option>
           </select>
+          <select class="form-control" id="adminFilterDate" aria-label="Filter by date">
+            <option value="">Any Date</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
           <button class="btn btn-primary" id="exportBtn" style="font-size:.8rem;padding:.55rem 1rem;">Export CSV</button>
+        </div>
+        <div class="bulk-toolbar" id="bulkToolbar" aria-live="polite">
+          <label><input type="checkbox" id="selectAllItems" /> Select all visible</label>
+          <span id="selectedItemsCount">0 selected</span>
+          <button class="action-btn action-btn-claim" id="bulkClaimBtn" disabled>Mark Claimed</button>
+          <button class="action-btn action-btn-delete" id="bulkDeleteBtn" disabled>Delete Selected</button>
+          <button class="btn btn-outline" id="exportSelectedBtn" disabled>Export Selected</button>
         </div>
         <div class="admin-table-card">
           <div class="admin-table-wrap overflow-x-auto">
@@ -105,11 +119,11 @@
                 <th title="Row number"># / ID</th>
                 <th>Item</th>
                 <th>Type</th>
-                <th>Category</th>
+                <th><button class="sort-button" data-sort="category">Category</button></th>
                 <th>Location</th>
                 <th>Reporter</th>
-                <th>Date</th>
-                <th>Status</th>
+                <th><button class="sort-button" data-sort="date">Date</button></th>
+                <th><button class="sort-button" data-sort="status">Status</button></th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -126,6 +140,15 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <div class="activity-modal-backdrop" id="activityModal" role="dialog" aria-modal="true" aria-labelledby="activityTitle">
+    <div class="activity-dialog">
+      <div class="claim-review-header"><h2 id="activityTitle">Item Activity</h2><button class="claim-review-close" onclick="closeActivityModal()">&times;</button></div>
+      <div id="activityContent"></div>
+      <textarea id="activityNote" class="claim-review-input" maxlength="500" rows="2" placeholder="Add an accountability note..."></textarea>
+      <button class="btn btn-primary" id="saveActivityNote">Save Note</button>
     </div>
   </div>
 

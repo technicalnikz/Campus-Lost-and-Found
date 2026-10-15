@@ -93,6 +93,20 @@ function saveClaims(claims) {
   writeJsonArray(CLAIMS_FILE, claims);
 }
 
+function addItemActivity(item, req, action, notes = '') {
+  if (!Array.isArray(item.activityLog)) item.activityLog = [];
+  item.activityLog.unshift({
+    id: `activity-${crypto.randomUUID()}`,
+    action,
+    notes: sanitizeString(notes).slice(0, 500),
+    timestamp: new Date().toISOString(),
+    actorId: req.session?.user?.id || 'system',
+    actorName: req.session?.user?.fullName || req.session?.user?.email || 'System',
+    actorRole: req.session?.user?.role || 'system'
+  });
+  item.activityLog = item.activityLog.slice(0, 100);
+}
+
 const MATCH_REFERENCE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function matchReferenceSecret() {
@@ -383,6 +397,7 @@ router.patch('/claims/:claimId', requireRole('admin'), (req, res) => {
     item.status = 'active';
     item.claimedAt = null;
   }
+  addItemActivity(item, req, status === 'approved' ? 'Claim approved' : 'Claim rejected', status === 'approved' ? pickupInstructions : rejectionReason);
   saveItems(items);
   saveClaims(claims);
 
@@ -839,6 +854,57 @@ router.post('/', upload.single('photo'), postgresStore.requestMiddleware(), vali
   }
 });
 
+// GET /api/items/:id/activity - Read the audit trail for an item.
+router.get('/:id/activity', requireRole('admin'), (req, res) => {
+  const item = getItems().find(entry => String(entry.id) === String(req.params.id));
+  if (!item) return res.status(404).json({ success: false, message: 'Item not found.' });
+  res.json({ success: true, activity: Array.isArray(item.activityLog) ? item.activityLog : [] });
+});
+
+// POST /api/items/:id/activity - Add an admin note to an item audit trail.
+router.post('/:id/activity', requireRole('admin'), (req, res) => {
+  const items = getItems();
+  const item = items.find(entry => String(entry.id) === String(req.params.id));
+  if (!item) return res.status(404).json({ success: false, message: 'Item not found.' });
+  const notes = sanitizeString(req.body.notes || '');
+  if (notes.length < 1 || notes.length > 500) {
+    return res.status(400).json({ success: false, message: 'A note between 1 and 500 characters is required.' });
+  }
+  addItemActivity(item, req, 'Admin note', notes);
+  saveItems(items);
+  res.status(201).json({ success: true, activity: item.activityLog[0] });
+});
+
+// PATCH /api/items/bulk - Apply a validated action to selected items.
+router.patch('/bulk', requireRole('admin'), (req, res) => {
+  const ids = Array.isArray(req.body.ids) ? req.body.ids.map(String).filter(Boolean) : [];
+  const action = req.body.action;
+  if (!ids.length || ids.length > 100) return res.status(400).json({ success: false, message: 'Select between 1 and 100 items.' });
+  if (!['claim', 'delete'].includes(action)) return res.status(400).json({ success: false, message: 'Unsupported bulk action.' });
+
+  let items = getItems();
+  const selected = items.filter(item => ids.includes(String(item.id)));
+  if (!selected.length) return res.status(404).json({ success: false, message: 'No selected items were found.' });
+  if (action === 'claim') {
+    selected.forEach(item => {
+      if (!isItemClaimed(item)) {
+        item.claimed = true;
+        item.status = 'claimed';
+        item.claimedAt = new Date().toISOString();
+        item.claimantProof = 'Bulk status update by moderator.';
+        addItemActivity(item, req, 'Marked as claimed', 'Bulk admin action.');
+      }
+    });
+    saveItems(items);
+  } else {
+    selected.forEach(item => addItemActivity(item, req, 'Deleted', 'Bulk admin action.'));
+    items = items.filter(item => !ids.includes(String(item.id)));
+    saveItems(items);
+    saveClaims(getClaims().filter(claim => !ids.includes(String(claim.itemId))));
+  }
+  res.json({ success: true, affected: selected.length, action });
+});
+
 // PATCH /api/items/:id/claim - Claim or restore item
 router.patch('/:id/claim', requireRole('admin'), (req, res) => {
   const items = getItems();
@@ -855,6 +921,7 @@ router.patch('/:id/claim', requireRole('admin'), (req, res) => {
     item.status = 'active';
     item.claimedAt = null;
     item.claimantProof = null;
+    addItemActivity(item, req, 'Restored to active', 'Item status restored by moderator.');
     saveItems(items);
     return res.json({ success: true, message: 'Item restored to active status.', item });
   }
@@ -865,6 +932,7 @@ router.patch('/:id/claim', requireRole('admin'), (req, res) => {
   item.status = 'claimed';
   item.claimedAt = new Date().toISOString();
   item.claimantProof = sanitizeString(proof || 'Verified by SAO Officer / Finder');
+  addItemActivity(item, req, 'Marked as claimed', item.claimantProof);
 
   saveItems(items);
   res.json({

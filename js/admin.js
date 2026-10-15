@@ -7,6 +7,8 @@ let deleteTargetId = null;
     let adminRefreshInProgress = false;
     let adminItemsSignature = null;
     let cachedServerItems = [];
+    const selectedItemIds = new Set();
+    let adminSort = { key: 'date', direction: 'desc' };
     const adminItemsPerPage = 10;
     let adminCurrentPage = 1;
 
@@ -66,6 +68,20 @@ let deleteTargetId = null;
 
       // Export CSV
       document.getElementById('exportBtn').addEventListener('click', exportCSV);
+      document.getElementById('bulkClaimBtn').addEventListener('click', () => runBulkAction('claim'));
+      document.getElementById('bulkDeleteBtn').addEventListener('click', () => runBulkAction('delete'));
+      document.getElementById('exportSelectedBtn').addEventListener('click', () => exportCSV([...selectedItemIds]));
+      document.getElementById('saveActivityNote').addEventListener('click', saveActivityNote);
+      document.getElementById('activityModal').addEventListener('click', event => { if (event.target.id === 'activityModal') closeActivityModal(); });
+      document.getElementById('selectAllItems').addEventListener('change', toggleSelectAllVisible);
+      document.getElementById('adminFilterDate').addEventListener('change', () => { adminCurrentPage = 1; renderItemsTable(); });
+      document.querySelectorAll('.sort-button').forEach(button => button.addEventListener('click', () => {
+        const key = button.dataset.sort;
+        adminSort = adminSort.key === key
+          ? { key, direction: adminSort.direction === 'asc' ? 'desc' : 'asc' }
+          : { key, direction: 'asc' };
+        renderItemsTable();
+      }));
 
       // Reactive admin filters
       ['adminSearch','adminFilterType','adminFilterStatus'].forEach(id => {
@@ -74,6 +90,7 @@ let deleteTargetId = null;
           renderItemsTable();
         });
       });
+      updateBulkToolbar();
     });
 
     function normalizeAdminItem(item) {
@@ -137,17 +154,36 @@ let deleteTargetId = null;
       const lost    = items.filter(i => i.type==='lost').length;
       const found   = items.filter(i => i.type==='found').length;
       const claimed = items.filter(i => i.status==='claimed').length;
-      const pending = items.filter(i => i.status !== 'claimed').length;
+      const pendingClaims = claimRequests.filter(claim => claim.status === 'pending');
+      const threshold = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const staleActive = items.filter(i => i.status !== 'claimed' && new Date(i.createdAt || i.date).getTime() < threshold).length;
+      const pending = pendingClaims.length + staleActive;
       document.getElementById('adminStats').innerHTML = `
         <div class="stat-card"><div class="stat-number">${items.length}</div><div class="stat-label">Total Items</div></div>
         <div class="stat-card"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
         <div class="stat-card"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
         <div class="stat-card"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
         <div class="stat-card"><div class="stat-number">${pending}</div><div class="stat-label">Pending</div></div>
-        <div class="stat-card"><div class="stat-number">0</div><div class="stat-label">Claims</div></div>
+        <div class="stat-card"><div class="stat-number">${pendingClaims.length}</div><div class="stat-label">Pending Claims</div></div>
+        <div class="stat-card action-needed-card"><div class="stat-number">${pending}</div><div class="stat-label">Action Needed</div></div>
       `;
 
+      renderAdminInsights(items);
+
       renderItemsTable();
+    }
+
+    function renderAdminInsights(items) {
+      const categories = countValues(items, 'category').slice(0, 5);
+      const locations = countValues(items, 'location').slice(0, 5);
+      const chart = (title, values) => `<div class="insight-card"><h3>${title}</h3>${values.length ? values.map(([label, count]) => `<div class="bar-row"><span>${escHtml(label || 'Unknown')}</span><div class="bar-track"><i style="width:${Math.max(8, count / Math.max(...values.map(v => v[1])) * 100)}%"></i></div><b>${count}</b></div>`).join('') : '<p>No data yet.</p>'}</div>`;
+      document.getElementById('adminInsights').innerHTML = chart('Top Categories', categories) + chart('Top Locations', locations);
+    }
+
+    function countValues(items, key) {
+      const counts = new Map();
+      items.forEach(item => counts.set(item[key] || 'Unknown', (counts.get(item[key] || 'Unknown') || 0) + 1));
+      return [...counts.entries()].sort((a, b) => b[1] - a[1]);
     }
 
     function showAdminItems(type) {
@@ -186,8 +222,12 @@ let deleteTargetId = null;
     function renderItemsTable() {
       let items = getFilteredAdminItems();
 
-      // Sort newest first
-      items.sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
+      items.sort((a, b) => {
+        const left = ['status', 'category'].includes(adminSort.key) ? (a[adminSort.key] || '') : new Date(a.createdAt || a.date).getTime();
+        const right = ['status', 'category'].includes(adminSort.key) ? (b[adminSort.key] || '') : new Date(b.createdAt || b.date).getTime();
+        const comparison = typeof left === 'string' ? left.localeCompare(right) : left - right;
+        return adminSort.direction === 'asc' ? comparison : -comparison;
+      });
 
       const tbody = document.getElementById('adminTableBody');
       const empty = document.getElementById('adminEmptyState');
@@ -223,7 +263,7 @@ let deleteTargetId = null;
         const rowNumber = startIndex + idx + 1;
         return `
         <tr>
-          <td title="${rowNumber}">${rowNumber}</td>
+          <td title="${rowNumber}"><input class="item-select" type="checkbox" data-item-id="${escHtml(item.id)}" ${selectedItemIds.has(String(item.id)) ? 'checked' : ''} aria-label="Select ${escHtml(item.title)}" /> ${rowNumber}</td>
           <td class="td-title" title="${escHtml(item.title)}">
             <a href="item-detail.html?id=${encodeURIComponent(item.id)}" target="_blank" title="${escHtml(item.title)}">${escHtml(item.title)}</a>
           </td>
@@ -244,6 +284,23 @@ let deleteTargetId = null;
           </td>
         </tr>`;
       }).join('');
+      tbody.querySelectorAll('.item-select').forEach(input => input.addEventListener('change', () => {
+        const id = String(input.dataset.itemId);
+        if (input.checked) selectedItemIds.add(id); else selectedItemIds.delete(id);
+        updateBulkToolbar();
+      }));
+      tbody.querySelectorAll('tr').forEach((row, index) => {
+        const item = pageItems[index];
+        if (!item) return;
+        const statusCell = row.querySelector('.status-cell');
+        statusCell.insertAdjacentHTML('afterbegin', `<select class="inline-status-select" data-item-id="${escHtml(item.id)}" aria-label="Update status for ${escHtml(item.title)}"><option value="active" ${item.status !== 'claimed' ? 'selected' : ''}>Active</option><option value="claimed" ${item.status === 'claimed' ? 'selected' : ''}>Claimed</option></select>`);
+        row.querySelector('.action-buttons').insertAdjacentHTML('afterbegin', `<button class="action-btn action-btn-outline" onclick="openActivityModal('${item.id}')">History</button>`);
+        row.querySelector('.inline-status-select').addEventListener('change', event => {
+          if (event.target.value === 'claimed') updateItemClaimStatus(item.id, 'Inline status update by moderator.');
+          else if (item.status === 'claimed') updateItemClaimStatus(item.id);
+        });
+      });
+      updateBulkToolbar();
     }
 
     function getFilteredAdminItems() {
@@ -251,6 +308,7 @@ let deleteTargetId = null;
       const query = document.getElementById('adminSearch').value.toLowerCase().trim();
       const type = document.getElementById('adminFilterType').value;
       const status = document.getElementById('adminFilterStatus').value;
+      const dateRange = document.getElementById('adminFilterDate').value;
 
       if (query) items = items.filter(item =>
         (item.title || '').toLowerCase().includes(query) ||
@@ -263,6 +321,14 @@ let deleteTargetId = null;
       );
       if (type) items = items.filter(item => item.type === type);
       if (status) items = items.filter(item => item.status === status || (['lost', 'found'].includes(status) && item.type === status));
+      if (dateRange) {
+        const now = new Date();
+        const start = new Date(now);
+        if (dateRange === 'today') start.setHours(0, 0, 0, 0);
+        if (dateRange === 'week') start.setDate(now.getDate() - 7);
+        if (dateRange === 'month') start.setMonth(now.getMonth() - 1);
+        items = items.filter(item => new Date(item.createdAt || item.date).getTime() >= start.getTime());
+      }
       return items;
     }
 
@@ -320,10 +386,10 @@ let deleteTargetId = null;
       updateItemClaimStatus(id);
     }
 
-    function openDeleteModal(id, title) {
+    function openDeleteModal(id, title, reporter = 'Unknown reporter') {
       deleteTargetId = id;
       document.getElementById('deleteMsg').textContent =
-        `Are you sure you want to permanently delete "${title}"? This action cannot be undone.`;
+        `Delete "${title}" reported by ${reporter}? This action cannot be undone.`;
       document.getElementById('deleteModal').classList.add('open');
     }
     function closeDeleteModal() {
@@ -464,8 +530,67 @@ let deleteTargetId = null;
       }
     }
 
-    function exportCSV() {
-      const items = adminItems;
+    function toggleSelectAllVisible(event) {
+      getFilteredAdminItems().slice((adminCurrentPage - 1) * adminItemsPerPage, adminCurrentPage * adminItemsPerPage).forEach(item => {
+        if (event.target.checked) selectedItemIds.add(String(item.id)); else selectedItemIds.delete(String(item.id));
+      });
+      renderItemsTable();
+    }
+
+    function updateBulkToolbar() {
+      const count = selectedItemIds.size;
+      document.getElementById('selectedItemsCount').textContent = `${count} selected`;
+      ['bulkClaimBtn', 'bulkDeleteBtn', 'exportSelectedBtn'].forEach(id => { document.getElementById(id).disabled = count === 0; });
+    }
+
+    async function runBulkAction(action) {
+      const ids = [...selectedItemIds];
+      if (!ids.length) return;
+      const actionText = action === 'delete' ? 'delete' : 'mark as claimed';
+      if (!window.confirm(`Are you sure you want to ${actionText} ${ids.length} selected item(s)?`)) return;
+      try {
+        const response = await adminFetch('/api/items/bulk', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, action }) });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'Bulk operation failed.');
+        ids.forEach(id => selectedItemIds.delete(id));
+        await refreshAdminItems();
+        await refreshAdminClaims();
+        showToast(`${data.affected} item(s) updated.`);
+      } catch (error) { showToast(error.message, 'error'); }
+    }
+
+    async function openActivityModal(id) {
+      const item = adminItems.find(entry => String(entry.id) === String(id));
+      if (!item) return;
+      document.getElementById('activityTitle').textContent = `Activity: ${item.title}`;
+      document.getElementById('activityNote').dataset.itemId = id;
+      document.getElementById('activityNote').value = '';
+      document.getElementById('activityContent').innerHTML = '<p>Loading activity…</p>';
+      document.getElementById('activityModal').classList.add('open');
+      try {
+        const response = await adminFetch(`/api/items/${encodeURIComponent(id)}/activity`);
+        const data = await response.json();
+        document.getElementById('activityContent').innerHTML = data.activity?.length
+          ? `<div class="activity-list">${data.activity.map(entry => `<div class="activity-entry"><strong>${escHtml(entry.action)}</strong><span>${escHtml(entry.actorName)} · ${formatDate(entry.timestamp)}</span>${entry.notes ? `<p>${escHtml(entry.notes)}</p>` : ''}</div>`).join('')}</div>`
+          : '<p class="activity-empty">No activity recorded yet.</p>';
+      } catch (error) { document.getElementById('activityContent').innerHTML = `<p class="activity-empty">${escHtml(error.message)}</p>`; }
+    }
+
+    function closeActivityModal() { document.getElementById('activityModal').classList.remove('open'); }
+
+    async function saveActivityNote() {
+      const note = document.getElementById('activityNote');
+      if (!note.value.trim()) return showToast('Enter a note first.', 'error');
+      const response = await adminFetch(`/api/items/${encodeURIComponent(note.dataset.itemId)}/activity`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: note.value.trim() }) });
+      const data = await response.json();
+      if (!response.ok || !data.success) return showToast(data.message || 'Unable to save note.', 'error');
+      note.value = '';
+      openActivityModal(note.dataset.itemId);
+      showToast('Activity note saved.');
+    }
+
+    function exportCSV(selectedIds = null) {
+      const items = selectedIds ? adminItems.filter(item => selectedIds.includes(String(item.id))) : adminItems;
       const headers = ['ID','Type','Title','Category','Location','Status','Reporter','Contact','Email','Date Lost/Found','Created At'];
       const rows = items.map(i => [
         i.id, i.type, i.title, i.category, i.location, i.status,
