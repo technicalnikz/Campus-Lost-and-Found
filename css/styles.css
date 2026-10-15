@@ -1813,6 +1813,11 @@ select::placeholder,
   line-height: 1;
 }
 
+/* Item deletion is managed from the admin panel only. */
+.projects-grid .btn-del {
+  display: none !important;
+}
+
     /* ── Badges ── */
     .badge {
       display: inline-block;
