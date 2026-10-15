@@ -240,6 +240,18 @@ let currentUser = null;
         const canRequestClaim = item.type === 'found' && !item.claimed && (!currentUser || item.reportedBy !== currentUser.id);
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
 
+        let matchBannerHtml = '';
+        if (item.potentialMatch) {
+          matchBannerHtml = `
+            <div class="match-banner">
+              <div>
+                <strong>Potential Match:</strong> ${escapeHtml(item.potentialMatch.title)} (${escapeHtml(item.potentialMatch.location)})
+              </div>
+              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${item.potentialMatch.id})">🤝 Match Reference QR</button>
+            </div>
+          `;
+        }
+
         const canDelete = currentUser?.role === 'admin';
         const delBtnHtml = canDelete
           ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>`
@@ -272,6 +284,8 @@ let currentUser = null;
               </div>
             </div>
 
+            ${matchBannerHtml}
+
             ${photoHtml}
 
             <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
@@ -283,8 +297,7 @@ let currentUser = null;
             </div>
 
             <div class="card-actions">
-              ${claimBtnHtml}
-              ${canGetQrSticker ? `<button class="btn-sm btn-qr" onclick="openQrStickerModal(${item.id})">🏷️ QR Sticker</button>` : ''}
+
               ${delBtnHtml}
             </div>
           </div>

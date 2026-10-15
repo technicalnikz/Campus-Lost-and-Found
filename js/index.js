@@ -344,6 +344,17 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
 
         // Check for smart matches
         const match = findMatch(item, items);
+        let matchBannerHtml = '';
+        if (match) {
+          matchBannerHtml = `
+            <div class="match-banner">
+              <div>
+                <strong>Potential Match:</strong> ${escapeHtml(match.title)} (${escapeHtml(match.location)})
+              </div>
+              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${match.id})">🤝 Match Reference QR</button>
+            </div>
+          `;
+        }
         const verificationHtml = item.verification ? `
           <span><strong>Verification Hint:</strong> ${escapeHtml(item.verification)}</span>
         ` : '';
@@ -370,6 +381,8 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
               </div>
             </div>
 
+            ${matchBannerHtml}
+
             ${photoHtml}
 
             <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
@@ -382,8 +395,6 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
             </div>
 
             <div class="card-actions">
-              ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${claimBtnText}</button>` : ''}
-              ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-qr" onclick="openQrStickerModal(${item.id})">🏷️ QR Sticker</button>` : ''}
               ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>` : ''}
             </div>
           </div>
