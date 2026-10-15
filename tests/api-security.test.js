@@ -677,17 +677,13 @@ test('production requires a secret and persists secure sessions', async () => {
   }
 });
 
-test('incomplete MySQL configuration does not silently fall back to JSON files', () => {
-  const keys = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
+test('missing Supabase configuration does not silently fall back to JSON files', () => {
+  const keys = ['DATABASE_URL', 'SUPABASE_DB_URL'];
   const originalEnvironment = Object.fromEntries(keys.map(key => [key, process.env[key]]));
   try {
-    process.env.DB_HOST = 'localhost';
-    delete process.env.DB_PORT;
-    delete process.env.DB_NAME;
-    delete process.env.DB_USER;
-    delete process.env.DB_PASSWORD;
-    const mysqlStore = require('../services/mysqlStore');
-    assert.throws(mysqlStore.isConfigured, /DB_HOST, DB_NAME, DB_USER, and DB_PASSWORD must all be configured/);
+    keys.forEach(key => delete process.env[key]);
+    const postgresStore = require('../services/postgresStore');
+    assert.equal(postgresStore.isConfigured(), false);
   } finally {
     keys.forEach(key => {
       if (originalEnvironment[key] === undefined) delete process.env[key];
@@ -735,7 +731,7 @@ test('production admin password reset is explicit and only affects the configure
   }
 });
 
-test('production startup requires MySQL configuration', async () => {
+test('production startup requires Supabase configuration', async () => {
   const childEnvironment = {
     ...process.env,
     NODE_ENV: 'production',
@@ -743,7 +739,7 @@ test('production startup requires MySQL configuration', async () => {
     ADMIN_EMAIL: 'admin@cspc.edu.ph',
     ADMIN_PASSWORD: 'ProductionStrongTestPass1!'
   };
-  ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_PORT'].forEach(key => delete childEnvironment[key]);
+  ['DATABASE_URL', 'SUPABASE_DB_URL'].forEach(key => delete childEnvironment[key]);
   const child = spawn(process.execPath, ['-e', "require('./server')"], {
     cwd: path.join(__dirname, '..'),
     env: childEnvironment,
@@ -766,5 +762,5 @@ test('production startup requires MySQL configuration', async () => {
 
   const { code } = await processExit;
   assert.equal(code, 1);
-  assert.match(logs, /MySQL database environment variables are required in production/);
+  assert.match(logs, /DATABASE_URL is required in production for Supabase PostgreSQL/);
 });

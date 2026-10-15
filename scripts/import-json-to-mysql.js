@@ -1,17 +1,17 @@
 require('dotenv').config();
 
 const path = require('path');
-const mysqlStore = require('../services/mysqlStore');
+const postgresStore = require('../services/postgresStore');
 
 async function main() {
-  if (!mysqlStore.isConfigured()) {
-    throw new Error('Configure DB_HOST, DB_NAME, DB_USER, and DB_PASSWORD before importing data.');
+  if (!postgresStore.isConfigured()) {
+    throw new Error('Configure DATABASE_URL before importing data.');
   }
 
   const sourceDir = process.env.LEGACY_DATA_DIR || path.join(__dirname, '..', 'data');
-  await mysqlStore.initialize();
-  const imported = await mysqlStore.importJsonFiles(sourceDir);
-  console.log('Imported JSON data into MySQL:', imported);
+  await postgresStore.initialize();
+  const imported = await postgresStore.importJsonFiles(sourceDir);
+  console.log('Imported JSON data into Supabase PostgreSQL:', imported);
 }
 
 async function run() {
@@ -23,7 +23,7 @@ async function run() {
   }
 
   try {
-    await mysqlStore.close();
+    await postgresStore.close();
   } catch (error) {
     console.error('Could not close the MySQL connection pool:', error.message);
     process.exitCode = 1;

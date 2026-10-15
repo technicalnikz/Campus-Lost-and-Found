@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const mysqlStore = require('./mysqlStore');
+const postgresStore = require('./postgresStore');
 
 function readJsonArray(filePath) {
-  if (mysqlStore.isConfigured()) return mysqlStore.readCollection(filePath);
+  if (postgresStore.isConfigured()) return postgresStore.readCollection(filePath);
 
   let data;
   try {
@@ -22,7 +22,7 @@ function readJsonArray(filePath) {
 }
 
 function writeJsonArray(filePath, value) {
-  if (mysqlStore.isConfigured()) return mysqlStore.writeCollection(filePath, value);
+  if (postgresStore.isConfigured()) return postgresStore.writeCollection(filePath, value);
 
   if (!Array.isArray(value)) {
     throw new TypeError(`Expected an array for ${filePath}.`);

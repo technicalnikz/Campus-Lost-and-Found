@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const { validateUserAuth, sanitizeString } = require('../middleware/validate');
 const { sendRegistrationEmail } = require('../services/email');
 const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
-const mysqlStore = require('../services/mysqlStore');
+const postgresStore = require('../services/postgresStore');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -84,7 +84,7 @@ function ensureDefaultAdminAccount() {
     saveUsers(users);
   };
 
-  if (mysqlStore.isConfigured()) return mysqlStore.withTransaction(ensureAccount);
+  if (postgresStore.isConfigured()) return postgresStore.withTransaction(ensureAccount);
   return ensureAccount();
 }
 

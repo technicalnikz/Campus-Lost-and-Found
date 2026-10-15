@@ -9,7 +9,7 @@ const fs = require('fs');
 
 const authRoutes = require('./routes/authRoutes');
 const itemRoutes = require('./routes/itemRoutes');
-const mysqlStore = require('./services/mysqlStore');
+const postgresStore = require('./services/postgresStore');
 
 function createApp() {
   const app = express();
@@ -43,7 +43,7 @@ function createApp() {
     }
   }));
 
-  const databaseRequest = mysqlStore.requestMiddleware();
+  const databaseRequest = postgresStore.requestMiddleware();
   app.use('/api', (req, res, next) => {
     if (req.method === 'POST' && ['/items', '/items/'].includes(req.path)) return next();
     databaseRequest(req, res, next);
@@ -92,8 +92,8 @@ function createApp() {
 
 async function startServer() {
   const PORT = process.env.PORT || 3000;
-  if (process.env.NODE_ENV === 'production' || mysqlStore.isConfigured()) {
-    await mysqlStore.initialize();
+  if (process.env.NODE_ENV === 'production' || postgresStore.isConfigured()) {
+    await postgresStore.initialize();
   }
   await authRoutes.ensureDefaultAdminAccount();
   createApp().listen(PORT, '0.0.0.0', () => console.log(`Server running at: http://localhost:${PORT}`));
