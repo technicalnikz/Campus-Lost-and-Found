@@ -383,8 +383,8 @@
       .admin-search-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       #adminPanel > .page-header { padding-top: 1.5rem; }
       #adminPanel .page-header h1 { font-size: 1.8rem; }
-      .admin-navbar .navbar-container { flex-wrap: wrap; gap: .35rem; padding: .45rem .75rem; }
-      .admin-navbar .nav-actions { width: 100%; justify-content: flex-end; flex-wrap: wrap; }
+      .admin-navbar .navbar-container { flex-wrap: nowrap; gap: .35rem; padding: .45rem .75rem; }
+      .admin-navbar .nav-actions { width: auto; margin-left: auto; justify-content: flex-end; flex-wrap: nowrap; gap: .35rem; }
       .admin-navbar .nav-links { top: 100%; width: auto; justify-content: flex-start; gap: 1.5rem; }
       .admin-navbar .nav-logo-short { font-size: .72rem; }
       .admin-profile .user-name { max-width: 105px; font-size: .7rem; }
