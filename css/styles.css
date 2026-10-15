@@ -888,9 +888,10 @@ h2 {
   bottom: 0;
   transform: translateX(-50%);
   z-index: 900;
-  width: min(900px, calc(100% - 2rem));
+  width: 100%;
+  max-width: none;
   min-height: 88px;
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem clamp(1.5rem, 6vw, 5rem);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -1084,7 +1085,7 @@ select option {
 
 @media (max-width: 768px) {
   body { padding-bottom: 128px; }
-  .site-footer { width: calc(100% - 1rem); min-height: 112px; padding: 1rem; }
+  .site-footer { width: 100%; min-height: 112px; padding: 1rem; }
   .nav-actions > .nav-register-btn {
     display: none !important;
   }
