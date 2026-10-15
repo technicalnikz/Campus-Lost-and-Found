@@ -55,7 +55,9 @@ let deleteTargetId = null;
           activeTab = tab.dataset.tab;
           document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
-          document.getElementById('tabItems').style.display = 'block';
+          document.getElementById('tabItems').style.display = activeTab === 'items' ? 'block' : 'none';
+          document.getElementById('tabClaims').style.display = activeTab === 'claims' ? 'block' : 'none';
+          if (activeTab === 'claims') renderPendingClaims();
         });
       });
 
@@ -69,8 +71,15 @@ let deleteTargetId = null;
       // Export CSV
       document.getElementById('exportBtn').addEventListener('click', exportCSV);
       document.getElementById('bulkClaimBtn').addEventListener('click', () => runBulkAction('claim'));
+      document.getElementById('bulkArchiveBtn').addEventListener('click', () => runBulkAction('archive'));
       document.getElementById('bulkDeleteBtn').addEventListener('click', () => runBulkAction('delete'));
+      document.getElementById('bulkStatusSelect').addEventListener('change', event => {
+        if (event.target.value) runBulkAction('status', event.target.value);
+        event.target.value = '';
+      });
       document.getElementById('exportSelectedBtn').addEventListener('click', () => exportCSV([...selectedItemIds]));
+      document.getElementById('refreshClaimsBtn').addEventListener('click', refreshAdminClaims);
+      document.getElementById('sendBroadcastBtn').addEventListener('click', sendBroadcast);
       document.getElementById('saveActivityNote').addEventListener('click', saveActivityNote);
       document.getElementById('activityModal').addEventListener('click', event => { if (event.target.id === 'activityModal') closeActivityModal(); });
       document.getElementById('selectAllItems').addEventListener('change', toggleSelectAllVisible);
@@ -143,7 +152,9 @@ let deleteTargetId = null;
         if (nextSignature === adminClaimsSignature) return;
         adminClaimsSignature = nextSignature;
         claimRequests = data.claims;
+        document.getElementById('pendingClaimsTabCount').textContent = claimRequests.filter(claim => claim.status === 'pending').length;
         renderItemsTable();
+        renderPendingClaims();
       } catch (error) {
         // Keep the last claim snapshot when the API is temporarily unavailable.
       }
@@ -171,6 +182,26 @@ let deleteTargetId = null;
       renderAdminInsights(items);
 
       renderItemsTable();
+      renderPendingClaims();
+    }
+
+    function renderPendingClaims() {
+      const container = document.getElementById('pendingClaimsList');
+      if (!container) return;
+      const pending = claimRequests.filter(claim => claim.status === 'pending');
+      if (!pending.length) {
+        container.innerHTML = '<div class="empty-state"><h3>No pending claims</h3><p>New student claim requests will appear here.</p></div>';
+        return;
+      }
+      container.innerHTML = pending.map(claim => {
+        const item = adminItems.find(entry => String(entry.id) === String(claim.itemId));
+        return `<article class="pending-claim-card">
+          <div><span class="claim-status-pending">PENDING REVIEW</span><h3>${escHtml(item?.title || claim.itemTitle || 'Unknown item')}</h3><p>${escHtml(item?.refCode || claim.itemRefCode || '')}</p></div>
+          <div class="pending-claim-details"><strong>${escHtml(claim.claimantName || 'Unknown student')}</strong><span>Student ID: ${escHtml(claim.claimantStudentId || 'Not provided')}</span><span>${escHtml(claim.claimantDepartment || 'Department not provided')} · ${escHtml(claim.claimantCourseYear || 'Course not provided')}</span><span>Submitted ${formatDate(claim.createdAt)}</span></div>
+          <div class="pending-claim-proof"><strong>Ownership proof</strong><p>${escHtml(claim.proof || 'No proof submitted.')}</p></div>
+          <button class="action-btn action-btn-claim" onclick="openClaimReview('${escHtml(claim.id)}')">Review Claim</button>
+        </article>`;
+      }).join('');
     }
 
     function renderAdminInsights(items) {
@@ -247,7 +278,7 @@ let deleteTargetId = null;
 
       tbody.innerHTML = pageItems.map((item, idx) => {
         const date = item.type === 'lost' ? formatDate(item.dateLost) : formatDate(item.dateFound);
-        const canClaim   = item.status !== 'claimed';
+        const canClaim   = item.status !== 'claimed' && item.status !== 'archived';
         const canRestore = item.status === 'claimed';
         const itemClaims = claimRequests.filter(claim => String(claim.itemId) === String(item.id));
         const pendingClaim = itemClaims.find(claim => claim.status === 'pending');
@@ -279,7 +310,7 @@ let deleteTargetId = null;
             <div class="action-buttons">
               ${pendingClaim ? `<button class="action-btn action-btn-claim" onclick="openClaimReview('${pendingClaim.id}')">Review Claim</button>` : ''}
               ${canRestore ? `<button class="action-btn action-btn-restore" onclick="markRestore('${item.id}')">Restore</button>` : ''}
-              <button class="action-btn action-btn-delete" onclick="openDeleteModal('${item.id}','${escHtml(item.title)}')">Delete</button>
+              <button class="action-btn action-btn-delete" onclick="openDeleteModal('${item.id}','${escHtml(item.title)}','${escHtml(reporterValues[0] || 'Unknown reporter')}')">Delete</button>
             </div>
           </td>
         </tr>`;
@@ -293,11 +324,12 @@ let deleteTargetId = null;
         const item = pageItems[index];
         if (!item) return;
         const statusCell = row.querySelector('.status-cell');
-        statusCell.insertAdjacentHTML('afterbegin', `<select class="inline-status-select" data-item-id="${escHtml(item.id)}" aria-label="Update status for ${escHtml(item.title)}"><option value="active" ${item.status !== 'claimed' ? 'selected' : ''}>Active</option><option value="claimed" ${item.status === 'claimed' ? 'selected' : ''}>Claimed</option></select>`);
+        statusCell.insertAdjacentHTML('afterbegin', `<select class="inline-status-select" data-item-id="${escHtml(item.id)}" aria-label="Update status for ${escHtml(item.title)}"><option value="active" ${!['claimed', 'archived'].includes(item.status) ? 'selected' : ''}>Active</option><option value="claimed" ${item.status === 'claimed' ? 'selected' : ''}>Claimed</option><option value="archived" ${item.status === 'archived' ? 'selected' : ''}>Archived</option></select>`);
         row.querySelector('.action-buttons').insertAdjacentHTML('afterbegin', `<button class="action-btn action-btn-outline" onclick="openActivityModal('${item.id}')">History</button>`);
         row.querySelector('.inline-status-select').addEventListener('change', event => {
-          if (event.target.value === 'claimed') updateItemClaimStatus(item.id, 'Inline status update by moderator.');
-          else if (item.status === 'claimed') updateItemClaimStatus(item.id);
+          if (event.target.value === 'archived') updateItemStatus(item.id, 'archived');
+          else if (event.target.value === 'claimed') updateItemClaimStatus(item.id, 'Inline status update by moderator.');
+          else if (item.status === 'claimed' || item.status === 'archived') updateItemStatus(item.id, 'active');
         });
       });
       updateBulkToolbar();
@@ -376,6 +408,16 @@ let deleteTargetId = null;
       } catch (error) {
         showToast(error.message, 'error');
       }
+    }
+
+    async function updateItemStatus(id, status) {
+      try {
+        const response = await adminFetch(`/api/items/${encodeURIComponent(id)}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'Unable to update item status.');
+        await refreshAdminItems();
+        showToast(data.message);
+      } catch (error) { showToast(error.message, 'error'); }
     }
 
     function markClaimed(id) {
@@ -487,7 +529,9 @@ let deleteTargetId = null;
       if (status === 'approved') {
         fields.innerHTML = `
           <label for="claimPickupInstructions">Optional pickup instructions</label>
-          <textarea class="claim-review-input" id="claimPickupInstructions" rows="2" maxlength="500" placeholder="Please present your CSPC Student ID at the SAS Office, Room 101"></textarea>`;
+          <textarea class="claim-review-input" id="claimPickupInstructions" rows="2" maxlength="500" placeholder="Please present your CSPC Student ID at the SAS Office, Room 101"></textarea>
+          <label for="claimHandoverSignature">Admin handover acknowledgment</label>
+          <input class="form-control claim-review-input" id="claimHandoverSignature" maxlength="120" placeholder="Type your full name to acknowledge handover" required />`;
         approveButton.textContent = 'Confirm Approval';
         approveButton.onclick = () => submitClaimDecision('approved');
         rejectButton.hidden = true;
@@ -505,6 +549,9 @@ let deleteTargetId = null;
       const pickupInstructions = status === 'approved'
         ? document.getElementById('claimPickupInstructions').value.trim()
         : '';
+      const handoverSignature = status === 'approved'
+        ? document.getElementById('claimHandoverSignature').value.trim()
+        : '';
       const rejectionReason = status === 'rejected'
         ? document.getElementById('claimRejectionReason').value.trim()
         : '';
@@ -512,12 +559,16 @@ let deleteTargetId = null;
         showToast('Enter a rejection reason of at least 5 characters.', 'error');
         return;
       }
+      if (status === 'approved' && handoverSignature.length < 2) {
+        showToast('Enter your name to acknowledge the physical handover.', 'error');
+        return;
+      }
 
       try {
         const response = await adminFetch(`/api/items/claims/${encodeURIComponent(activeClaimReviewId)}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status, pickupInstructions, rejectionReason })
+          body: JSON.stringify({ status, pickupInstructions, rejectionReason, handoverSignature })
         });
         const data = await response.json();
         if (!response.ok || !data.success) throw new Error(data.message || 'Unable to review claim.');
@@ -540,16 +591,16 @@ let deleteTargetId = null;
     function updateBulkToolbar() {
       const count = selectedItemIds.size;
       document.getElementById('selectedItemsCount').textContent = `${count} selected`;
-      ['bulkClaimBtn', 'bulkDeleteBtn', 'exportSelectedBtn'].forEach(id => { document.getElementById(id).disabled = count === 0; });
+      ['bulkClaimBtn', 'bulkArchiveBtn', 'bulkDeleteBtn', 'exportSelectedBtn', 'bulkStatusSelect'].forEach(id => { document.getElementById(id).disabled = count === 0; });
     }
 
-    async function runBulkAction(action) {
+    async function runBulkAction(action, status = '') {
       const ids = [...selectedItemIds];
       if (!ids.length) return;
-      const actionText = action === 'delete' ? 'delete' : 'mark as claimed';
+      const actionText = action === 'delete' ? 'delete' : action === 'archive' ? 'archive' : status ? `set to ${status}` : 'mark as claimed';
       if (!window.confirm(`Are you sure you want to ${actionText} ${ids.length} selected item(s)?`)) return;
       try {
-        const response = await adminFetch('/api/items/bulk', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, action }) });
+        const response = await adminFetch('/api/items/bulk', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids, action, status }) });
         const data = await response.json();
         if (!response.ok || !data.success) throw new Error(data.message || 'Bulk operation failed.');
         ids.forEach(id => selectedItemIds.delete(id));
@@ -557,6 +608,23 @@ let deleteTargetId = null;
         await refreshAdminClaims();
         showToast(`${data.affected} item(s) updated.`);
       } catch (error) { showToast(error.message, 'error'); }
+    }
+
+    async function sendBroadcast() {
+      const subject = document.getElementById('broadcastSubject').value.trim();
+      const message = document.getElementById('broadcastMessage').value.trim();
+      if (subject.length < 3 || message.length < 5) return showToast('Enter a subject and message first.', 'error');
+      if (!window.confirm('Send this announcement to all registered students?')) return;
+      const button = document.getElementById('sendBroadcastBtn');
+      button.disabled = true;
+      try {
+        const response = await adminFetch('/api/items/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subject, message }) });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'Broadcast failed.');
+        document.getElementById('broadcastSubject').value = '';
+        document.getElementById('broadcastMessage').value = '';
+        showToast(`Broadcast sent to ${data.sent} of ${data.recipients} student(s).`);
+      } catch (error) { showToast(error.message, 'error'); } finally { button.disabled = false; }
     }
 
     async function openActivityModal(id) {

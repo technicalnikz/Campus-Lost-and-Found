@@ -8,7 +8,7 @@ const multer = require('multer');
 const { validateItemReport, sanitizeString } = require('../middleware/validate');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
-const { sendPossibleMatchEmail } = require('../services/email');
+const { sendPossibleMatchEmail, sendClaimStatusEmail, sendBroadcastEmail } = require('../services/email');
 const postgresStore = require('../services/postgresStore');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
@@ -332,7 +332,23 @@ router.get('/claims', requireRole('admin'), (req, res) => {
   res.json({ success: true, claims });
 });
 
-router.patch('/claims/:claimId', requireRole('admin'), (req, res) => {
+// POST /api/items/broadcast - Send an admin announcement to registered students.
+router.post('/broadcast', requireRole('admin'), async (req, res) => {
+  const subject = sanitizeString(req.body.subject || '');
+  const message = sanitizeString(req.body.message || '');
+  if (subject.length < 3 || subject.length > 120 || message.length < 5 || message.length > 2000) {
+    return res.status(400).json({ success: false, message: 'Subject or message length is invalid.' });
+  }
+  const recipients = readJsonArray(USERS_FILE).filter(user => user.role === 'student' && user.email);
+  let sent = 0;
+  for (const user of recipients) {
+    try { await sendBroadcastEmail(user, subject, message); sent += 1; }
+    catch (error) { console.error('Broadcast email could not be sent:', error.message); }
+  }
+  res.json({ success: true, recipients: recipients.length, sent });
+});
+
+router.patch('/claims/:claimId', requireRole('admin'), async (req, res) => {
   const { status } = req.body;
   if (!['approved', 'rejected'].includes(status)) {
     return res.status(400).json({ success: false, message: 'Claim status must be approved or rejected.' });
@@ -340,6 +356,7 @@ router.patch('/claims/:claimId', requireRole('admin'), (req, res) => {
 
   const pickupInstructions = sanitizeString(req.body.pickupInstructions || '');
   const rejectionReason = sanitizeString(req.body.rejectionReason || '');
+  const handoverSignature = sanitizeString(req.body.handoverSignature || '');
   if (pickupInstructions.length > 500) {
     return res.status(400).json({ success: false, message: 'Pickup instructions must be 500 characters or fewer.' });
   }
@@ -373,6 +390,13 @@ router.patch('/claims/:claimId', requireRole('admin'), (req, res) => {
       ? `Your claim for ${item.title} was approved.${pickupInstructions ? ` Pickup instructions: ${pickupInstructions}` : ''}`
       : `Your claim for ${item.title} was not approved. Reason: ${rejectionReason}`
   };
+  claim.handover = status === 'approved' ? {
+    acknowledged: true,
+    acknowledgedAt: claim.reviewedAt,
+    acknowledgedBy: req.session.user.id,
+    acknowledgedByName: req.session.user.fullName,
+    signature: handoverSignature || req.session.user.fullName || 'Admin approval'
+  } : null;
   if (status === 'approved') {
     item.claimed = true;
     item.status = 'claimed';
@@ -401,7 +425,27 @@ router.patch('/claims/:claimId', requireRole('admin'), (req, res) => {
   saveItems(items);
   saveClaims(claims);
 
+  if (claim.claimantEmail) {
+    try {
+      await sendClaimStatusEmail({ fullName: claim.claimantName, email: claim.claimantEmail }, item, claim, status);
+    } catch (error) {
+      console.error('Claim status email could not be sent:', error.message);
+    }
+  }
+
   res.json({ success: true, message: `Claim request ${status}.`, claim });
+});
+
+// PATCH /api/items/claims/:claimId/handover - Record the physical handover acknowledgment.
+router.patch('/claims/:claimId/handover', requireRole('admin'), (req, res) => {
+  const claims = getClaims();
+  const claim = claims.find(entry => entry.id === req.params.claimId);
+  if (!claim || claim.status !== 'approved') return res.status(404).json({ success: false, message: 'Approved claim not found.' });
+  const signature = sanitizeString(req.body.signature || '');
+  if (signature.length < 2 || signature.length > 120) return res.status(400).json({ success: false, message: 'A handover acknowledgment is required.' });
+  claim.handover = { acknowledged: true, acknowledgedAt: new Date().toISOString(), acknowledgedBy: req.session.user.id, acknowledgedByName: req.session.user.fullName, signature };
+  saveClaims(claims);
+  res.json({ success: true, handover: claim.handover });
 });
 
 // GET /api/items - Retrieve items with filters
@@ -417,7 +461,7 @@ router.get('/', (req, res) => {
     items = items.filter(i => i.type === 'registered' && (i.reportedBy === req.session.user.id || req.session.user.role === 'admin'));
   } else {
     // Public feed strictly excludes private preventive belongings
-    items = items.filter(i => i.type !== 'registered');
+    items = items.filter(i => i.type !== 'registered' && (req.session?.user?.role === 'admin' || i.status !== 'archived'));
   }
 
   // Type filter: lost | found
@@ -425,9 +469,11 @@ router.get('/', (req, res) => {
     items = items.filter(i => i.type === type && !isItemClaimed(i));
   }
 
-  // Status filter: claimed | active
+  // Status filter: claimed | active | archived
   if (status === 'claimed') {
     items = items.filter(isItemClaimed);
+  } else if (status === 'archived') {
+    items = items.filter(i => i.status === 'archived');
   } else if (status === 'active') {
     items = items.filter(i => !isItemClaimed(i));
   }
@@ -880,19 +926,30 @@ router.patch('/bulk', requireRole('admin'), (req, res) => {
   const ids = Array.isArray(req.body.ids) ? req.body.ids.map(String).filter(Boolean) : [];
   const action = req.body.action;
   if (!ids.length || ids.length > 100) return res.status(400).json({ success: false, message: 'Select between 1 and 100 items.' });
-  if (!['claim', 'delete'].includes(action)) return res.status(400).json({ success: false, message: 'Unsupported bulk action.' });
+  if (!['claim', 'delete', 'archive', 'status'].includes(action)) return res.status(400).json({ success: false, message: 'Unsupported bulk action.' });
+  const status = action === 'status' ? sanitizeString(req.body.status || '') : action === 'archive' ? 'archived' : '';
+  if (action === 'status' && !['active', 'claimed', 'archived'].includes(status)) return res.status(400).json({ success: false, message: 'Invalid bulk status.' });
 
   let items = getItems();
   const selected = items.filter(item => ids.includes(String(item.id)));
   if (!selected.length) return res.status(404).json({ success: false, message: 'No selected items were found.' });
-  if (action === 'claim') {
+  if (action === 'claim' || action === 'archive' || action === 'status') {
     selected.forEach(item => {
-      if (!isItemClaimed(item)) {
+      if (action === 'claim' && !isItemClaimed(item)) {
         item.claimed = true;
         item.status = 'claimed';
         item.claimedAt = new Date().toISOString();
         item.claimantProof = 'Bulk status update by moderator.';
         addItemActivity(item, req, 'Marked as claimed', 'Bulk admin action.');
+      } else if (status === 'archived') {
+        item.status = 'archived';
+        item.archivedAt = new Date().toISOString();
+        addItemActivity(item, req, 'Archived', 'Bulk admin action.');
+      } else if (status === 'active') {
+        item.status = 'active';
+        item.claimed = false;
+        item.claimedAt = null;
+        addItemActivity(item, req, 'Restored to active', 'Bulk admin action.');
       }
     });
     saveItems(items);
@@ -905,8 +962,24 @@ router.patch('/bulk', requireRole('admin'), (req, res) => {
   res.json({ success: true, affected: selected.length, action });
 });
 
+// PATCH /api/items/:id/status - Update active, claimed, or archived status.
+router.patch('/:id/status', requireRole('admin'), (req, res) => {
+  const status = sanitizeString(req.body.status || '');
+  if (!['active', 'claimed', 'archived'].includes(status)) return res.status(400).json({ success: false, message: 'Invalid item status.' });
+  const items = getItems();
+  const item = items.find(entry => String(entry.id) === String(req.params.id));
+  if (!item) return res.status(404).json({ success: false, message: 'Item not found.' });
+  item.status = status;
+  item.claimed = status === 'claimed';
+  if (status === 'archived') item.archivedAt = new Date().toISOString();
+  if (status !== 'claimed') item.claimedAt = null;
+  addItemActivity(item, req, `Status changed to ${status}`, 'Inline admin status update.');
+  saveItems(items);
+  res.json({ success: true, message: `Item status updated to ${status}.`, item });
+});
+
 // PATCH /api/items/:id/claim - Claim or restore item
-router.patch('/:id/claim', requireRole('admin'), (req, res) => {
+router.patch('/:id/claim', requireRole('admin'), async (req, res) => {
   const items = getItems();
   const itemIndex = items.findIndex(i => String(i.id) === String(req.params.id));
   if (itemIndex === -1) {
@@ -935,6 +1008,13 @@ router.patch('/:id/claim', requireRole('admin'), (req, res) => {
   addItemActivity(item, req, 'Marked as claimed', item.claimantProof);
 
   saveItems(items);
+  if (item.reporterEmail) {
+    try {
+      await sendClaimStatusEmail({ fullName: item.reporterName, email: item.reporterEmail }, item, { claimantName: item.reporterName, claimantEmail: item.reporterEmail }, 'approved');
+    } catch (error) {
+      console.error('Claim notification email could not be sent:', error.message);
+    }
+  }
   res.json({
     success: true,
     message: `Item ${item.refCode} marked as claimed.`,

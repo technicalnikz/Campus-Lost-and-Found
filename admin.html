@@ -66,6 +66,7 @@
       <!-- Tabs -->
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="items">All Items</button>
+        <button class="admin-tab" data-tab="claims">Pending Claims <span class="tab-count" id="pendingClaimsTabCount">0</span></button>
       </div>
 
       <!-- ITEMS TAB -->
@@ -84,6 +85,7 @@
             <option value="lost">Lost</option>
             <option value="found">Found</option>
             <option value="claimed">Claimed</option>
+            <option value="archived">Archived</option>
           </select>
           <select class="form-control" id="adminFilterDate" aria-label="Filter by date">
             <option value="">Any Date</option>
@@ -97,6 +99,13 @@
           <label><input type="checkbox" id="selectAllItems" /> Select all visible</label>
           <span id="selectedItemsCount">0 selected</span>
           <button class="action-btn action-btn-claim" id="bulkClaimBtn" disabled>Mark Claimed</button>
+          <button class="action-btn action-btn-outline" id="bulkArchiveBtn" disabled>Archive Selected</button>
+          <select class="form-control bulk-status-select" id="bulkStatusSelect" aria-label="Bulk status update" disabled>
+            <option value="">Bulk Status…</option>
+            <option value="active">Active</option>
+            <option value="claimed">Claimed</option>
+            <option value="archived">Archived</option>
+          </select>
           <button class="action-btn action-btn-delete" id="bulkDeleteBtn" disabled>Delete Selected</button>
           <button class="btn btn-outline" id="exportSelectedBtn" disabled>Export Selected</button>
         </div>
@@ -137,6 +146,22 @@
         </div>
         <div id="adminEmptyState" style="display:none;" class="empty-state">
           <h3>No items found</h3>
+        </div>
+      </div>
+
+      <!-- PENDING CLAIMS TAB -->
+      <div id="tabClaims" style="display:none;">
+        <div class="claims-tab-intro">
+          <div><h2>Pending Claims</h2><p>Review ownership proof before approving a physical handover.</p></div>
+          <button class="btn btn-outline" id="refreshClaimsBtn">Refresh Claims</button>
+        </div>
+        <div id="pendingClaimsList" class="pending-claims-list"></div>
+        <div class="broadcast-card">
+          <h3>Broadcast Message</h3>
+          <p>Send an announcement to registered students by email.</p>
+          <input class="form-control" id="broadcastSubject" maxlength="120" placeholder="Announcement subject" />
+          <textarea class="claim-review-input" id="broadcastMessage" maxlength="2000" rows="4" placeholder="Write the announcement..."></textarea>
+          <button class="btn btn-primary" id="sendBroadcastBtn">Send Broadcast</button>
         </div>
       </div>
 

@@ -22,11 +22,12 @@
       border-color: var(--blue-main);
       color: var(--blue-main);
     }
+    .tab-count { display:inline-grid; min-width:1.25rem; height:1.25rem; place-items:center; margin-left:.25rem; padding:0 .25rem; border-radius:99px; background:rgba(239,68,68,.18); color:#f87171; font-size:.68rem; }
 
     /* ── Admin Stats ── */
     .admin-stats {
       display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       gap: .75rem;
       margin-bottom: 1.25rem;
     }
@@ -57,6 +58,21 @@
     .activity-entry { padding:.7rem .8rem; border-left:3px solid var(--blue-main); border-radius:5px; background:rgba(59,130,246,.06); font-size:.8rem; }
     .activity-entry span { display:block; margin-top:.2rem; color:var(--text-muted); font-size:.7rem; }
     .activity-entry p { margin-top:.35rem; color:var(--text-muted); line-height:1.4; }
+    .claims-tab-intro { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+    .claims-tab-intro h2 { color:var(--text-main); font-size:1.1rem; }
+    .claims-tab-intro p,.broadcast-card p { color:var(--text-muted); font-size:.8rem; margin-top:.25rem; }
+    .pending-claims-list { display:grid; gap:.8rem; }
+    .pending-claim-card { display:grid; grid-template-columns:1.1fr 1fr 1.6fr auto; align-items:center; gap:1rem; padding:1rem; border:1px solid var(--border); border-radius:10px; background:var(--card-bg); }
+    .pending-claim-card h3 { margin-top:.35rem; color:var(--text-main); font-size:.95rem; }
+    .pending-claim-card p,.pending-claim-details span { color:var(--text-muted); font-size:.76rem; line-height:1.45; }
+    .pending-claim-details { display:grid; gap:.2rem; }
+    .pending-claim-proof { min-width:0; padding:.65rem .75rem; border-left:3px solid var(--blue-main); background:rgba(59,130,246,.05); }
+    .pending-claim-proof strong { color:var(--blue-light); font-size:.76rem; }
+    .broadcast-card { max-width:680px; margin-top:1.25rem; padding:1rem; border:1px solid var(--border); border-radius:10px; background:var(--card-bg); }
+    .broadcast-card h3 { color:var(--blue-light); font-size:.9rem; }
+    .broadcast-card .form-control { margin-top:.75rem; }
+    .broadcast-card .btn { margin-top:.75rem; }
+    .bulk-status-select { width:auto !important; min-width:125px; }
 
     /* ── Table ── */
     .admin-table-card { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; }
@@ -259,7 +275,7 @@
     /* ── Search in admin ── */
     .admin-search-row {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: .75rem;
       margin-bottom: 1.25rem;
       align-items: center;
@@ -372,6 +388,8 @@
       .admin-profile { gap: .35rem; padding: 0 .5rem; }
       .claim-review-grid { grid-template-columns: 1fr; }
       .claim-review-dialog { padding: 1rem; }
+      .pending-claim-card { grid-template-columns:1fr; }
+      .claims-tab-intro { align-items:flex-start; flex-direction:column; }
       .admin-insights { grid-template-columns:1fr; }
     }
 

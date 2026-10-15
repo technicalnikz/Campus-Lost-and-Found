@@ -92,4 +92,31 @@ async function sendPossibleMatchEmail(user, lostItem, foundItem) {
   });
 }
 
-module.exports = { sendRegistrationEmail, sendPossibleMatchEmail };
+async function sendClaimStatusEmail(user, item, claim, status) {
+  const transport = createTransport();
+  const name = user.fullName || claim.claimantName || 'there';
+  const message = status === 'approved'
+    ? `Your claim for ${item.title} (${item.refCode}) was approved. Please follow the campus handover instructions provided by Back2You.`
+    : `Your claim for ${item.title} (${item.refCode}) was not approved. ${claim.rejectionReason || 'Please contact campus staff if you need clarification.'}`;
+  await transport.sendMail({
+    from: process.env.SMTP_FROM,
+    to: user.email || claim.claimantEmail,
+    subject: `Back2You claim ${status}: ${item.title}`,
+    text: `Hi ${name},\n\n${message}\n\nBack2You – CSPC Lost & Found`,
+    html: `<p>Hi ${escapeHtml(name)},</p><p>${escapeHtml(message)}</p><p>Back2You – CSPC Lost &amp; Found</p>`
+  });
+}
+
+async function sendBroadcastEmail(user, subject, message) {
+  const transport = createTransport();
+  const name = user.fullName || 'there';
+  await transport.sendMail({
+    from: process.env.SMTP_FROM,
+    to: user.email,
+    subject,
+    text: `Hi ${name},\n\n${message}\n\nBack2You – CSPC Lost & Found`,
+    html: `<p>Hi ${escapeHtml(name)},</p><p>${escapeHtml(message).replace(/\n/g, '<br>')}</p><p>Back2You – CSPC Lost &amp; Found</p>`
+  });
+}
+
+module.exports = { sendRegistrationEmail, sendPossibleMatchEmail, sendClaimStatusEmail, sendBroadcastEmail };
