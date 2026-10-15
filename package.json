@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "db:import": "node scripts/import-json-to-mysql.js"
   },
   "keywords": [
     "cspc",
@@ -23,6 +24,7 @@
     "express": "^4.22.3",
     "express-session": "^1.18.0",
     "multer": "^2.4.0",
+    "mysql2": "^3.24.6",
     "nodemailer": "^10.0.13",
     "nodemon": "^3.1.14",
     "session-file-store": "^1.5.0"

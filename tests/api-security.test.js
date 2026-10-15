@@ -653,13 +653,6 @@ test('production requires a secret and persists secure sessions', async () => {
   assert.throws(createApp, /SESSION_SECRET must be configured in production/);
 
   process.env.SESSION_SECRET = 'production-test-session-secret';
-  const configuredDataDir = process.env.DATA_DIR;
-  delete process.env.DATA_DIR;
-  assert.throws(createApp, /DATA_DIR must be configured in production/);
-  process.env.DATA_DIR = 'relative-data';
-  assert.throws(createApp, /DATA_DIR must be an absolute path in production/);
-  process.env.DATA_DIR = configuredDataDir;
-
   const productionServer = createApp().listen(0);
   await new Promise(resolve => productionServer.once('listening', resolve));
   try {
@@ -681,6 +674,25 @@ test('production requires a secret and persists secure sessions', async () => {
     await new Promise((resolve, reject) => productionServer.close(error => error ? reject(error) : resolve()));
     process.env.NODE_ENV = 'test';
     process.env.SESSION_SECRET = 'test-only-session-secret';
+  }
+});
+
+test('incomplete MySQL configuration does not silently fall back to JSON files', () => {
+  const keys = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
+  const originalEnvironment = Object.fromEntries(keys.map(key => [key, process.env[key]]));
+  try {
+    process.env.DB_HOST = 'localhost';
+    delete process.env.DB_PORT;
+    delete process.env.DB_NAME;
+    delete process.env.DB_USER;
+    delete process.env.DB_PASSWORD;
+    const mysqlStore = require('../services/mysqlStore');
+    assert.throws(mysqlStore.isConfigured, /DB_HOST, DB_NAME, DB_USER, and DB_PASSWORD must all be configured/);
+  } finally {
+    keys.forEach(key => {
+      if (originalEnvironment[key] === undefined) delete process.env[key];
+      else process.env[key] = originalEnvironment[key];
+    });
   }
 });
 
@@ -723,83 +735,36 @@ test('production admin password reset is explicit and only affects the configure
   }
 });
 
-test('production server starts when loaded as a hosting entry module', async () => {
-  const bootDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cspc-lostfound-boot-'));
-  fs.writeFileSync(path.join(bootDataDir, 'users.json'), JSON.stringify([
-    { id: 'usr-admin-01', email: 'legacy-admin@example.edu', role: 'admin' },
-    { id: 'kept-user', email: 'student@my.cspc.edu.ph', role: 'student' }
-  ]));
-  const portProbe = net.createServer();
-  await new Promise((resolve, reject) => {
-    portProbe.once('error', reject);
-    portProbe.listen(0, '127.0.0.1', resolve);
-  });
-  const port = portProbe.address().port;
-  await new Promise((resolve, reject) => portProbe.close(error => error ? reject(error) : resolve()));
-
+test('production startup requires MySQL configuration', async () => {
+  const childEnvironment = {
+    ...process.env,
+    NODE_ENV: 'production',
+    SESSION_SECRET: 'test-module-start-secret',
+    ADMIN_EMAIL: 'admin@cspc.edu.ph',
+    ADMIN_PASSWORD: 'ProductionStrongTestPass1!'
+  };
+  ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_PORT'].forEach(key => delete childEnvironment[key]);
   const child = spawn(process.execPath, ['-e', "require('./server')"], {
     cwd: path.join(__dirname, '..'),
-    env: {
-      ...process.env,
-      DATA_DIR: bootDataDir,
-      NODE_ENV: 'production',
-      PORT: String(port),
-      SESSION_SECRET: 'test-module-start-secret',
-      ADMIN_EMAIL: 'admin@cspc.edu.ph',
-      ADMIN_PASSWORD: 'ProductionStrongTestPass1!'
-    },
+    env: childEnvironment,
     stdio: ['ignore', 'pipe', 'pipe']
   });
   let logs = '';
-  const startup = new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error(`Server did not start. Logs: ${logs}`)), 3500);
-    child.stdout.on('data', chunk => {
-      logs += chunk.toString();
-      if (logs.includes('Server running')) {
-        clearTimeout(timeout);
-        resolve();
-      }
-    });
+  const processExit = new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error(`Server did not exit. Logs: ${logs}`)), 3500);
+    child.stdout.on('data', chunk => { logs += chunk.toString(); });
     child.stderr.on('data', chunk => { logs += chunk.toString(); });
     child.once('error', error => {
       clearTimeout(timeout);
       reject(error);
     });
-    child.once('exit', code => {
+    child.once('exit', (code, signal) => {
       clearTimeout(timeout);
-      reject(new Error(`Server exited with code ${code}. Logs: ${logs}`));
+      resolve({ code, signal });
     });
   });
 
-  try {
-    await startup;
-    const response = await fetch(`http://127.0.0.1:${port}/api/items`);
-    assert.equal(response.status, 200);
-    const users = JSON.parse(fs.readFileSync(path.join(bootDataDir, 'users.json'), 'utf8'));
-    assert.deepEqual(users.map(user => user.email), [
-      'legacy-admin@example.edu',
-      'student@my.cspc.edu.ph',
-      'admin@cspc.edu.ph'
-    ]);
-    assert.match(users[2].id, /^usr-admin-/);
-
-    const loginResponse = await fetch(`http://127.0.0.1:${port}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Forwarded-Proto': 'https' },
-      body: JSON.stringify({ email: 'admin@cspc.edu.ph', password: 'ProductionStrongTestPass1!' })
-    });
-    assert.equal(loginResponse.status, 200);
-    assert.equal((await loginResponse.json()).user.role, 'admin');
-    const sessionCookie = loginResponse.headers.get('set-cookie').split(';')[0];
-    const claimsResponse = await fetch(`http://127.0.0.1:${port}/api/items/claims`, {
-      headers: { Cookie: sessionCookie }
-    });
-    assert.equal(claimsResponse.status, 200);
-  } finally {
-    if (child.exitCode === null) {
-      child.kill();
-      await new Promise(resolve => child.once('exit', resolve));
-    }
-    fs.rmSync(bootDataDir, { recursive: true, force: true });
-  }
+  const { code } = await processExit;
+  assert.equal(code, 1);
+  assert.match(logs, /MySQL database environment variables are required in production/);
 });

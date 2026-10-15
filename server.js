@@ -9,17 +9,11 @@ const fs = require('fs');
 
 const authRoutes = require('./routes/authRoutes');
 const itemRoutes = require('./routes/itemRoutes');
+const mysqlStore = require('./services/mysqlStore');
 
 function createApp() {
   const app = express();
   const isProduction = process.env.NODE_ENV === 'production';
-  if (isProduction && !process.env.DATA_DIR) {
-    throw new Error('DATA_DIR must be configured in production to use persistent storage.');
-  }
-  if (isProduction && !path.isAbsolute(process.env.DATA_DIR)) {
-    throw new Error('DATA_DIR must be an absolute path in production.');
-  }
-
   const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
   const sessionSecret = process.env.SESSION_SECRET || (isProduction ? '' : 'cspc-lostfound-development-only');
 
@@ -49,6 +43,11 @@ function createApp() {
     }
   }));
 
+  const databaseRequest = mysqlStore.requestMiddleware();
+  app.use('/api', (req, res, next) => {
+    if (req.method === 'POST' && ['/items', '/items/'].includes(req.path)) return next();
+    databaseRequest(req, res, next);
+  });
   app.use('/api/auth', authRoutes);
   app.use('/api/items', itemRoutes);
   app.use('/api/stats', (req, res) => res.redirect('/api/items/stats'));
@@ -91,10 +90,20 @@ function createApp() {
   return app;
 }
 
-if (process.env.NODE_ENV !== 'test') {
+async function startServer() {
   const PORT = process.env.PORT || 3000;
-  authRoutes.ensureDefaultAdminAccount();
+  if (process.env.NODE_ENV === 'production' || mysqlStore.isConfigured()) {
+    await mysqlStore.initialize();
+  }
+  await authRoutes.ensureDefaultAdminAccount();
   createApp().listen(PORT, '0.0.0.0', () => console.log(`Server running at: http://localhost:${PORT}`));
 }
 
-module.exports = { createApp };
+if (process.env.NODE_ENV !== 'test') {
+  startServer().catch(error => {
+    console.error('Server startup failed:', error.message);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { createApp, startServer };

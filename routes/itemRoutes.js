@@ -9,6 +9,7 @@ const { validateItemReport, sanitizeString } = require('../middleware/validate')
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
 const { sendPossibleMatchEmail } = require('../services/email');
+const mysqlStore = require('../services/mysqlStore');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const ITEMS_FILE = path.join(DATA_DIR, 'items.json');
@@ -645,7 +646,7 @@ router.post('/:id/claim-requests', requireAuth, (req, res) => {
 });
 
 // POST /api/items - Create item report
-router.post('/', upload.single('photo'), validateItemReport, async (req, res) => {
+router.post('/', upload.single('photo'), mysqlStore.requestMiddleware(), validateItemReport, async (req, res) => {
   try {
     const items = getItems();
     const nextSeq = items.length + 1;

@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const { validateUserAuth, sanitizeString } = require('../middleware/validate');
 const { sendRegistrationEmail } = require('../services/email');
 const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
+const mysqlStore = require('../services/mysqlStore');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -40,46 +41,51 @@ function saveUsers(users) {
 }
 
 function ensureDefaultAdminAccount() {
-  const users = getUsers();
-  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@cspc.edu.ph').trim().toLowerCase();
-  if (!/^[^\s@]+@cspc\.edu\.ph$/.test(adminEmail)) {
-    throw new Error('ADMIN_EMAIL must be a valid @cspc.edu.ph address.');
-  }
-
-  const existingAdmin = users.find(user => user.email.toLowerCase() === adminEmail);
-  if (existingAdmin) {
-    if (existingAdmin.role !== 'admin') {
-      throw new Error(`${adminEmail} is reserved for the administrator account.`);
+  const ensureAccount = () => {
+    const users = getUsers();
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@cspc.edu.ph').trim().toLowerCase();
+    if (!/^[^\s@]+@cspc\.edu\.ph$/.test(adminEmail)) {
+      throw new Error('ADMIN_EMAIL must be a valid @cspc.edu.ph address.');
     }
-    if (process.env.NODE_ENV === 'production' && process.env.ADMIN_PASSWORD_RESET === 'true') {
-      const password = process.env.ADMIN_PASSWORD;
-      if (!password || password.length < 12) {
-        throw new Error('ADMIN_PASSWORD must be configured with at least 12 characters to reset the production admin password.');
+
+    const existingAdmin = users.find(user => user.email.toLowerCase() === adminEmail);
+    if (existingAdmin) {
+      if (existingAdmin.role !== 'admin') {
+        throw new Error(`${adminEmail} is reserved for the administrator account.`);
       }
+      if (process.env.NODE_ENV === 'production' && process.env.ADMIN_PASSWORD_RESET === 'true') {
+        const password = process.env.ADMIN_PASSWORD;
+        if (!password || password.length < 12) {
+          throw new Error('ADMIN_PASSWORD must be configured with at least 12 characters to reset the production admin password.');
+        }
 
-      existingAdmin.passwordHash = bcrypt.hashSync(password, 10);
-      saveUsers(users);
-      console.info(`Production admin password reset completed for ${adminEmail}. Set ADMIN_PASSWORD_RESET=false after verifying login.`);
+        existingAdmin.passwordHash = bcrypt.hashSync(password, 10);
+        saveUsers(users);
+        console.info(`Production admin password reset completed for ${adminEmail}. Set ADMIN_PASSWORD_RESET=false after verifying login.`);
+      }
+      return;
     }
-    return;
-  }
 
-  const password = process.env.ADMIN_PASSWORD;
-  if (process.env.NODE_ENV === 'production' && (!password || password.length < 12)) {
-    throw new Error('ADMIN_PASSWORD must be configured with at least 12 characters in production.');
-  }
+    const password = process.env.ADMIN_PASSWORD;
+    if (process.env.NODE_ENV === 'production' && (!password || password.length < 12)) {
+      throw new Error('ADMIN_PASSWORD must be configured with at least 12 characters in production.');
+    }
 
-  users.push({
-    id: `usr-admin-${Date.now()}`,
-    email: adminEmail,
-    passwordHash: bcrypt.hashSync(password || 'admin@_123bAck2u', 10),
-    fullName: sanitizeString(process.env.ADMIN_NAME || 'CSPC Administrator'),
-    studentId: 'N/A',
-    role: 'admin',
-    department: 'Administration',
-    createdAt: new Date().toISOString()
-  });
-  saveUsers(users);
+    users.push({
+      id: `usr-admin-${Date.now()}`,
+      email: adminEmail,
+      passwordHash: bcrypt.hashSync(password || 'admin@_123bAck2u', 10),
+      fullName: sanitizeString(process.env.ADMIN_NAME || 'CSPC Administrator'),
+      studentId: 'N/A',
+      role: 'admin',
+      department: 'Administration',
+      createdAt: new Date().toISOString()
+    });
+    saveUsers(users);
+  };
+
+  if (mysqlStore.isConfigured()) return mysqlStore.withTransaction(ensureAccount);
+  return ensureAccount();
 }
 
 // POST /api/auth/register
