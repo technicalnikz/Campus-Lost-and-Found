@@ -699,14 +699,6 @@ h2 {
   min-height: 2.72em;
 }
 
-/* Keep item cards focused on match verification. */
-.projects-grid .item-card-description,
-.projects-grid .card-meta-line,
-.projects-grid .project-card > div[onclick*="openImageModal"],
-.projects-grid .btn-claim,
-.projects-grid .btn-qr {
-  display: none !important;
-}
 
 .project-card {
   background: var(--card-bg);
