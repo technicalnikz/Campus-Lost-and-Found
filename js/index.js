@@ -41,6 +41,10 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
           return;
         }
         currentUser = data.user;
+        if (currentUser.role === 'admin' && window.location.pathname === '/') {
+          window.location.replace('/admin.html');
+          return;
+        }
         document.getElementById('userNavSlot').innerHTML = `
           <div class="user-pill">
             <span class="user-name">${currentUser.role === 'admin' ? 'Admin' : escapeHtml(currentUser.fullName)}</span>

@@ -727,6 +727,10 @@
 
         if (data.authenticated && data.user && ['admin', 'student'].includes(data.user.role)) {
           currentUser = data.user;
+          if (currentUser.role === 'admin' && window.location.pathname === '/') {
+            window.location.replace('/admin.html');
+            return;
+          }
           sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
           sessionStorage.setItem('userRole', currentUser.role);
           const isAdmin = currentUser.role === 'admin';
