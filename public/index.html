@@ -1280,6 +1280,8 @@
         const found = data.found || { title: 'Hidden', refCode: 'Hidden' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
         document.getElementById('matchStaffAction').style.display = statusOnly ? 'none' : '';
+        document.getElementById('matchLostRef').style.display = statusOnly ? 'none' : '';
+        document.getElementById('matchFoundRef').style.display = statusOnly ? 'none' : '';
         const printAction = document.querySelector('button[onclick="printMatchQr()"]');
         if (printAction) printAction.style.display = statusOnly ? 'none' : '';
 
@@ -1330,6 +1332,8 @@
         data.found = data.found || { title: 'Hidden', refCode: 'Hidden' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
         document.getElementById('matchStaffAction').style.display = statusOnly ? 'none' : '';
+        document.getElementById('matchLostRef').style.display = statusOnly ? 'none' : '';
+        document.getElementById('matchFoundRef').style.display = statusOnly ? 'none' : '';
         const printAction = document.querySelector('button[onclick="printMatchQr()"]');
         if (printAction) printAction.style.display = statusOnly ? 'none' : '';
         document.getElementById('matchLostTitle').textContent = data.lost.title || '—';
