@@ -80,16 +80,15 @@ async function sendPossibleMatchEmail(user, lostItem, foundItem) {
   const name = user.fullName || 'there';
   const safeName = escapeHtml(name);
   const link = reviewUrl.toString();
-  const instructions = 'Sign in to Back2You to review the possible match. If you believe the found item is yours, contact the Student Affairs and Services (SAS) office or the General Services Unit / Campus Security Desk. Bring your student ID and both report reference codes. Campus staff will verify ownership before any item is returned; this automated match is not confirmation of ownership.';
-  const lostDetails = `Lost report: ${lostItem.title} (${lostItem.refCode})`;
-  const foundDetails = `Found report: ${foundItem.title} (${foundItem.refCode}) at ${foundItem.location}`;
+  const lostDetails = `Your lost-item report: ${lostItem.title} (${lostItem.refCode})`;
+  const foundDetails = `Possible found-item match: ${foundItem.title} (${foundItem.refCode})`;
 
   await transport.sendMail({
     from: process.env.SMTP_FROM,
     to: user.email,
     subject: 'Possible match for your Back2You lost-item report',
-    text: `Hi ${name},\n\nA found item may match your lost-item report. This is only a possible match, not confirmation of ownership.\n\n${lostDetails}\n${foundDetails}\n\n${instructions}\n\nReview the possible match: ${link}\n\nThe Back2You Team`,
-    html: `<p>Hi ${safeName},</p><p>A found item may match your lost-item report. This is only a possible match, not confirmation of ownership.</p><ul><li>${escapeHtml(lostDetails)}</li><li>${escapeHtml(foundDetails)}</li></ul><p>${escapeHtml(instructions)}</p><p><a href="${escapeHtml(link)}">Review the possible match</a></p><p>The Back2You Team</p>`
+    text: `Hi ${name},\n\nA found item may match your lost-item report. This is only a possible match and does not confirm ownership. Sign in to Back2You to review the details.\n\n- ${lostDetails}\n- ${foundDetails}\n- Reported location: ${foundItem.location}\n\nIf you believe this is your item, be prepared to provide information that helps verify your ownership. The item will only be returned after ownership has been verified.\n\nReview the possible match: ${link}\n\nThank you,\nBack2You – CSPC Lost & Found`,
+    html: `<p>Hi ${safeName},</p><p>A found item may match your lost-item report. This is only a possible match and does not confirm ownership. Sign in to Back2You to review the details.</p><ul><li>${escapeHtml(lostDetails)}</li><li>${escapeHtml(foundDetails)}</li><li>Reported location: ${escapeHtml(foundItem.location)}</li></ul><p>If you believe this is your item, be prepared to provide information that helps verify your ownership. The item will only be returned after ownership has been verified.</p><p><a href="${escapeHtml(link)}">Review the possible match</a></p><p>Thank you,<br>Back2You – CSPC Lost &amp; Found</p>`
   });
 }
 

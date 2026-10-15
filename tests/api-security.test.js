@@ -523,12 +523,17 @@ test('possible-match alerts notify the lost-report student whether the found rep
   const firstFound = (await firstFoundResponse.json()).item;
   assert.equal(smtp.messages.length, 1);
   assert.match(smtp.messages[0].recipient, /match\.student@my\.cspc\.edu\.ph/i);
-  assert.match(smtp.messages[0].content, /Possible match for your Back2You lost-item report/i);
-  assert.ok(smtp.messages[0].content.includes(firstLost.refCode));
-  assert.ok(smtp.messages[0].content.includes(firstFound.refCode));
-  assert.match(smtp.messages[0].content, /Student Affairs and Services/i);
-  assert.match(smtp.messages[0].content, /Campus Security Desk/i);
-  assert.doesNotMatch(smtp.messages[0].content, /Gold comet sticker under the hinge/);
+  const emailContent = smtp.messages[0].content.replace(/=\r\n/g, '');
+  assert.match(emailContent, /Possible match for your Back2You lost-item report/i);
+  assert.ok(emailContent.includes(firstLost.refCode));
+  assert.ok(emailContent.includes(firstFound.refCode));
+  assert.match(emailContent, /Your lost-item report: Cerulean astrophotography camera/i);
+  assert.match(emailContent, /Possible found-item match: Cerulean astrophotography camera/i);
+  assert.match(emailContent, /Reported location: College of Computer Studies \(CCS\)/);
+  assert.match(emailContent, /does not confirm ownership/i);
+  assert.match(emailContent, /verify your ownership/i);
+  assert.doesNotMatch(emailContent, /Student Affairs and Services|Campus Security Desk|General Services Unit/i);
+  assert.doesNotMatch(emailContent, /Gold comet sticker under the hinge/);
 
   const secondPair = {
     title: 'Silver robotics team hoodie',

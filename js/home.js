@@ -291,7 +291,6 @@ let currentUser = null;
 
             <div class="card-meta-line">
               <span><strong>Location:</strong> ${escapeHtml(item.location)}</span>
-              <span><strong>Return:</strong> Coordinate through the CSPC Student Affairs Office or Campus Security Desk.</span>
               <span><strong>Reported:</strong> ${formatTimestamp(item.createdAt || item.date)}</span>
               ${item.claimedAt ? `<span><strong>Claimed:</strong> ${formatTimestamp(item.claimedAt)}</span>` : ''}
             </div>
