@@ -279,11 +279,13 @@ let deleteTargetId = null;
       tbody.innerHTML = pageItems.map((item, idx) => {
         const date = item.type === 'lost' ? formatDate(item.dateLost) : formatDate(item.dateFound);
         const canClaim   = item.status !== 'claimed' && item.status !== 'archived';
-        const canRestore = item.status === 'claimed';
+        const canRestore = item.status === 'claimed' || item.status === 'archived';
         const itemClaims = claimRequests.filter(claim => String(claim.itemId) === String(item.id));
         const pendingClaim = itemClaims.find(claim => claim.status === 'pending');
         const latestClaim = itemClaims[0];
-        const itemStatus = item.claimed || item.status === 'claimed'
+        const itemStatus = item.status === 'archived'
+          ? '<span class="badge badge-archived">Archived</span>'
+          : item.claimed || item.status === 'claimed'
           ? '<span class="badge badge-claimed">Claimed</span>'
           : pendingClaim
             ? '<span class="badge admin-status-pending">Pending Verification</span>'
@@ -309,7 +311,7 @@ let deleteTargetId = null;
           <td class="actions-cell">
             <div class="action-buttons">
               ${pendingClaim ? `<button class="action-btn action-btn-claim" onclick="openClaimReview('${pendingClaim.id}')">Review Claim</button>` : ''}
-              ${canRestore ? `<button class="action-btn action-btn-restore" onclick="markRestore('${item.id}')">Restore</button>` : ''}
+              ${canRestore ? `<button class="action-btn action-btn-restore" onclick="markRestore('${item.id}','${item.status}')">Restore</button>` : ''}
               <button class="action-btn action-btn-delete" onclick="openDeleteModal('${item.id}','${escHtml(item.title)}','${escHtml(reporterValues[0] || 'Unknown reporter')}')">Delete</button>
             </div>
           </td>
@@ -424,8 +426,9 @@ let deleteTargetId = null;
       updateItemClaimStatus(id, 'Verified by moderator during campus handoff.');
     }
 
-    function markRestore(id) {
-      updateItemClaimStatus(id);
+    function markRestore(id, status = 'claimed') {
+      if (status === 'archived') updateItemStatus(id, 'active');
+      else updateItemClaimStatus(id);
     }
 
     function openDeleteModal(id, title, reporter = 'Unknown reporter') {
