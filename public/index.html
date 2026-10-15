@@ -629,7 +629,7 @@
   <!-- SMART MATCH HANDOVER QR MODAL -->
   <!-- MATCH REFERENCE QR MODAL -->
   <div class="slip-overlay" id="matchQrModal" onclick="if(event.target===this) closeMatchQrModal()">
-    <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 1.8rem; max-width: 520px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
+    <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 1.8rem; max-width: 520px; width: 92%; box-sizing: border-box; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
       <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
         <div>
           <span style="font-size: 0.68rem; font-weight: 800; background: rgba(59,130,246,0.18); color: var(--blue-main); padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">Match Reference</span>
@@ -660,10 +660,10 @@
 
          <div style="display: block; width: max-content; margin: 0 auto 0.5rem; padding: 0.5rem; background: #ffffff; border: 1.5px solid #0f172a; border-radius: 8px;">
           <img id="matchQrImage" src="" alt="Match Verification QR" style="width: 130px; height: 130px; display: block;" />
+         </div>
         <div id="matchQrStatus" style="margin-top: 0.55rem; font-size: 0.78rem; font-weight: 900; color: #2563eb;">Status: Pending Verification</div>
-        <div id="matchQrDates" style="margin-top: 0.25rem; font-size: 0.68rem; color: #64748b;">Generated: — · Expires: —</div>
+        <div id="matchQrDates" style="margin-top: 0.25rem; font-size: 0.68rem; color: #64748b; overflow-wrap:anywhere; white-space:normal;">Generated: — · Expires: —</div>
          <div id="matchQrAccessNote" style="display:none; margin-top:0.55rem; font-size:0.75rem; color:#475569;">Read-only status view. Staff verification details are restricted.</div>
-        </div>
         <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Reference lookup only — not handover approval</div>
       </div>
 
