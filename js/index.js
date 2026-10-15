@@ -43,8 +43,8 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
         currentUser = data.user;
         document.getElementById('userNavSlot').innerHTML = `
           <div class="user-pill">
-            <span class="user-name">${currentUser.role === 'admin' ? 'CSPC Administrator' : escapeHtml(currentUser.fullName)}</span>
-            <span class="role-badge">${currentUser.role === 'admin' ? 'CSPC ADMIN' : 'Student'}</span>
+            <span class="user-name">${currentUser.role === 'admin' ? 'Admin' : escapeHtml(currentUser.fullName)}</span>
+            ${currentUser.role === 'admin' ? '' : '<span class="role-badge">Student</span>'}
             <button type="button" onclick="handleLogout()" class="user-pill-logout">Logout</button>
           </div>`;
         renderItems();

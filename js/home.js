@@ -31,14 +31,14 @@ let currentUser = null;
           sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
           sessionStorage.setItem('userRole', currentUser.role);
           const isAdmin = currentUser.role === 'admin';
-          const roleLabel = isAdmin ? 'CSPC ADMIN' : 'Student';
+          const roleLabel = isAdmin ? '' : 'Student';
           document.getElementById('userNavSlot').innerHTML = `
             <button type="button" id="notifBellBtn" onclick="openNotificationsModal()" class="notif-bell-btn" title="View QR Recovery Alerts">
               🔔 <span id="notifCountBadge" class="notif-badge" style="display:none;">0</span>
             </button>
             <div class="user-pill">
-              <span class="user-name">${escapeHtml(isAdmin ? 'CSPC Administrator' : currentUser.fullName)}</span>
-              <span class="role-badge">${roleLabel}</span>
+              <span class="user-name">${escapeHtml(isAdmin ? 'Admin' : currentUser.fullName)}</span>
+              ${roleLabel ? `<span class="role-badge">${roleLabel}</span>` : ''}
               <button type="button" onclick="handleLogout()" class="user-pill-logout" title="Sign out of account">Logout</button>
             </div>
           `;
