@@ -1085,14 +1085,20 @@ select option {
 }
 
 @media (max-width: 768px) {
-  body { padding-bottom: 128px; }
-  .site-footer { width: 100%; min-height: 112px; padding: 1rem; }
+  body { padding-bottom: 88px; }
+  .site-footer { width: 100%; min-height: 0; padding: .6rem .75rem; gap: .2rem .75rem; }
+  .site-footer .footer-left img { width: 30px !important; height: 30px !important; }
+  .site-footer .footer-left { gap: .5rem !important; }
+  .site-footer .footer-left p, .site-footer .footer-right p { line-height: 1.25; font-size: .68rem; }
   .navbar-container { padding-inline: .5rem; gap: .25rem; }
   .nav-actions { gap: .25rem; min-width: 0; }
+  .nav-logo { gap: .35rem; font-size: .78rem; }
+  .nav-logo img { width: 29px; height: 29px; }
+  .theme-toggle, .notif-bell-btn { width: 32px; min-width: 32px; height: 32px; }
   #userNavSlot, .user-nav-slot { gap: .25rem; min-width: 0; }
-  .user-pill { max-width: 126px; gap: .25rem; padding-inline: .45rem; overflow: hidden; }
-  .user-pill .user-name { max-width: 68px; }
-  .user-pill .role-badge { max-width: 48px; overflow: hidden; padding-inline: .3rem; font-size: .52rem; }
+  .user-pill { max-width: 105px; gap: .2rem; padding-inline: .35rem; overflow: hidden; height: 32px; }
+  .user-pill .user-name { max-width: 52px; }
+  .user-pill .role-badge { max-width: 42px; overflow: hidden; padding-inline: .25rem; font-size: .48rem; }
   .user-pill-logout { display: none; }
   .nav-actions > .nav-register-btn {
     display: none !important;
