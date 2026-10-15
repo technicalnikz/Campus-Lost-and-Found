@@ -673,6 +673,7 @@
 
       <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end;">
         <button class="btn btn-outline" onclick="closeMatchQrModal()">Close</button>
+        <button class="btn btn-primary" id="matchClaimAction" onclick="requestMatchClaimFromQr()" style="display:none;">Request Claim</button>
         <button class="btn btn-outline" id="matchRegenerateAction" onclick="regenerateMatchQr()">Regenerate QR</button>
         <a class="btn btn-outline" id="matchStaffAction" href="#" target="_blank" rel="noopener">Open Staff Verification</a>
         <button class="btn btn-primary" onclick="printMatchQr()">🖨️ Print Match Reference</button>
@@ -1276,6 +1277,7 @@
 
     // ── Match QR Modal ────────────────────────────────────────────────────────
     let activeMatchQrIds = { lostId: null, foundId: null };
+    let activeMatchFoundId = null;
     let matchQrCountdownTimer = null;
 
     function formatQrTimestamp(value) {
@@ -1323,8 +1325,15 @@
       }
     }
 
+    function requestMatchClaimFromQr() {
+      if (!activeMatchFoundId) return showToast('The found-item reference is unavailable.', 'error');
+      closeMatchQrModal();
+      openClaimRequestModal(activeMatchFoundId);
+    }
+
     async function openMatchQrModal(lostId, foundId) {
       activeMatchQrIds = { lostId, foundId };
+      activeMatchFoundId = foundId;
       try {
         const response = await fetch(`/api/items/match-reference-token?lostId=${encodeURIComponent(lostId)}&foundId=${encodeURIComponent(foundId)}`);
         const data = await response.json();
@@ -1334,6 +1343,7 @@
         const found = data.found || { title: 'Hidden', refCode: 'Hidden' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
         document.getElementById('matchStaffAction').style.display = statusOnly ? 'none' : '';
+        document.getElementById('matchClaimAction').style.display = statusOnly ? '' : 'none';
         document.getElementById('matchLostRef').style.display = statusOnly ? 'none' : '';
         document.getElementById('matchFoundRef').style.display = statusOnly ? 'none' : '';
         const printAction = document.querySelector('button[onclick="printMatchQr()"]');
@@ -1387,10 +1397,12 @@
           throw new Error(data.message || 'This match reference is unavailable.');
         }
         const statusOnly = data.view === 'status-only';
+        activeMatchFoundId = data.foundItemId || activeMatchFoundId;
         data.lost = data.lost || { title: 'Hidden', refCode: 'Hidden' };
         data.found = data.found || { title: 'Hidden', refCode: 'Hidden' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
         document.getElementById('matchStaffAction').style.display = statusOnly ? 'none' : '';
+        document.getElementById('matchClaimAction').style.display = statusOnly ? '' : 'none';
         document.getElementById('matchLostRef').style.display = statusOnly ? 'none' : '';
         document.getElementById('matchFoundRef').style.display = statusOnly ? 'none' : '';
         const printAction = document.querySelector('button[onclick="printMatchQr()"]');

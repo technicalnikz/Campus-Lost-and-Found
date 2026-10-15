@@ -665,6 +665,7 @@ router.get('/match-reference-token', requireAuth, (req, res) => {
       token,
       url,
       referenceId,
+      foundItemId: found.id,
       issuedAt: new Date(issuedAt).toISOString(),
       expiresAt: new Date(expiresAt).toISOString(),
       status
@@ -710,6 +711,7 @@ router.get('/match-reference/:token', (req, res) => {
     return res.json({
       success: true,
       view: 'status-only',
+      foundItemId: found.id,
       issuedAt: new Date(reference.issuedAt).toISOString(),
       expiresAt: new Date(reference.expiresAt).toISOString(),
       referenceId,
