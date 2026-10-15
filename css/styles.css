@@ -1192,6 +1192,14 @@ select option {
   .nav-links { top: 76px; }
 }
 
+@media (max-width: 480px) {
+  .navbar:not(.admin-navbar) .navbar-container { flex-wrap: wrap; min-height: 76px; padding-block: .4rem; }
+  .navbar:not(.admin-navbar) .nav-actions { flex: 1 0 100%; width: 100%; justify-content: space-between; }
+  .navbar:not(.admin-navbar) .user-pill { max-width: none; }
+  .navbar:not(.admin-navbar) .user-pill .user-name { max-width: none; }
+  .navbar:not(.admin-navbar) .nav-links { top: 76px; }
+}
+
 /* ── LIGHT THEME COMPONENT OVERRIDES ── */
 [data-theme='light'] body::before,
 [data-theme='light'] body::after {
