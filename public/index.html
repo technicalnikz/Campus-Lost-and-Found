@@ -676,7 +676,6 @@
         <button class="btn btn-outline" onclick="closeMatchQrModal()">Close</button>
         <button class="btn btn-primary" id="matchClaimAction" onclick="requestMatchClaimFromQr()" style="display:none;">Request Claim</button>
         <button class="btn btn-outline" id="matchRegenerateAction" onclick="regenerateMatchQr()">Regenerate QR</button>
-        <a class="btn btn-outline" id="matchStaffAction" href="#" target="_blank" rel="noopener">Open CSPC Admin Verification</a>
         <button class="btn btn-primary" onclick="printMatchQr()">🖨️ Print Match Reference</button>
       </div>
     </div>
@@ -1343,7 +1342,6 @@
         const lost = data.lost || { title: 'Hidden', refCode: 'Hidden' };
         const found = data.found || { title: 'Hidden', refCode: 'Hidden' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
-        document.getElementById('matchStaffAction').style.display = statusOnly ? 'none' : '';
         document.getElementById('matchClaimAction').style.display = statusOnly ? '' : 'none';
         document.getElementById('matchLostRef').style.display = statusOnly ? 'none' : '';
         document.getElementById('matchFoundRef').style.display = statusOnly ? 'none' : '';
@@ -1358,7 +1356,6 @@
         document.getElementById('matchQrStatus').textContent = `Status: ${data.status.label}`;
         document.getElementById('matchQrDates').textContent = `Generated: ${formatQrTimestamp(data.issuedAt)}\nExpires: ${formatQrTimestamp(data.expiresAt)}`;
         setMatchQrMetadata(data);
-        document.getElementById('matchStaffAction').href = data.url;
 
         const legacyMatchPayload = encodeURIComponent(
           `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
@@ -1402,7 +1399,6 @@
         data.lost = data.lost || { title: 'Hidden', refCode: 'Hidden' };
         data.found = data.found || { title: 'Hidden', refCode: 'Hidden' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
-        document.getElementById('matchStaffAction').style.display = statusOnly ? 'none' : '';
         document.getElementById('matchClaimAction').style.display = statusOnly ? '' : 'none';
         document.getElementById('matchLostRef').style.display = statusOnly ? 'none' : '';
         document.getElementById('matchFoundRef').style.display = statusOnly ? 'none' : '';
@@ -1415,7 +1411,6 @@
         document.getElementById('matchQrStatus').textContent = `Status: ${data.status.label}`;
         document.getElementById('matchQrDates').textContent = `Generated: ${formatQrTimestamp(data.issuedAt)}\nExpires: ${formatQrTimestamp(data.expiresAt)}`;
         setMatchQrMetadata(data);
-        document.getElementById('matchStaffAction').href = window.location.href;
         document.getElementById('matchQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
         document.getElementById('matchQrModal').classList.add('open');
       } catch (error) {
