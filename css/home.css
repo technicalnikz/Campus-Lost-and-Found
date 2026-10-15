@@ -50,6 +50,11 @@
     [data-theme='light'] .stat-lbl { color: #475569; }
     [data-theme='light'] .stat-box { color: #0f172a; }
 
+    @media (max-width: 768px) {
+      .hero-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; width: 100%; }
+      .stat-box { min-width: 0; width: 100%; padding: .75rem .85rem; }
+    }
+
     /* ── SIMPLE REPORT FORM ── */
     .simple-card {
       background: var(--card-bg);

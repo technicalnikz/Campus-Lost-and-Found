@@ -42,6 +42,7 @@ body {
   min-height: 100vh;
   padding-bottom: 104px;
   color: var(--text-main);
+  overflow-x: hidden;
 }
 
 /* ── BACKGROUND GLOWS ── */
@@ -1101,7 +1102,12 @@ select option {
     gap: 2rem;
     min-height: auto;
     padding-top: 3rem;
+    width: 100%;
+    overflow: hidden;
   }
+
+  .hero-text { width: 100%; min-width: 0; }
+  .hero-name { font-size: clamp(2.35rem, 12vw, 3.25rem); overflow-wrap: anywhere; }
 
   .hero-seal {
     width: 150px;
