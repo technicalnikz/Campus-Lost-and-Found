@@ -252,12 +252,13 @@
                 <path d="M20 23V11m-5 5 5-5 5 5" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
-            <strong>Click or drag and drop image here</strong>
-            <small>PNG, JPG, or WEBP up to 5MB</small>
+            <strong>Choose a photo or drag it here</strong>
+            <small>PNG, JPG, or WEBP · maximum 5MB</small>
           </div>
           <input type="file" id="itemPhotoInput" accept="image/*" onchange="handlePhotoSelect(event)" style="display: none;" />
-          <div id="photoPreviewBox" style="display: none; margin-top: 0.5rem; position: relative;">
-            <img id="photoPreviewImg" src="" alt="Photo Preview" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--blue-main); object-fit: cover; width: 100%;" />
+          <div id="photoPreviewBox" class="photo-preview-box" style="display: none;">
+            <img id="photoPreviewImg" class="photo-preview-image" src="" alt="Photo Preview" />
+            <div id="photoPreviewMeta" class="photo-preview-meta"></div>
             <button type="button" onclick="removePhoto()" style="position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; padding: 0.25rem 0.55rem; font-size: 0.72rem; cursor: pointer; font-weight: 700;">✕ Remove Photo</button>
           </div>
         </div>
@@ -1371,6 +1372,7 @@
       reader.onload = function(evt) {
         currentPhotoBase64 = evt.target.result;
         document.getElementById('photoPreviewImg').src = currentPhotoBase64;
+        document.getElementById('photoPreviewMeta').textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
         document.getElementById('photoPreviewBox').style.display = 'block';
       };
       reader.readAsDataURL(file);
@@ -1382,6 +1384,7 @@
       if (input) input.value = '';
       document.getElementById('photoPreviewBox').style.display = 'none';
       document.getElementById('photoPreviewImg').src = '';
+      document.getElementById('photoPreviewMeta').textContent = '';
     }
 
     function resetItemForm() {

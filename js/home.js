@@ -751,6 +751,7 @@ let currentUser = null;
       selectedPhotoFile = file;
       currentPhotoPreviewUrl = URL.createObjectURL(file);
       document.getElementById('photoPreviewImg').src = currentPhotoPreviewUrl;
+      document.getElementById('photoPreviewMeta').textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
       document.getElementById('photoPreviewBox').style.display = 'block';
     }
 
@@ -762,6 +763,7 @@ let currentUser = null;
       if (input) input.value = '';
       document.getElementById('photoPreviewBox').style.display = 'none';
       document.getElementById('photoPreviewImg').src = '';
+      document.getElementById('photoPreviewMeta').textContent = '';
     }
 
     function resetItemForm() {

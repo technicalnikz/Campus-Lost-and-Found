@@ -1765,6 +1765,42 @@ select::placeholder,
   height: 2.8rem;
 }
 
+.photo-preview-box {
+  position: relative;
+  margin-top: 0.7rem;
+  overflow: hidden;
+  border: 1px solid rgba(59, 130, 246, 0.55);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.7));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.photo-preview-image {
+  display: block;
+  width: 100%;
+  height: 220px;
+  object-fit: contain;
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.photo-preview-meta {
+  padding: 0.55rem 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-preview-box button {
+  top: 0.65rem !important;
+  right: 0.65rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 999px !important;
+  padding: 0.4rem 0.7rem !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
     /* ── Badges ── */
     .badge {
       display: inline-block;

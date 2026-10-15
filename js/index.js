@@ -768,6 +768,7 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
       reader.onload = function(evt) {
         currentPhotoBase64 = evt.target.result;
         document.getElementById('photoPreviewImg').src = currentPhotoBase64;
+        document.getElementById('photoPreviewMeta').textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
         document.getElementById('photoPreviewBox').style.display = 'block';
       };
       reader.readAsDataURL(file);
@@ -779,6 +780,7 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
       if (input) input.value = '';
       document.getElementById('photoPreviewBox').style.display = 'none';
       document.getElementById('photoPreviewImg').src = '';
+      document.getElementById('photoPreviewMeta').textContent = '';
     }
 
     function resetItemForm() {
