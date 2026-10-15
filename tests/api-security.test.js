@@ -653,6 +653,13 @@ test('production requires a secret and persists secure sessions', async () => {
   assert.throws(createApp, /SESSION_SECRET must be configured in production/);
 
   process.env.SESSION_SECRET = 'production-test-session-secret';
+  const configuredDataDir = process.env.DATA_DIR;
+  delete process.env.DATA_DIR;
+  assert.throws(createApp, /DATA_DIR must be configured in production/);
+  process.env.DATA_DIR = 'relative-data';
+  assert.throws(createApp, /DATA_DIR must be an absolute path in production/);
+  process.env.DATA_DIR = configuredDataDir;
+
   const productionServer = createApp().listen(0);
   await new Promise(resolve => productionServer.once('listening', resolve));
   try {

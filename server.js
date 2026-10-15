@@ -13,6 +13,13 @@ const itemRoutes = require('./routes/itemRoutes');
 function createApp() {
   const app = express();
   const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction && !process.env.DATA_DIR) {
+    throw new Error('DATA_DIR must be configured in production to use persistent storage.');
+  }
+  if (isProduction && !path.isAbsolute(process.env.DATA_DIR)) {
+    throw new Error('DATA_DIR must be an absolute path in production.');
+  }
+
   const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
   const sessionSecret = process.env.SESSION_SECRET || (isProduction ? '' : 'cspc-lostfound-development-only');
 
