@@ -406,10 +406,17 @@ input[type='submit'] {
 
 /* Final narrow-phone header: keep every control on one row. */
 @media (max-width: 420px) {
+  .navbar {
+    min-height: 56px !important;
+    height: 56px;
+    overflow: visible;
+  }
+
   .navbar-container {
     display: flex !important;
     position: relative !important;
     flex-wrap: nowrap !important;
+    height: 56px !important;
     min-height: 56px !important;
     padding-inline: .55rem;
   }
@@ -423,7 +430,10 @@ input[type='submit'] {
 
   .nav-actions {
     position: absolute !important;
-    inset: 0 .85rem 0 auto;
+    top: 0;
+    right: .85rem;
+    bottom: auto;
+    height: 56px;
     display: flex !important;
     align-items: center;
     justify-content: flex-end !important;
@@ -433,6 +443,14 @@ input[type='submit'] {
     padding: 0;
     gap: .2rem;
     transform: none !important;
+  }
+
+  .nav-logo,
+  .nav-logo img,
+  .nav-actions > *,
+  #userNavSlot,
+  .user-nav-slot {
+    align-self: center !important;
   }
 
   .nav-actions .notif-bell-btn {
