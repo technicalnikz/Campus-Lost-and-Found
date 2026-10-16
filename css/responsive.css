@@ -510,7 +510,13 @@ input[type='submit'] {
 
   .user-pill-logout {
     font-size: .48rem;
-    padding-inline: .15rem;
+    min-height: 22px;
+    padding: 0 .45rem;
+    border: 1px solid rgba(148, 163, 184, .45);
+    border-radius: 999px;
+    background: rgba(148, 163, 184, .12);
+    color: var(--text-muted);
+    white-space: nowrap;
   }
 
   .nav-signin-btn {
