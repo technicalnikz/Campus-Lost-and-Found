@@ -197,14 +197,18 @@ input[type='submit'] {
 
   .navbar-container {
     position: relative !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
+    display: grid !important;
+    grid-template-columns: 1fr;
+    grid-template-rows: 56px auto;
     min-height: 56px !important;
     padding-inline: .6rem;
   }
 
   .nav-logo {
-    flex: 1 1 auto;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    z-index: 2;
     max-width: none;
     min-width: 0;
   }
@@ -213,16 +217,41 @@ input[type='submit'] {
     display: flex !important;
     align-items: center;
     justify-content: flex-end !important;
-    flex: 0 0 auto !important;
-    width: auto !important;
-    max-width: calc(100vw - 8.5rem);
-    flex-wrap: nowrap !important;
-    position: absolute !important;
-    top: 50%;
-    right: .6rem;
-    transform: translateY(-50%);
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+    width: 100% !important;
+    max-width: none;
+    flex-wrap: wrap !important;
+    position: static !important;
+    transform: none;
     gap: .2rem;
     min-width: 0;
+    padding-top: .25rem;
+  }
+
+  .nav-actions .theme-toggle,
+  .nav-actions .notif-bell-btn,
+  .nav-actions .menu-toggle {
+    flex: 0 0 auto;
+    align-self: flex-start;
+  }
+
+  .nav-actions .theme-toggle { margin-left: auto; }
+
+  #userNavSlot,
+  .user-nav-slot {
+    order: 10;
+    flex: 1 0 100%;
+    width: 100%;
+    max-width: none;
+    justify-content: flex-end;
+    padding: .15rem 0 .4rem;
+  }
+
+  #userNavSlot .user-pill,
+  .user-nav-slot .user-pill {
+    max-width: 100% !important;
   }
 
   .nav-logo img {
@@ -235,7 +264,7 @@ input[type='submit'] {
   }
 
   .nav-links {
-    top: 56px !important;
+    top: 92px !important;
   }
 
   .nav-actions .notif-bell-btn {
@@ -245,13 +274,13 @@ input[type='submit'] {
   #userNavSlot,
   .user-nav-slot {
     min-width: 0;
-    max-width: min(10.5rem, calc(100vw - 10rem));
-    overflow: hidden;
+    max-width: none !important;
+    overflow: visible;
   }
 
   .user-pill {
     width: 100%;
-    max-width: min(10.5rem, calc(100vw - 10rem)) !important;
+    max-width: 100% !important;
     min-width: 0;
     height: 32px;
     min-height: 32px;
@@ -359,7 +388,7 @@ input[type='submit'] {
   #userNavSlot,
   .user-nav-slot,
   .user-pill {
-    max-width: min(10.5rem, calc(100vw - 10rem)) !important;
+    max-width: 100% !important;
   }
 
   .user-pill .user-name {
