@@ -404,6 +404,87 @@ input[type='submit'] {
   }
 }
 
+/* Final narrow-phone header: keep every control on one row. */
+@media (max-width: 420px) {
+  .navbar-container {
+    display: flex !important;
+    position: relative !important;
+    flex-wrap: nowrap !important;
+    min-height: 56px !important;
+    padding-inline: .55rem;
+  }
+
+  .nav-logo {
+    flex: 1 1 auto !important;
+    min-width: 0;
+    max-width: none;
+    z-index: 1;
+  }
+
+  .nav-actions {
+    position: absolute !important;
+    inset: 0 .55rem 0 auto;
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end !important;
+    width: auto !important;
+    max-width: calc(100vw - 5rem);
+    flex-wrap: nowrap !important;
+    padding: 0;
+    gap: .2rem;
+    transform: none !important;
+  }
+
+  .nav-actions .notif-bell-btn {
+    display: none !important;
+  }
+
+  #userNavSlot,
+  .user-nav-slot {
+    display: inline-flex !important;
+    order: 2;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: min(10rem, calc(100vw - 8.5rem)) !important;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  #userNavSlot .user-pill,
+  .user-nav-slot .user-pill {
+    width: 100%;
+    max-width: 100% !important;
+  }
+
+  .user-pill {
+    height: 32px;
+    min-height: 32px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .user-pill .user-name {
+    flex: 0 0 auto;
+    max-width: none !important;
+    white-space: nowrap;
+  }
+
+  .nav-signin-btn {
+    min-width: 4.3rem;
+    max-width: 4.8rem;
+    padding-inline: .55rem !important;
+  }
+
+  .nav-actions .menu-toggle {
+    order: 3;
+  }
+
+  .nav-links {
+    top: 56px !important;
+  }
+}
+
 @media (min-width: 769px) {
   .projects-grid,
   .browse-grid {
