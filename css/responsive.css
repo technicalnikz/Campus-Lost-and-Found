@@ -423,7 +423,7 @@ input[type='submit'] {
 
   .nav-actions {
     position: absolute !important;
-    inset: 0 .55rem 0 auto;
+    inset: 0 .85rem 0 auto;
     display: flex !important;
     align-items: center;
     justify-content: flex-end !important;
@@ -478,6 +478,10 @@ input[type='submit'] {
 
   .nav-actions .menu-toggle {
     order: 3;
+    width: 28px;
+    min-width: 28px;
+    margin-left: .1rem;
+    margin-right: .1rem;
   }
 
   .nav-links {
