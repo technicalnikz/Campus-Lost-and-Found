@@ -163,10 +163,11 @@ input[type='submit'] {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    min-height: 40px;
-    padding: .55rem .8rem !important;
+    min-height: 36px;
+    padding: .4rem .65rem !important;
     margin: 0 !important;
-    line-height: 1.2;
+    font-size: .75rem !important;
+    line-height: 1.1;
     text-align: center;
   }
 
