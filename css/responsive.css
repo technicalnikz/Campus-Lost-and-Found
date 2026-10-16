@@ -58,12 +58,13 @@ input[type='submit'] {
 
   .nav-links {
     padding: .65rem .6rem !important;
-    gap: .3rem !important;
+    gap: .12rem !important;
   }
 
   .nav-links a {
-    height: 28px !important;
+    height: 24px !important;
     font-size: .72rem !important;
+    line-height: 1 !important;
   }
 
   .nav-links .nav-register-mobile {
