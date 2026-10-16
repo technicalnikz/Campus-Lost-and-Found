@@ -182,8 +182,8 @@ input[type='submit'] {
 
   .nav-signin-btn {
     max-width: 5.25rem;
-    width: 56px;
-    min-width: 56px;
+    width: 50px;
+    min-width: 50px;
     height: 26px !important;
     padding: 0 .35rem !important;
     font-size: .64rem !important;
@@ -455,8 +455,8 @@ input[type='submit'] {
 
   .nav-signin-btn {
     max-width: 4.75rem;
-    width: 56px;
-    min-width: 56px;
+    width: 50px;
+    min-width: 50px;
     height: 26px !important;
     padding: 0 .35rem !important;
     font-size: .64rem !important;
@@ -830,9 +830,9 @@ input[type='submit'] {
   }
 
   .nav-signin-btn {
-    width: 56px;
-    min-width: 56px;
-    max-width: 56px;
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
     height: 26px !important;
     padding: 0 .35rem !important;
     font-size: .64rem !important;
