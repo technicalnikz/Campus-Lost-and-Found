@@ -14,6 +14,18 @@ body {
   overflow-x: hidden;
 }
 
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  body {
+    min-height: -webkit-fill-available;
+  }
+}
+
 img,
 svg,
 video,
@@ -191,6 +203,16 @@ input[type='submit'] {
     height: auto !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
+    padding: 0 !important;
+    align-content: start !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: auto !important;
+    row-gap: .75rem !important;
+  }
+
+  #itemsGrid > * {
+    margin-top: 0 !important;
+    align-self: start !important;
   }
 
   .filter-row,
@@ -261,6 +283,8 @@ input[type='submit'] {
 
   .site-footer {
     padding-bottom: calc(.6rem + env(safe-area-inset-bottom));
+    padding-left: max(.6rem, env(safe-area-inset-left));
+    padding-right: max(.6rem, env(safe-area-inset-right));
   }
 }
 
