@@ -44,14 +44,32 @@ input[type='submit'] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: min(100%, 14rem);
-    min-height: 44px;
+    width: min(100%, 12rem);
+    min-height: 36px;
+    padding: .4rem .75rem;
     border: 1px solid rgba(239, 68, 68, .45);
     border-radius: 10px;
     background: rgba(239, 68, 68, .1);
     color: #fca5a5;
     font-weight: 700;
     cursor: pointer;
+  }
+
+  .nav-links {
+    padding: .9rem .75rem !important;
+    gap: .5rem !important;
+  }
+
+  .nav-links a {
+    height: 32px !important;
+  }
+
+  .nav-links .nav-register-mobile {
+    min-height: 36px !important;
+    height: 36px !important;
+    width: min(100%, 12rem);
+    padding: .4rem .75rem !important;
+    font-size: .75rem !important;
   }
 
   body {
