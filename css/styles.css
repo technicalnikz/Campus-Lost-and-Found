@@ -85,9 +85,11 @@ body::after {
 }
 
 .navbar-container {
-  max-width: 1100px;
+  width: 100%;
+  max-width: 1140px;
   margin: 0 auto;
   padding: 0 1.25rem;
+  box-sizing: border-box;
   min-height: 64px;
   display: flex;
   align-items: center;
@@ -909,8 +911,9 @@ h2 {
   z-index: 900;
   width: 100%;
   max-width: none;
+  box-sizing: border-box;
   min-height: 0;
-  padding: 1rem clamp(1.5rem, 6vw, 5rem);
+  padding: 1rem 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -919,6 +922,18 @@ h2 {
   border-top: 1px solid var(--border);
   background: linear-gradient(135deg, rgba(24,24,27,.98), rgba(39,39,42,.98));
   box-shadow: 0 -10px 30px rgba(0,0,0,.18);
+}
+
+.footer-container {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .75rem;
 }
 
 .site-footer .footer-left img {
@@ -1110,13 +1125,13 @@ select option {
 }
 
 @media (max-width: 768px) {
-  body { padding-bottom: 64px; }
-  .site-footer { width: 100%; min-height: 0; padding: .5rem .75rem; gap: .5rem; align-items: center; flex-wrap: nowrap; }
+  body { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+  .site-footer { width: 100%; min-height: 0; padding: .75rem 0; }
+  .footer-container { flex-direction: column; justify-content: center; align-items: center; gap: 1rem; padding-inline: .75rem; text-align: center; }
   .site-footer .footer-left img { width: 28px !important; height: 28px !important; }
-  .site-footer .footer-left { gap: .5rem !important; }
-  .site-footer .footer-left, .site-footer .footer-right { min-width: 0; }
-  .site-footer .footer-left { flex: 1 1 auto; }
-  .site-footer .footer-right { flex: 0 0 auto; text-align: right; }
+  .site-footer .footer-left { gap: .5rem !important; justify-content: center; }
+  .site-footer .footer-left, .site-footer .footer-right { min-width: 0; text-align: center; }
+  .site-footer .footer-right { flex: 0 0 auto; }
   .site-footer .footer-left p, .site-footer .footer-right p { line-height: 1.25; font-size: .68rem; }
   .navbar-container { padding-inline: .5rem; gap: .25rem; }
   .nav-actions { gap: .25rem; min-width: 0; }

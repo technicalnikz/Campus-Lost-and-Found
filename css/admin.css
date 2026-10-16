@@ -329,6 +329,7 @@
     [data-theme='light'] .del-modal p  { color: #475569; }
 
     .admin-navbar .navbar-container { max-width: 1280px; }
+    .admin-navbar ~ .site-footer .footer-container { max-width: 1280px; }
     .admin-navbar .nav-links { width: min(500px, 45vw); justify-content: space-between; gap: 1rem; }
     .admin-navbar .nav-links a { font-size: .78rem; }
     .admin-navbar .nav-actions { gap: .5rem; }
