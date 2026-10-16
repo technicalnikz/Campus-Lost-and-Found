@@ -541,6 +541,67 @@ input[type='submit'] {
   }
 }
 
+/* Tablet-phone header: prevent the legacy wrap rule from moving controls to a second row. */
+@media (min-width: 421px) and (max-width: 768px) {
+  .navbar:not(.admin-navbar) {
+    min-height: 56px !important;
+    height: 56px;
+  }
+
+  .navbar:not(.admin-navbar) .navbar-container {
+    height: 56px !important;
+    min-height: 56px !important;
+    flex-wrap: nowrap !important;
+    padding-inline: .85rem;
+  }
+
+  .navbar:not(.admin-navbar) .nav-actions {
+    position: static !important;
+    transform: none !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: calc(100vw - 8rem);
+    height: 56px;
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+    gap: .3rem;
+  }
+
+  .navbar:not(.admin-navbar) .nav-actions > .nav-register-btn {
+    display: none !important;
+  }
+
+  .navbar:not(.admin-navbar) .nav-actions .theme-toggle,
+  .navbar:not(.admin-navbar) .nav-actions .notif-bell-btn,
+  .navbar:not(.admin-navbar) .nav-actions .menu-toggle {
+    flex: 0 0 auto;
+    align-self: center !important;
+  }
+
+  .navbar:not(.admin-navbar) #userNavSlot,
+  .navbar:not(.admin-navbar) .user-nav-slot {
+    display: inline-flex !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: min(12rem, calc(100vw - 10rem)) !important;
+    min-width: 0;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .navbar:not(.admin-navbar) .user-pill .role-badge {
+    display: none !important;
+  }
+
+  .navbar:not(.admin-navbar) .user-pill-logout {
+    display: none !important;
+  }
+
+  .navbar:not(.admin-navbar) .nav-links {
+    top: 56px !important;
+  }
+}
+
 /* Final narrow-phone header: keep every control on one row. */
 @media (max-width: 420px) {
   .navbar {
