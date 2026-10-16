@@ -52,6 +52,10 @@ input[type='submit'] {
     margin-bottom: .75rem !important;
   }
 
+  .hotspots-row {
+    margin-bottom: .5rem !important;
+  }
+
   .nav-links .mobile-menu-logout.visible {
     display: inline-flex;
     align-items: center;
@@ -179,6 +183,14 @@ input[type='submit'] {
   .projects-grid > .project-card {
     min-height: 0 !important;
     height: auto !important;
+    align-self: start !important;
+  }
+
+  #itemsGrid {
+    min-height: 0 !important;
+    height: auto !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
   }
 
   .filter-row,
