@@ -56,17 +56,7 @@ function togglePasswordVisibility(inputId, btn) {
       return user.role === 'admin' ? '/admin.html' : '/';
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      loadTheme();
-      document.querySelectorAll('.theme-toggle').forEach(button => {
-        if (button.dataset.loginThemeBound === 'true') return;
-        button.dataset.loginThemeBound = 'true';
-        button.addEventListener('click', event => {
-          event.stopPropagation();
-          toggleTheme();
-        });
-      });
-    });
+    // Theme initialization and click handling are provided by the shared main.js.
 
     function switchTab(tab) {
       const isLogin = tab === 'login';

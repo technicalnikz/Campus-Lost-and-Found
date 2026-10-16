@@ -754,6 +754,9 @@ input[type='submit'] {
     min-width: 4.3rem;
     max-width: 4.8rem;
     padding-inline: .55rem !important;
+    position: relative;
+    z-index: 2;
+    touch-action: manipulation;
   }
 
   .nav-actions .menu-toggle {
