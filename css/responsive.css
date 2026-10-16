@@ -192,6 +192,9 @@ input[type='submit'] {
 
 @media (max-width: 420px) {
   .navbar-container {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     flex-wrap: nowrap !important;
     min-height: 56px !important;
     padding-inline: .6rem;
@@ -204,9 +207,13 @@ input[type='submit'] {
   }
 
   .nav-actions {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end !important;
     flex: 0 0 auto !important;
     width: auto !important;
     gap: .2rem;
+    min-width: 0;
   }
 
   .nav-logo img {
@@ -220,6 +227,10 @@ input[type='submit'] {
 
   .nav-links {
     top: 56px !important;
+  }
+
+  .nav-actions .notif-bell-btn {
+    display: inline-flex;
   }
 
   .nav-signin-btn {
