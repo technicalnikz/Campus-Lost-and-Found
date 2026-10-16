@@ -40,6 +40,18 @@ input[type='submit'] {
     display: none !important;
   }
 
+  .user-pill .role-badge {
+    display: none !important;
+  }
+
+  .projects-section {
+    padding-top: .75rem !important;
+  }
+
+  .projects-section h2 {
+    margin-bottom: .75rem !important;
+  }
+
   .nav-links .mobile-menu-logout.visible {
     display: inline-flex;
     align-items: center;
