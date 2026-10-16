@@ -357,8 +357,7 @@
         <button type="button" onclick="closeImageModal()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; cursor: pointer; font-weight: 700;">✕ Close</button>
       </div>
       <div style="min-height: 180px; max-height: 70vh; overflow: auto; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2); background: #000; display: flex; align-items: center; justify-content: center; position: relative;">
-        <div id="imageModalLoading" hidden role="status" aria-live="polite" style="padding: 2rem; color: #cbd5e1;">Loading photo…</div>
-        <img id="imageModalImg" src="" alt="Full Item View" hidden style="display: block; width: auto; height: auto; max-width: 100%; max-height: 70vh; object-fit: contain;" />
+        <img id="imageModalImg" src="" alt="Full Item View" style="display: block; width: auto; height: auto; max-width: 100%; max-height: 70vh; object-fit: contain;" />
         <p id="imageModalFallback" hidden style="margin: 1.5rem; color: var(--text-muted);">This photo could not be loaded.</p>
       </div>
     </div>
@@ -1350,13 +1349,11 @@
     function openImageModal(photoSrc, title) {
       if (!photoSrc) return;
       const image = document.getElementById('imageModalImg');
-      const loading = document.getElementById('imageModalLoading');
       const fallback = document.getElementById('imageModalFallback');
-      image.hidden = true;
-      loading.hidden = false;
+      image.hidden = false;
       fallback.hidden = true;
-      image.onload = () => { loading.hidden = true; image.hidden = false; fallback.hidden = true; };
-      image.onerror = () => { loading.hidden = true; image.hidden = true; fallback.hidden = false; };
+      image.onload = () => { image.hidden = false; fallback.hidden = true; };
+      image.onerror = () => { image.hidden = true; fallback.hidden = false; };
       image.src = photoSrc;
       document.getElementById('imageModalTitle').innerText = title || 'Item Photo View';
       document.getElementById('imageModal').classList.add('open');
