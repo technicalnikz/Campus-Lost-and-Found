@@ -231,6 +231,7 @@ input[type='submit'] {
   #itemsGrid {
     min-height: 0 !important;
     height: auto !important;
+    display: grid !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
     padding: 0 !important;
@@ -238,6 +239,18 @@ input[type='submit'] {
     grid-template-rows: none !important;
     grid-auto-rows: auto !important;
     row-gap: .75rem !important;
+  }
+
+  /* Keep the first result close to the office filter on small screens. */
+  .projects-section {
+    display: block;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .projects-grid {
+    min-height: 0 !important;
+    margin-top: 0 !important;
+    row-gap: .5rem !important;
   }
 
   #itemsGrid > * {
