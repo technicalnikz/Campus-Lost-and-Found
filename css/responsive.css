@@ -247,6 +247,10 @@ input[type='submit'] {
     padding-bottom: 1.5rem !important;
   }
 
+  .projects-section + .section-divider + .tools-section {
+    padding-top: 1.25rem !important;
+  }
+
   .projects-grid {
     min-height: 0 !important;
     margin-top: 0 !important;

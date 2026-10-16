@@ -454,6 +454,19 @@ label,
   z-index: 1;
 }
 
+/* Keep the report form visually connected to the item results. */
+.projects-section + .section-divider {
+  margin-top: 0;
+}
+
+.projects-section + .section-divider + .tools-section {
+  padding-top: 2rem;
+}
+
+.projects-section {
+  padding-bottom: 2rem;
+}
+
 h2 {
   font-size: 0.78rem;
   font-weight: 700;
