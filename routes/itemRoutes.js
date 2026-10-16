@@ -11,7 +11,9 @@ const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
 const { sendPossibleMatchEmail, sendClaimStatusEmail, sendBroadcastEmail } = require('../services/email');
 const postgresStore = require('../services/postgresStore');
 
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
+// res.sendFile requires an absolute path. DATA_DIR is commonly configured as
+// a relative value (for example, DATA_DIR=./data) on hosted deployments.
+const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, '..', 'data'));
 const ITEMS_FILE = path.join(DATA_DIR, 'items.json');
 const CLAIMS_FILE = path.join(DATA_DIR, 'claims.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');

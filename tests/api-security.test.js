@@ -634,6 +634,11 @@ test('image upload stores a bounded image file and rejects invalid uploads', asy
   assert.match(item.photo, /^\/uploads\/[a-f0-9-]+\.png$/);
   assert.equal(fs.existsSync(path.join(dataDir, 'uploads', path.basename(item.photo))), true);
 
+  const photoResponse = await fetch(`${baseUrl}/api/items/${item.id}/photo`);
+  assert.equal(photoResponse.status, 200);
+  assert.match(photoResponse.headers.get('content-type') || '', /^image\/png/);
+  assert.deepEqual(Buffer.from(await photoResponse.arrayBuffer()), pngBytes);
+
   const invalidResponse = await fetch(`${baseUrl}/api/items`, {
     method: 'POST',
     body: reportFormData(new Blob([Buffer.from('not an image')], { type: 'image/png' }))

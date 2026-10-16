@@ -15,7 +15,9 @@ const postgresStore = require('./services/postgresStore');
 function createApp() {
   const app = express();
   const isProduction = process.env.NODE_ENV === 'production';
-  const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
+  // Resolve configured paths once so sendFile/static serving work with values
+  // such as DATA_DIR=./data in production environments.
+  const dataDir = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
   const sessionSecret = process.env.SESSION_SECRET || (isProduction ? '' : 'cspc-lostfound-development-only');
 
   if (!sessionSecret) {
