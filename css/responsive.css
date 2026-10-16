@@ -156,6 +156,18 @@ input[type='submit'] {
 
   .nav-actions {
     min-width: 0;
+    gap: .5rem;
+  }
+
+  .auth-dashboard-link {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: .55rem .8rem !important;
+    margin: 0 !important;
+    line-height: 1.2;
+    text-align: center;
   }
 
   .nav-actions > * {
