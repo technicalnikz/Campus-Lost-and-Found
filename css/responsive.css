@@ -253,6 +253,19 @@ input[type='submit'] {
     row-gap: .5rem !important;
   }
 
+  #items .projects-grid {
+    grid-auto-rows: min-content !important;
+    grid-template-rows: none !important;
+    align-items: start !important;
+  }
+
+  #items .projects-grid > .project-card,
+  #items .projects-grid > .item-card {
+    min-height: 0 !important;
+    height: auto !important;
+    margin-top: 0 !important;
+  }
+
   #itemsGrid > * {
     margin-top: 0 !important;
     align-self: start !important;
