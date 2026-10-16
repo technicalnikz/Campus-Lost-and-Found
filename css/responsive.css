@@ -262,6 +262,7 @@ input[type='submit'] {
   }
 
   #items .projects-grid {
+    display: block !important;
     grid-auto-rows: min-content !important;
     grid-template-rows: none !important;
     align-items: start !important;
@@ -273,9 +274,11 @@ input[type='submit'] {
 
   #items .projects-grid > .project-card,
   #items .projects-grid > .item-card {
+    display: flex !important;
     min-height: 0 !important;
     height: auto !important;
     margin-top: 0 !important;
+    margin-bottom: .75rem !important;
   }
 
   #itemsGrid > * {
