@@ -1,7 +1,8 @@
 const THEME_STORAGE_KEY = 'cspc_theme';
 
 function loadTheme() {
-  const theme = localStorage.getItem(THEME_STORAGE_KEY) || 'dark';
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark';
   document.documentElement.setAttribute('data-theme', theme);
   updateThemeIcon();
 }
