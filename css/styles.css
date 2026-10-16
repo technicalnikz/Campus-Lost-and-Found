@@ -928,7 +928,7 @@ h2 {
   width: 100%;
   max-width: 1140px;
   margin: 0 auto;
-  padding: 0 1.25rem;
+  padding: 0 1.5rem;
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
@@ -1156,14 +1156,14 @@ select option {
 }
 
 @media (max-width: 768px) {
-  body { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+  body { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
   .site-footer { width: 100%; min-height: 0; padding: .5rem 0; }
-  .footer-container { flex-direction: column; justify-content: center; align-items: center; gap: .25rem; padding-inline: .75rem; text-align: center; }
-  .site-footer .footer-left img { width: 28px !important; height: 28px !important; }
-  .site-footer .footer-left { gap: .5rem !important; justify-content: center; }
-  .site-footer .footer-left, .site-footer .footer-right { min-width: 0; text-align: center; }
-  .site-footer .footer-right { flex: 0 0 auto; }
-  .site-footer .footer-left p, .site-footer .footer-right p { line-height: 1.25; font-size: .68rem; }
+  .footer-container { flex-direction: row; justify-content: space-between; align-items: center; gap: .5rem; padding-inline: .75rem; }
+  .site-footer .footer-left { min-width: 0; flex: 1 1 auto; gap: .35rem !important; }
+  .site-footer .footer-left img { width: 1.25rem !important; height: 1.25rem !important; max-height: 1.25rem; flex: 0 0 1.25rem; }
+  .site-footer .footer-left > div { min-width: 0; }
+  .site-footer .footer-right { min-width: 0; flex: 0 1 auto; text-align: right; }
+  .site-footer .footer-left p, .site-footer .footer-right p { line-height: 1.2; font-size: .625rem; overflow-wrap: anywhere; }
   .navbar-container { padding-inline: .5rem; gap: .25rem; }
   .nav-actions { gap: .25rem; min-width: 0; }
   .nav-logo { gap: .35rem; font-size: .78rem; }
@@ -1253,8 +1253,18 @@ select option {
   }
 
   .footer-right {
-    text-align: left;
+    text-align: right;
   }
+}
+
+@media (min-width: 640px) and (max-width: 768px) {
+  .footer-container { padding-inline: 1.5rem; }
+  .site-footer .footer-left img { width: 1.5rem !important; height: 1.5rem !important; max-height: 1.5rem; flex-basis: 1.5rem; }
+  .site-footer .footer-left p, .site-footer .footer-right p { font-size: .75rem; }
+}
+
+@media (min-width: 1024px) {
+  .footer-container { padding-inline: 2rem; }
 }
 
 @media (max-width: 380px) {
