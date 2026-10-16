@@ -184,7 +184,7 @@ input[type='submit'] {
     max-width: 5.25rem;
     width: 50px;
     min-width: 50px;
-    height: 26px !important;
+    height: 36px !important;
     padding: 0 .35rem !important;
     font-size: .64rem !important;
     border-radius: 6px !important;
@@ -457,7 +457,7 @@ input[type='submit'] {
     max-width: 4.75rem;
     width: 50px;
     min-width: 50px;
-    height: 26px !important;
+    height: 36px !important;
     padding: 0 .35rem !important;
     font-size: .64rem !important;
     border-radius: 6px !important;
@@ -833,7 +833,7 @@ input[type='submit'] {
     width: 50px;
     min-width: 50px;
     max-width: 50px;
-    height: 26px !important;
+    height: 36px !important;
     padding: 0 .35rem !important;
     font-size: .64rem !important;
     border-radius: 6px !important;
