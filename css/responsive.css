@@ -304,6 +304,13 @@ input[type='submit'] {
     min-width: 0;
   }
 
+  /* The desktop location wrapper has a 420px flex-basis. Reset it on mobile
+     so the column layout does not reserve a large blank area below the select. */
+  .location-filter-wrap {
+    flex: 0 0 auto !important;
+    height: auto !important;
+  }
+
   .filter-chips,
   .type-tabs {
     display: grid;
