@@ -545,24 +545,25 @@ input[type='submit'] {
   }
 
   .site-footer {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: .2rem;
+    display: flex;
+    gap: .5rem;
     min-height: 0;
     padding: .5rem .65rem calc(.5rem + env(safe-area-inset-bottom));
-    align-items: flex-start;
+    align-items: center;
+    flex-wrap: nowrap;
   }
 
   .site-footer .footer-left {
     min-width: 0;
-    width: 100%;
+    flex: 1 1 auto;
     gap: .5rem !important;
   }
 
   .site-footer .footer-left img {
-    width: 32px !important;
-    height: 32px !important;
-    flex: 0 0 32px;
+    width: 28px !important;
+    height: 28px !important;
+    max-height: 28px;
+    flex: 0 0 28px;
   }
 
   .site-footer .footer-left p,
@@ -577,7 +578,8 @@ input[type='submit'] {
   }
 
   .footer-right {
-    text-align: left;
+    flex: 0 0 auto;
+    text-align: right;
   }
 }
 
