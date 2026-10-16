@@ -460,15 +460,15 @@ label,
 }
 
 .projects-section + .section-divider + .tools-section {
-  padding-top: 2rem;
+  padding-top: 1.25rem;
 }
 
 .section-divider + .projects-section {
-  padding-top: 2rem;
+  padding-top: 1.25rem;
 }
 
 .projects-section {
-  padding-bottom: 2rem;
+  padding-bottom: 1.25rem;
 }
 
 h2 {
