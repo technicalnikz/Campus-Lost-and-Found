@@ -1,0 +1,255 @@
+/* Shared mobile-first layout safeguards. Loaded after page-specific styles. */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input[type='button'],
+input[type='submit'] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .navbar-container {
+    width: 100%;
+    min-width: 0;
+    padding-inline: max(.75rem, env(safe-area-inset-left));
+  }
+
+  .nav-logo {
+    min-width: 0;
+  }
+
+  .nav-logo-full,
+  .nav-logo-short {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nav-actions {
+    min-width: 0;
+  }
+
+  .nav-actions > * {
+    flex-shrink: 1;
+  }
+
+  .nav-actions .theme-toggle,
+  .nav-actions .notif-bell-btn,
+  .nav-actions .menu-toggle {
+    flex: 0 0 auto;
+  }
+
+  .nav-signin-btn {
+    max-width: 5.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hero-section,
+  .tools-section,
+  .projects-section,
+  .timeline-section,
+  .contact-section,
+  .page-section,
+  .page-header {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .hero-section {
+    gap: 1.5rem;
+  }
+
+  .hero-name,
+  .page-header h1 {
+    overflow-wrap: anywhere;
+  }
+
+  .hero-buttons .btn,
+  .hero-buttons a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .projects-grid,
+  .browse-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-auto-rows: auto;
+  }
+
+  .project-card,
+  .item-card {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .project-card {
+    min-height: 0;
+  }
+
+  .filter-row,
+  .filter-bar,
+  .results-header,
+  .hotspots-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search-box,
+  .search-wrap,
+  .filter-group,
+  .location-filter-wrap,
+  .results-header > *,
+  .sort-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .filter-chips,
+  .type-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .filter-chips .chip,
+  .type-tabs .type-tab {
+    min-height: 44px;
+    padding-inline: .5rem;
+  }
+
+  .chip-my-vault {
+    grid-column: 1 / -1;
+  }
+
+  .simple-card,
+  .auth-card,
+  .detail-card,
+  .modal,
+  .claim-card,
+  .pin-card {
+    max-width: 100%;
+    padding: 1.15rem;
+    border-radius: 12px;
+  }
+
+  .form-row,
+  .type-switcher {
+    grid-template-columns: minmax(0, 1fr);
+    flex-direction: column;
+  }
+
+  .type-option,
+  .input-field input,
+  .input-field select,
+  .input-field textarea,
+  .form-control,
+  .btn,
+  .category-picker {
+    min-height: 44px;
+  }
+
+  .input-field textarea {
+    min-height: 110px;
+  }
+
+  .site-footer {
+    padding-bottom: calc(.6rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 420px) {
+  .navbar-container {
+    padding-inline: .6rem;
+  }
+
+  .nav-logo {
+    max-width: 7.25rem;
+  }
+
+  .nav-actions {
+    gap: .2rem;
+  }
+
+  .nav-signin-btn {
+    padding-inline: .55rem !important;
+  }
+
+  .hero-section,
+  .tools-section,
+  .projects-section,
+  .timeline-section,
+  .contact-section,
+  .page-section,
+  .page-header {
+    padding-left: .75rem;
+    padding-right: .75rem;
+  }
+
+  .hero-stats {
+    gap: .5rem;
+  }
+
+  .stat-box {
+    padding: .7rem .65rem;
+  }
+
+  .site-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footer-right {
+    text-align: left;
+  }
+}
+
+@media (min-width: 769px) {
+  .projects-grid,
+  .browse-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
