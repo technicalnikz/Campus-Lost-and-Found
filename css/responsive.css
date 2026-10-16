@@ -671,6 +671,7 @@ input[type='submit'] {
     padding: 0;
     gap: .2rem;
     transform: none !important;
+    z-index: 1001;
   }
 
   .nav-logo,
@@ -695,6 +696,10 @@ input[type='submit'] {
     min-width: 28px;
     height: 28px;
     font-size: .72rem;
+    position: relative;
+    z-index: 1002;
+    pointer-events: auto;
+    touch-action: manipulation;
   }
 
   #userNavSlot,

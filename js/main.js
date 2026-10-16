@@ -26,6 +26,15 @@ function updateThemeIcon() {
 
 function initNav() {
   updateThemeIcon();
+  document.querySelectorAll('.theme-toggle').forEach(button => {
+    if (button.dataset.themeBound === 'true') return;
+    button.dataset.themeBound = 'true';
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleTheme();
+    });
+  });
 }
 
 function syncButtonSelect(select) {
@@ -204,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 document.addEventListener('click', event => {
   if (event.target.closest('.theme-toggle')) {
+    if (event.target.closest('.theme-toggle').dataset.themeBound === 'true') return;
     toggleTheme();
     return;
   }
