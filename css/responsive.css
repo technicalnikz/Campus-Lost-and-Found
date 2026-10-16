@@ -192,15 +192,34 @@ input[type='submit'] {
 
 @media (max-width: 420px) {
   .navbar-container {
+    flex-wrap: nowrap !important;
+    min-height: 56px !important;
     padding-inline: .6rem;
   }
 
   .nav-logo {
-    max-width: 7.25rem;
+    flex: 1 1 auto;
+    max-width: none;
+    min-width: 0;
   }
 
   .nav-actions {
+    flex: 0 0 auto !important;
+    width: auto !important;
     gap: .2rem;
+  }
+
+  .nav-logo img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .nav-signin-btn {
+    max-width: 4.75rem;
+  }
+
+  .nav-links {
+    top: 56px !important;
   }
 
   .nav-signin-btn {
