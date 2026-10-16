@@ -382,6 +382,43 @@ input[type='submit'] {
   }
 }
 
+@media (orientation: landscape) and (max-height: 560px) {
+  body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  .hero-section {
+    min-height: auto;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .page-header {
+    padding-top: 1.5rem;
+  }
+
+  .site-footer {
+    min-height: 0;
+    padding-top: .45rem;
+    padding-bottom: calc(.45rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 768px) {
+  :where(button, a, input, select, textarea) {
+    touch-action: manipulation;
+  }
+
+  :where(button, a, input[type='button'], input[type='submit']) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  :where(input, select, textarea) {
+    max-width: 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
