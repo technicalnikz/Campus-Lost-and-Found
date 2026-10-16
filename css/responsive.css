@@ -253,15 +253,22 @@ input[type='submit'] {
     width: 100%;
     max-width: 8.25rem !important;
     min-width: 0;
+    height: auto;
+    min-height: 32px;
     gap: .18rem;
     padding-inline: .35rem;
+    padding-block: .3rem;
   }
 
   .user-pill .user-name {
+    flex: 1 1 auto;
     min-width: 0;
-    max-width: 4.6rem !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    max-width: none !important;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.05;
   }
 
   .user-pill .role-badge {
@@ -346,11 +353,11 @@ input[type='submit'] {
   #userNavSlot,
   .user-nav-slot,
   .user-pill {
-    max-width: 7.1rem !important;
+    max-width: 8.25rem !important;
   }
 
   .user-pill .user-name {
-    max-width: 3.8rem !important;
+    max-width: none !important;
   }
 
   .user-pill .role-badge {
