@@ -714,7 +714,13 @@ let currentUser = null;
 
     function openImageModal(photoSrc, title) {
       if (!photoSrc) return;
-      document.getElementById('imageModalImg').src = photoSrc;
+      const image = document.getElementById('imageModalImg');
+      const fallback = document.getElementById('imageModalFallback');
+      image.hidden = false;
+      fallback.hidden = true;
+      image.onload = () => { image.hidden = false; fallback.hidden = true; };
+      image.onerror = () => { image.hidden = true; fallback.hidden = false; };
+      image.src = photoSrc;
       document.getElementById('imageModalTitle').innerText = title || 'Item Photo View';
       document.getElementById('imageModal').classList.add('open');
     }
