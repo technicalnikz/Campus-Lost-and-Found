@@ -752,9 +752,11 @@ input[type='submit'] {
   }
 
   .nav-actions .theme-toggle {
-    width: 28px;
-    min-width: 28px;
-    height: 28px;
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    aspect-ratio: 1 / 1;
+    border-radius: 50% !important;
     font-size: .72rem;
     position: relative;
     z-index: 1002;
@@ -816,9 +818,12 @@ input[type='submit'] {
   }
 
   .nav-signin-btn {
-    min-width: 4.3rem;
-    max-width: 4.8rem;
-    padding-inline: .55rem !important;
+    min-width: 4rem;
+    max-width: 4.4rem;
+    height: 32px !important;
+    padding: 0 .45rem !important;
+    font-size: .72rem !important;
+    border-radius: 7px !important;
     position: relative;
     z-index: 2;
     touch-action: manipulation;
