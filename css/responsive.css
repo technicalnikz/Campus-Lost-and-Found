@@ -68,6 +68,36 @@ input[type='submit'] {
     margin-bottom: .5rem !important;
   }
 
+  .auth-container {
+    min-height: auto;
+    padding: 1.25rem .75rem calc(1.5rem + env(safe-area-inset-bottom));
+    align-items: flex-start;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 28rem;
+    padding: 1.15rem;
+    border-radius: 14px;
+  }
+
+  .auth-tabs {
+    gap: .25rem;
+    margin-bottom: 1rem;
+  }
+
+  .auth-tab,
+  .auth-card .btn-primary,
+  .btn-toggle-pw {
+    min-height: 44px;
+  }
+
+  .form-group input,
+  .form-group select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
   .nav-links .mobile-menu-logout.visible {
     display: inline-flex;
     align-items: center;

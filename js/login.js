@@ -56,7 +56,17 @@ function togglePasswordVisibility(inputId, btn) {
       return user.role === 'admin' ? '/admin.html' : '/';
     }
 
-    document.addEventListener('DOMContentLoaded', loadTheme);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadTheme();
+      document.querySelectorAll('.theme-toggle').forEach(button => {
+        if (button.dataset.loginThemeBound === 'true') return;
+        button.dataset.loginThemeBound = 'true';
+        button.addEventListener('click', event => {
+          event.stopPropagation();
+          toggleTheme();
+        });
+      });
+    });
 
     function switchTab(tab) {
       const isLogin = tab === 'login';
@@ -107,6 +117,7 @@ function togglePasswordVisibility(inputId, btn) {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ email, password })
         });
 
@@ -149,6 +160,7 @@ function togglePasswordVisibility(inputId, btn) {
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ fullName, studentId, department, email, password })
         });
 
