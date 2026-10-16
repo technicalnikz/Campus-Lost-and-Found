@@ -463,6 +463,10 @@ label,
   padding-top: 2rem;
 }
 
+.section-divider + .projects-section {
+  padding-top: 2rem;
+}
+
 .projects-section {
   padding-bottom: 2rem;
 }
