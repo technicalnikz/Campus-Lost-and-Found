@@ -557,7 +557,7 @@ input[type='submit'] {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
+    gap: .25rem;
     padding-inline: .75rem;
     text-align: center;
   }
