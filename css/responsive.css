@@ -265,6 +265,10 @@ input[type='submit'] {
     grid-auto-rows: min-content !important;
     grid-template-rows: none !important;
     align-items: start !important;
+    align-content: start !important;
+    place-content: start !important;
+    height: fit-content !important;
+    min-height: 0 !important;
   }
 
   #items .projects-grid > .project-card,
