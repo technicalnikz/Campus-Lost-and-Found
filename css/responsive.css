@@ -242,6 +242,42 @@ input[type='submit'] {
     display: inline-flex;
   }
 
+  #userNavSlot,
+  .user-nav-slot {
+    min-width: 0;
+    max-width: 8.25rem;
+    overflow: hidden;
+  }
+
+  .user-pill {
+    width: 100%;
+    max-width: 8.25rem !important;
+    min-width: 0;
+    gap: .18rem;
+    padding-inline: .35rem;
+  }
+
+  .user-pill .user-name {
+    min-width: 0;
+    max-width: 4.6rem !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-pill .role-badge {
+    max-width: 3.2rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: .4rem;
+    padding-inline: .2rem;
+  }
+
+  .user-pill-logout {
+    flex: 0 0 auto;
+    font-size: .55rem;
+    padding-inline: .15rem;
+  }
+
   .nav-signin-btn {
     padding-inline: .55rem !important;
   }
@@ -299,6 +335,30 @@ input[type='submit'] {
 
   .footer-right {
     text-align: left;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav-actions .notif-bell-btn {
+    display: none;
+  }
+
+  #userNavSlot,
+  .user-nav-slot,
+  .user-pill {
+    max-width: 7.1rem !important;
+  }
+
+  .user-pill .user-name {
+    max-width: 3.8rem !important;
+  }
+
+  .user-pill .role-badge {
+    display: none;
+  }
+
+  .nav-signin-btn {
+    max-width: 4.3rem;
   }
 }
 
