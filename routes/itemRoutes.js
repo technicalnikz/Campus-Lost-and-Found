@@ -734,6 +734,32 @@ router.get('/match-reference/:token', (req, res) => {
   });
 });
 
+// GET /api/items/:id/photo - Serve an uploaded item photo through the API origin.
+// This avoids browser/proxy differences when loading the raw /uploads path.
+router.get('/:id/photo', (req, res) => {
+  const item = getItems().find(entry => String(entry.id) === String(req.params.id));
+  if (!item || typeof item.photo !== 'string' || !item.photo) {
+    return res.sendStatus(404);
+  }
+
+  const user = req.session?.user;
+  const canViewPrivatePhoto = user && (user.role === 'admin' || item.reportedBy === user.id);
+  if (item.type === 'registered' && !canViewPrivatePhoto) {
+    return res.sendStatus(404);
+  }
+
+  const filename = path.basename(item.photo);
+  if (!filename || filename === '.' || filename === '..') return res.sendStatus(404);
+
+  res.sendFile(path.join(UPLOADS_DIR, filename), {
+    headers: {
+      'Cache-Control': 'public, max-age=86400'
+    }
+  }, error => {
+    if (error && !res.headersSent) res.sendStatus(error.code === 'ENOENT' ? 404 : 500);
+  });
+});
+
 // PATCH /api/items/notifications/:notifId/read - Mark notification as read
 router.patch('/notifications/:notifId/read', requireAuth, (req, res) => {
   const items = getItems();

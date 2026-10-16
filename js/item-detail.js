@@ -29,8 +29,11 @@ let currentItem = null;
         ? `<div class="detail-row"><div class="detail-row-label">📅 Date Lost</div><div class="detail-row-value">${formatDate(item.dateLost)}</div></div>`
         : `<div class="detail-row"><div class="detail-row-label">📅 Date Found</div><div class="detail-row-value">${formatDate(item.dateFound)}</div></div>`;
 
-      const imageBlock = item.imageUrl
-        ? `<img src="${item.imageUrl}" class="detail-image" alt="${escHtml(item.title)}">`
+      const photoUrl = (item.imageUrl || item.photo) && item.id
+        ? `/api/items/${encodeURIComponent(item.id)}/photo`
+        : (item.imageUrl || item.photo || '');
+      const imageBlock = photoUrl
+        ? `<img src="${photoUrl}" class="detail-image" alt="${escHtml(item.title)}" onerror="this.style.display='none'">`
         : `<div class="detail-image-placeholder">${categoryIcon(item.category)}</div>`;
 
       const canClaim = item.status !== 'claimed';

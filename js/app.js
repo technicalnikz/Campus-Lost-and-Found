@@ -241,8 +241,11 @@ function buildItemCard(item) {
     ? `Lost: ${formatDate(item.dateLost)}`
     : `Found: ${formatDate(item.dateFound)}`;
 
-  const thumb = item.imageUrl
-    ? `<img src="${item.imageUrl}" alt="${item.title}" class="card-thumb">`
+  const photoUrl = (item.imageUrl || item.photo) && item.id
+    ? `/api/items/${encodeURIComponent(item.id)}/photo`
+    : (item.imageUrl || item.photo || '');
+  const thumb = photoUrl
+    ? `<img src="${photoUrl}" alt="${item.title}" class="card-thumb" onerror="this.replaceWith(document.createTextNode('Photo unavailable'))">`
     : `<div class="card-thumb-placeholder">${categoryIcon(item.category)}</div>`;
 
   return `
