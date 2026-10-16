@@ -24,6 +24,7 @@
         <a href="#items">Items</a>
         <a href="#report">Report Item</a>
         <button type="button" class="btn btn-outline nav-btn-action nav-register-btn nav-register-mobile" onclick="handleOpenRegisterBelonging()">Register Belonging</button>
+        <button type="button" class="mobile-menu-logout" id="mobileMenuLogout" onclick="handleLogout()">Logout</button>
       </div>
       <div class="nav-actions">
         <button type="button" class="btn btn-outline nav-btn-action nav-register-btn" onclick="handleOpenRegisterBelonging()">Register Belonging</button>
@@ -716,8 +717,10 @@
       currentUser = null;
       const slot = document.getElementById('userNavSlot');
       const chipVault = document.getElementById('chipMyBelongings');
+      const mobileLogout = document.getElementById('mobileMenuLogout');
       if (slot) slot.innerHTML = '<a href="/login" class="btn btn-primary nav-signin-btn">Sign In</a>';
       if (chipVault) chipVault.style.display = 'none';
+      if (mobileLogout) mobileLogout.classList.remove('visible');
     }
 
     async function checkAuthSession() {
@@ -736,6 +739,8 @@
           sessionStorage.setItem('userRole', currentUser.role);
           const isAdmin = currentUser.role === 'admin';
           const roleLabel = isAdmin ? '' : 'Student';
+          const mobileLogout = document.getElementById('mobileMenuLogout');
+          if (mobileLogout) mobileLogout.classList.add('visible');
           document.getElementById('userNavSlot').innerHTML = `
             <button type="button" id="notifBellBtn" onclick="openNotificationsModal()" class="notif-bell-btn" title="View QR Recovery Alerts">
               🔔 <span id="notifCountBadge" class="notif-badge" style="display:none;">0</span>
