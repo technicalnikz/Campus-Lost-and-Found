@@ -9,6 +9,7 @@ let deleteTargetId = null;
     let actionConfirmResolver = null;
     let cachedServerItems = [];
     const selectedItemIds = new Set();
+    let visibleAdminItems = [];
     let adminSort = { key: 'date', direction: 'desc' };
     const adminItemsPerPage = 10;
     let adminCurrentPage = 1;
@@ -238,6 +239,10 @@ let deleteTargetId = null;
         if (nextSignature !== adminItemsSignature) {
           adminItemsSignature = nextSignature;
           adminItems = nextItems;
+          const existingItemIds = new Set(adminItems.map(item => String(item.id)));
+          selectedItemIds.forEach(id => {
+            if (!existingItemIds.has(id)) selectedItemIds.delete(id);
+          });
           renderAdminPanel(adminItems);
         }
       } finally {
@@ -370,11 +375,13 @@ let deleteTargetId = null;
       adminCurrentPage = totalPages ? Math.min(adminCurrentPage, totalPages) : 1;
       const startIndex = (adminCurrentPage - 1) * adminItemsPerPage;
       const pageItems = items.slice(startIndex, startIndex + adminItemsPerPage);
+      visibleAdminItems = pageItems;
       renderItemsPagination(totalItems, totalPages, startIndex);
 
       if (totalItems === 0) {
         tbody.innerHTML = '';
         empty.style.display = 'block';
+        updateBulkToolbar();
         return;
       }
       empty.style.display = 'none';
@@ -676,8 +683,9 @@ let deleteTargetId = null;
     }
 
     function toggleSelectAllVisible(event) {
-      getFilteredAdminItems().slice((adminCurrentPage - 1) * adminItemsPerPage, adminCurrentPage * adminItemsPerPage).forEach(item => {
-        if (event.target.checked) selectedItemIds.add(String(item.id)); else selectedItemIds.delete(String(item.id));
+      visibleAdminItems.forEach(item => {
+        if (event.currentTarget.checked) selectedItemIds.add(String(item.id));
+        else selectedItemIds.delete(String(item.id));
       });
       renderItemsTable();
     }
@@ -686,6 +694,10 @@ let deleteTargetId = null;
       const count = selectedItemIds.size;
       document.getElementById('selectedItemsCount').textContent = `${count} selected`;
       ['bulkClaimBtn', 'bulkArchiveBtn', 'bulkDeleteBtn', 'exportSelectedBtn'].forEach(id => { document.getElementById(id).disabled = count === 0; });
+      const selectAll = document.getElementById('selectAllItems');
+      const selectedVisibleCount = visibleAdminItems.filter(item => selectedItemIds.has(String(item.id))).length;
+      selectAll.checked = visibleAdminItems.length > 0 && selectedVisibleCount === visibleAdminItems.length;
+      selectAll.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleAdminItems.length;
     }
 
     function openActionConfirm(title, message) {
