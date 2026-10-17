@@ -1104,8 +1104,10 @@
       const refCode = item.refCode || `CSPC-LF-QR-${item.id}`;
       document.getElementById('qrRefCode').innerText = refCode;
 
-      // Encodes anonymous notification endpoint for finder
-      const qrData = encodeURIComponent(`https://lostfound.cspc.edu.ph/found?ref=${refCode}&item=${encodeURIComponent(item.title)}`);
+      // Keep the sticker on the same host serving this app.
+      const finderUrl = new URL('/found', window.location.origin);
+      finderUrl.searchParams.set('ref', refCode);
+      const qrData = encodeURIComponent(finderUrl.toString());
       document.getElementById('qrCodeImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${qrData}`;
 
       toggleAnonymousDemo(false);
@@ -1898,6 +1900,8 @@
       window.setInterval(loadMyNotifications, 30000);
       const matchParams = new URLSearchParams(window.location.search);
       openMatchReferenceFromQr(matchParams.get('token'));
+      const finderRef = window.location.pathname === '/found' ? matchParams.get('ref') : null;
+      if (finderRef) openAnonymousFinderModal(finderRef);
       if (matchParams.get('matchItemId') && matchParams.get('search')) {
         document.getElementById('searchInput').value = matchParams.get('search');
       }

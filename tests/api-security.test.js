@@ -351,6 +351,15 @@ test('registered belongings are private except through QR reference lookup', asy
   assert.equal(Object.hasOwn(item, 'ownerEmail'), false);
 });
 
+test('finder QR landing URL serves the app for the anonymous finder screen', async () => {
+  const response = await fetch(`${baseUrl}/found?ref=CSPC-REG-QR-0012`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /text\/html/);
+  const html = await response.text();
+  assert.match(html, /id="anonymousFinderModal"/);
+  assert.match(html, /openAnonymousFinderModal\(finderRef\)/);
+});
+
 test('private registered records are visible to their owner only', async () => {
   const studentCookie = await login('student@my.cspc.edu.ph', studentPassword);
   const ownResponse = await fetch(`${baseUrl}/api/items/12`, { headers: { Cookie: studentCookie } });
