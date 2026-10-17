@@ -67,13 +67,21 @@ function createApp() {
   app.get('/report-found.html', (req, res) => res.redirect(302, '/?report=found#itemForm'));
   app.get('/found', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
   app.get('/match-reference', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+  app.get('/', (req, res) => {
+    if (req.session?.user?.role === 'admin') return res.redirect(302, '/admin.html');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
+  app.get('/login', (req, res) => {
+    const user = req.session?.user;
+    if (user?.role === 'admin') return res.redirect(302, '/admin.html');
+    if (user?.role === 'student') return res.redirect(302, '/');
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  });
 
   app.use(express.static(path.join(__dirname, 'public')));
   app.use(['/data', '/routes', '/middleware', '/tests', '/node_modules', '/.git', '/server.js', '/package.json', '/package-lock.json'], (req, res) => res.sendStatus(404));
   app.use(express.static(__dirname));
 
-  app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-  app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
   app.use('/api/*', (req, res) => res.status(404).json({ success: false, message: 'API endpoint not found.' }));
 
   app.use((err, req, res, next) => {
