@@ -973,6 +973,12 @@ input[type='submit'] {
     justify-content: center;
   }
 
+  #items .match-banner.match-banner-qr-only .btn-match-qr {
+    min-width: 7rem;
+    height: 2.25rem;
+    box-sizing: border-box;
+  }
+
 }
 
 @media (min-width: 320px) and (max-width: 440px) {
