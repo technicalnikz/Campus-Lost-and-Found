@@ -340,7 +340,7 @@
       <!-- Action Buttons -->
       <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end; flex-wrap: wrap;">
         <button class="btn btn-outline" style="padding: 0.45rem 1rem;" onclick="closeQrModal()">Close</button>
-        <button class="btn btn-outline" id="demoToggleBtn" style="padding: 0.45rem 1rem; border-color: rgba(59,130,246,0.4); color: var(--blue-light);" onclick="toggleAnonymousDemo(true)">💬 Test Finder Screen</button>
+        <button class="btn btn-outline inline-flex items-center justify-center gap-2" id="demoToggleBtn" style="padding: 0.45rem 1rem; border-color: rgba(59,130,246,0.4); color: var(--blue-light);" onclick="toggleAnonymousDemo(true)"><span class="shrink-0" aria-hidden="true">💬</span><span class="flex items-center">Test Finder Screen</span></button>
         <button class="btn btn-primary" style="padding: 0.45rem 1.25rem;" onclick="printQrSticker()">🖨️ Print Sticker</button>
       </div>
 
@@ -1245,6 +1245,18 @@
     }
 
     // ── Anonymous Finder Modal ────────────────────────────────────────────────
+    function showAnonymousFinderForItem(item) {
+      const safeItem = item || {};
+      document.getElementById('finderScreenItemTitle').textContent = safeItem.title || 'Found Item';
+      document.getElementById('finderScreenRefCode').textContent = safeItem.refCode || '—';
+      document.getElementById('finderScreenInstructions').textContent = safeItem.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.';
+      document.getElementById('finderRefCodeInput').value = safeItem.refCode || '';
+      document.getElementById('finderMessageInput').value = '';
+      document.getElementById('finderLocationInput').value = '';
+      document.getElementById('finderContactInput').value = '';
+      document.getElementById('anonymousFinderModal').classList.add('open');
+    }
+
     async function openAnonymousFinderModal(refCode) {
       try {
         const res = await fetch(`/api/items/qr-lookup/${encodeURIComponent(refCode)}`);
@@ -1254,14 +1266,7 @@
           return;
         }
         const item = data.item;
-        document.getElementById('finderScreenItemTitle').textContent = item.title;
-        document.getElementById('finderScreenRefCode').textContent = item.refCode;
-        document.getElementById('finderScreenInstructions').textContent = item.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.';
-        document.getElementById('finderRefCodeInput').value = item.refCode;
-        document.getElementById('finderMessageInput').value = '';
-        document.getElementById('finderLocationInput').value = '';
-        document.getElementById('finderContactInput').value = '';
-        document.getElementById('anonymousFinderModal').classList.add('open');
+        showAnonymousFinderForItem(item);
       } catch (err) {
         showToast('Failed to load item info.', 'error');
       }
@@ -1378,7 +1383,8 @@
         document.getElementById('matchLostLocation').textContent = data.lost.location || 'Location unavailable';
         document.getElementById('matchFoundLocation').textContent = data.found.location || 'Location unavailable';
         document.getElementById('matchQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
-        document.getElementById('matchQrModal').classList.add('open');
+        document.getElementById('matchQrModal').classList.remove('open');
+        showAnonymousFinderForItem(data.found);
       } catch (error) {
         showToast(error.message || 'Could not open match verification.', 'error');
       }

@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": 1792247363715,
+    "refCode": "CSPC-LF-2026-001",
+    "title": "aksf",
+    "category": "Bags & Wallets",
+    "type": "lost",
+    "location": "College of Engineering and Architecture (CEA) (CSS building, ITLAB 2)",
+    "locationDetails": "CSS building, ITLAB 2",
+    "contact": "Carmel Sumpay (casumpay@my.cspc.edu.ph)",
+    "desc": "afkdfjjjjjjjjjjjjjjjjjjjjjjjjjjj",
+    "verification": "akjfha",
+    "photo": "",
+    "date": "Oct 17, 2026",
+    "status": "active",
+    "claimed": false,
+    "reportedBy": "guest",
+    "submissionKey": "239d960f-fab5-4eaa-9cbb-18a9b8ca67cb",
+    "submissionFingerprint": "5493868741e31414fa62f0988fb09ac796f2d46b42640566c14a872c85d75421",
+    "createdAt": "2026-10-17T14:29:23.746Z"
+  }
+]
