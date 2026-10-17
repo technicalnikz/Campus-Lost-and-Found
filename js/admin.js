@@ -26,13 +26,14 @@ let deleteTargetId = null;
     async function requireAdminSession() {
       try {
         const response = await adminFetch('/api/auth/me', { cache: 'no-store' });
+        if (!response.ok) return response.status >= 500;
         const data = await response.json();
         if (response.ok && data.authenticated && data.user?.role === 'admin') {
           window.currentAdminUserId = data.user.id;
           return true;
         }
       } catch (error) {
-        // Treat an unavailable auth session as unauthenticated.
+        return true;
       }
       window.location.replace('/login?redirect=%2Fadmin.html');
       return false;
