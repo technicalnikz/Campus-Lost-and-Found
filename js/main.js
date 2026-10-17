@@ -62,16 +62,21 @@ function initializeMobileDrawer(navbar) {
   if (!drawerHeader) {
     drawerHeader = document.createElement('div');
     drawerHeader.className = 'mobile-drawer-header';
-    if (logo) {
-      const brand = document.createElement('a');
-      const logoImage = logo.querySelector('img');
-      const logoTitle = logo.querySelector('.nav-logo-full, .nav-logo-short');
-      brand.className = 'mobile-drawer-brand';
-      brand.href = logo.href;
-      if (logoImage) brand.append(logoImage.cloneNode(true));
-      brand.append(document.createTextNode(logoTitle ? logoTitle.textContent.trim() : 'Back2You'));
-      drawerHeader.append(brand);
-    }
+  }
+  let brand = drawerHeader.querySelector('.mobile-drawer-brand');
+  if (!brand && logo) {
+    brand = document.createElement('div');
+    brand.className = 'mobile-drawer-brand';
+    const logoImage = logo.querySelector('img');
+    const logoTitle = logo.querySelector('.nav-logo-full, .nav-logo-short');
+    if (logoImage) brand.append(logoImage.cloneNode(true));
+    brand.append(document.createTextNode(logoTitle ? logoTitle.textContent.trim() : 'Back2You'));
+    drawerHeader.prepend(brand);
+  } else if (brand && brand.tagName === 'A') {
+    const staticBrand = document.createElement('div');
+    staticBrand.className = 'mobile-drawer-brand';
+    staticBrand.append(...brand.childNodes);
+    brand.replaceWith(staticBrand);
   }
   drawerHeader.append(closeButton);
   links.prepend(drawerHeader);

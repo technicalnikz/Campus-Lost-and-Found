@@ -1256,8 +1256,8 @@ input[type='submit'] {
     font-weight: 800;
     letter-spacing: -.01em;
     line-height: 1.2 !important;
-    text-decoration: none;
     white-space: nowrap;
+    cursor: default;
   }
 
   .mobile-drawer-brand img {
