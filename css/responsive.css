@@ -1009,13 +1009,13 @@ input[type='submit'] {
   }
 
   #report .input-field {
-    gap: .2rem;
-    margin-bottom: .65rem !important;
+    gap: .12rem;
+    margin-bottom: .45rem !important;
   }
 
   #report .form-row {
-    gap: .6rem;
-    margin-bottom: .65rem;
+    gap: .45rem;
+    margin-bottom: .45rem;
   }
 
   #report .input-field label {
@@ -1036,7 +1036,22 @@ input[type='submit'] {
 
   #report .input-field textarea {
     height: auto;
-    min-height: 78px !important;
+    min-height: 70px !important;
+  }
+
+  #report .photo-upload-area {
+    min-height: 7.5rem;
+    padding: .65rem;
+    gap: .2rem;
+  }
+
+  #report .photo-upload-icon {
+    height: 2.2rem;
+  }
+
+  #report .photo-upload-icon svg {
+    width: 2.8rem;
+    height: 2.2rem;
   }
 
   .filter-chips {
