@@ -42,6 +42,13 @@ function initializeMobileDrawer(navbar) {
   const links = navbar.querySelector('.nav-links');
   if (!links) return;
 
+  const container = navbar.querySelector('.navbar-container');
+  const logo = container && container.querySelector('.nav-logo');
+  const menuButton = navbar.querySelector('.menu-toggle');
+  if (container && logo && menuButton && menuButton.parentElement !== container) {
+    container.insertBefore(menuButton, logo);
+  }
+
   let closeButton = links.querySelector('.mobile-drawer-close');
   if (!closeButton) {
     closeButton = document.createElement('button');
@@ -49,16 +56,33 @@ function initializeMobileDrawer(navbar) {
     closeButton.className = 'mobile-drawer-close';
     closeButton.setAttribute('aria-label', 'Close navigation menu');
     closeButton.textContent = '\u00d7';
-    links.prepend(closeButton);
   }
+
+  let drawerHeader = links.querySelector('.mobile-drawer-header');
+  if (!drawerHeader) {
+    drawerHeader = document.createElement('div');
+    drawerHeader.className = 'mobile-drawer-header';
+    if (logo) {
+      const brand = document.createElement('a');
+      const logoImage = logo.querySelector('img');
+      const logoTitle = logo.querySelector('.nav-logo-full, .nav-logo-short');
+      brand.className = 'mobile-drawer-brand';
+      brand.href = logo.href;
+      if (logoImage) brand.append(logoImage.cloneNode(true));
+      brand.append(document.createTextNode(logoTitle ? logoTitle.textContent.trim() : 'Back2You'));
+      drawerHeader.append(brand);
+    }
+  }
+  drawerHeader.append(closeButton);
+  links.prepend(drawerHeader);
 
   let profile = links.querySelector('.mobile-drawer-profile');
   if (!profile) {
     profile = document.createElement('div');
     profile.className = 'mobile-drawer-profile';
     profile.hidden = true;
-    closeButton.after(profile);
   }
+  drawerHeader.after(profile);
 
   let footer = links.querySelector('.mobile-drawer-footer');
   if (!footer) {
@@ -85,7 +109,6 @@ function initializeMobileDrawer(navbar) {
     navbar.append(backdrop);
   }
 
-  const menuButton = navbar.querySelector('.menu-toggle');
   if (menuButton) {
     menuButton.setAttribute('aria-controls', links.id || 'navLinks');
     menuButton.setAttribute('aria-expanded', String(links.classList.contains('open')));
@@ -108,8 +131,7 @@ function initializeMobileDrawer(navbar) {
 
 function syncMobileHeaderControls(navbar) {
   const actions = navbar.querySelector('.nav-actions');
-  const menuButton = actions && actions.querySelector('.menu-toggle');
-  if (!actions || !menuButton) return;
+  if (!actions) return;
 
   const account = navbar.querySelector('.user-pill');
   const authenticated = Boolean(account);
@@ -126,7 +148,7 @@ function syncMobileHeaderControls(navbar) {
         signInButton.href = '/login';
         signInButton.textContent = 'Sign In';
       }
-      actions.insertBefore(signInButton, menuButton);
+      actions.append(signInButton);
     }
   } else {
     signInButton?.remove();
@@ -149,7 +171,7 @@ function syncMobileHeaderControls(navbar) {
       mobileNotification.classList.add('mobile-header-notification');
       mobileNotification.removeAttribute('id');
       mobileNotification.querySelectorAll('[id]').forEach(element => element.removeAttribute('id'));
-      actions.insertBefore(mobileNotification, menuButton);
+      actions.append(mobileNotification);
     }
   } else {
     mobileNotification?.remove();
