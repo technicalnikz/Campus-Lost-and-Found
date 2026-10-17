@@ -85,9 +85,11 @@ body::after {
 }
 
 .navbar-container {
-  max-width: 1100px;
+  width: 100%;
+  max-width: 1140px;
   margin: 0 auto;
   padding: 0 1.25rem;
+  box-sizing: border-box;
   min-height: 64px;
   display: flex;
   align-items: center;
@@ -372,12 +374,18 @@ body::after {
 }
 
 .notif-badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  border: 2px solid var(--bg-dark);
   background: #ef4444;
   color: #ffffff;
   border-radius: 999px;
-  font-size: 0.64rem;
+  font-size: 0.625rem;
   font-weight: 800;
-  padding: 0.12rem 0.42rem;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -915,16 +923,66 @@ h2 {
   z-index: 900;
   width: 100%;
   max-width: none;
-  min-height: 88px;
-  padding: 1.25rem clamp(1.5rem, 6vw, 5rem);
+  box-sizing: border-box;
+  min-height: 0;
+  padding: .5rem 0;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 1rem;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0;
   border-top: 1px solid var(--border);
   background: linear-gradient(135deg, rgba(24,24,27,.98), rgba(39,39,42,.98));
   box-shadow: 0 -10px 30px rgba(0,0,0,.18);
+}
+
+.footer-container {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0;
+}
+
+.site-footer .footer-left img {
+  width: 28px !important;
+  height: 28px !important;
+  max-height: 28px;
+  object-fit: contain;
+}
+
+.notifications-modal-close {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: .5rem;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color .2s ease, background-color .2s ease;
+}
+
+.notifications-modal-close:hover,
+.notifications-modal-close:focus-visible {
+  color: #ffffff;
+  background: rgba(30, 41, 59, .6);
+}
+
+[data-theme='light'] .notifications-modal-close:hover,
+[data-theme='light'] .notifications-modal-close:focus-visible {
+  color: #0f172a;
+  background: rgba(148, 163, 184, .2);
 }
 
 [data-theme='light'] .site-footer {
@@ -933,9 +991,10 @@ h2 {
 
 .footer-left p,
 .footer-right p {
+  margin: 0;
   font-size: 0.8rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.25;
 }
 
 .footer-right {
@@ -1109,11 +1168,14 @@ select option {
 }
 
 @media (max-width: 768px) {
-  body { padding-bottom: 88px; }
-  .site-footer { width: 100%; min-height: 0; padding: .6rem .75rem; gap: .2rem .75rem; }
-  .site-footer .footer-left img { width: 30px !important; height: 30px !important; }
-  .site-footer .footer-left { gap: .5rem !important; }
-  .site-footer .footer-left p, .site-footer .footer-right p { line-height: 1.25; font-size: .68rem; }
+  body { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
+  .site-footer { width: 100%; min-height: 0; padding: .5rem 0; }
+  .footer-container { flex-direction: row; justify-content: space-between; align-items: center; gap: .5rem; padding-inline: .75rem; }
+  .site-footer .footer-left { min-width: 0; flex: 1 1 auto; gap: .35rem !important; }
+  .site-footer .footer-left img { width: 1.25rem !important; height: 1.25rem !important; max-height: 1.25rem; flex: 0 0 1.25rem; }
+  .site-footer .footer-left > div { min-width: 0; }
+  .site-footer .footer-right { min-width: 0; flex: 0 1 auto; text-align: right; }
+  .site-footer .footer-left p, .site-footer .footer-right p { line-height: 1.2; font-size: .625rem; overflow-wrap: anywhere; }
   .navbar-container { padding-inline: .5rem; gap: .25rem; }
   .nav-actions { gap: .25rem; min-width: 0; }
   .nav-logo { gap: .35rem; font-size: .78rem; }
@@ -1208,8 +1270,18 @@ select option {
   }
 
   .footer-right {
-    text-align: left;
+    text-align: right;
   }
+}
+
+@media (min-width: 640px) and (max-width: 768px) {
+  .footer-container { padding-inline: 1.5rem; }
+  .site-footer .footer-left img { width: 1.5rem !important; height: 1.5rem !important; max-height: 1.5rem; flex-basis: 1.5rem; }
+  .site-footer .footer-left p, .site-footer .footer-right p { font-size: .75rem; }
+}
+
+@media (min-width: 1024px) {
+  .footer-container { padding-inline: 2rem; }
 }
 
 @media (max-width: 380px) {

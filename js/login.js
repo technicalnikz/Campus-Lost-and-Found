@@ -1,19 +1,14 @@
 function togglePasswordVisibility(inputId, btn) {
       const input = document.getElementById(inputId);
       if (!input) return;
-      if (input.type === 'password') {
-        input.type = 'text';
-        btn.innerText = 'Hide';
-        btn.style.borderColor = 'rgba(239, 68, 68, 0.5)';
-        btn.style.color = '#fca5a5';
-        btn.style.background = 'rgba(239, 68, 68, 0.15)';
-      } else {
-        input.type = 'password';
-        btn.innerText = 'Show';
-        btn.style.borderColor = 'rgba(59, 130, 246, 0.35)';
-        btn.style.color = 'var(--blue-light)';
-        btn.style.background = 'rgba(37, 99, 235, 0.15)';
-      }
+      const showPassword = input.type === 'password';
+      input.type = showPassword ? 'text' : 'password';
+      btn.setAttribute('aria-pressed', String(showPassword));
+      btn.setAttribute('aria-label', showPassword ? 'Hide password' : 'Show password');
+      btn.setAttribute('title', showPassword ? 'Hide password' : 'Show password');
+      btn.innerHTML = showPassword
+        ? '<svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8" /><path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a15.8 15.8 0 0 1-3.1 3.8M6.2 6.2C3.5 8.1 2 12 2 12s3.6 7 10 7a10.8 10.8 0 0 0 4.1-.8" /></svg>'
+        : '<svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>';
     }
 
     // Theme toggle
