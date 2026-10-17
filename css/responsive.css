@@ -970,6 +970,52 @@ input[type='submit'] {
 }
 
 @media (min-width: 320px) and (max-width: 440px) {
+  #report {
+    padding-inline: .65rem !important;
+  }
+
+  #report > h2 {
+    margin-bottom: .75rem !important;
+    font-size: 1rem;
+  }
+
+  #report .simple-card {
+    padding: .8rem !important;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+  }
+
+  #report .input-field {
+    gap: .2rem;
+    margin-bottom: .65rem !important;
+  }
+
+  #report .form-row {
+    gap: .6rem;
+    margin-bottom: .65rem;
+  }
+
+  #report .input-field label {
+    font-size: .68rem;
+    line-height: 1.2;
+  }
+
+  #report .input-field input,
+  #report .input-field select,
+  #report .input-field textarea,
+  #report .category-picker {
+    min-height: 38px !important;
+    height: 38px;
+    padding: .45rem .6rem !important;
+    font-size: .74rem !important;
+    border-radius: 7px;
+  }
+
+  #report .input-field textarea {
+    height: auto;
+    min-height: 78px !important;
+  }
+
   .filter-chips {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: .3rem !important;
