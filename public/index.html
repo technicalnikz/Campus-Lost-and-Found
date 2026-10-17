@@ -750,6 +750,7 @@
 
         if (data.authenticated && data.user && ['admin', 'student'].includes(data.user.role)) {
           currentUser = data.user;
+          if (currentUser.role === 'student') installDashboardBackGuard();
           if (currentUser.role === 'admin' && window.location.pathname === '/') {
             window.location.replace('/admin.html');
             return;
@@ -774,6 +775,7 @@
           if (cachedUser && ['admin', 'student'].includes(cachedUser.role)
             && sessionStorage.getItem('userRole') === cachedUser.role) {
             renderAuthenticatedHeader(cachedUser);
+            if (cachedUser.role === 'student') installDashboardBackGuard();
             return;
           }
         } catch (storageError) {

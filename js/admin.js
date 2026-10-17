@@ -30,6 +30,7 @@ let deleteTargetId = null;
         const data = await response.json();
         if (response.ok && data.authenticated && data.user?.role === 'admin') {
           window.currentAdminUserId = data.user.id;
+          installDashboardBackGuard();
           return true;
         }
       } catch (error) {

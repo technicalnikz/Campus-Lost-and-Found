@@ -1,4 +1,35 @@
 const THEME_STORAGE_KEY = 'cspc_theme';
+let dashboardBackPrompted = false;
+let dashboardBackGuardInstalled = false;
+
+function installDashboardBackGuard() {
+  if (dashboardBackGuardInstalled) return;
+  dashboardBackGuardInstalled = true;
+
+  const restoreDashboardEntry = () => window.history.pushState({ dashboardBackGuard: true }, '', window.location.href);
+  restoreDashboardEntry();
+  window.addEventListener('popstate', () => {
+    if (!dashboardBackPrompted) {
+      dashboardBackPrompted = true;
+      window.alert('Press back again to exit/sign out');
+      restoreDashboardEntry();
+      return;
+    }
+
+    dashboardBackPrompted = false;
+    restoreDashboardEntry();
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+      .then(response => {
+        if (!response.ok) throw new Error('Logout request failed.');
+        ['adminToken', 'currentUser', 'userRole'].forEach(key => {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
+        });
+        window.location.replace('/login');
+      })
+      .catch(() => { dashboardBackPrompted = false; });
+  });
+}
 
 function loadTheme() {
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
