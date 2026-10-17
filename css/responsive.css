@@ -1089,14 +1089,15 @@ input[type='submit'] {
   #items .projects-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: .5rem !important;
-    align-items: stretch !important;
+    align-items: start !important;
   }
 
   #items .projects-grid > .project-card,
   #items .projects-grid > .item-card {
     min-width: 0 !important;
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
+    align-self: start !important;
     padding: .75rem !important;
     box-sizing: border-box;
   }
