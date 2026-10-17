@@ -67,7 +67,7 @@
       <!-- Tabs -->
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="items">All Items</button>
-        <button class="admin-tab" data-tab="claims">Pending Claims <span class="tab-count" id="pendingClaimsTabCount">0</span></button>
+        <button class="admin-tab" data-tab="broadcast">Broadcast Message</button>
         <button class="admin-tab" data-tab="users">Users</button>
       </div>
 
@@ -145,13 +145,8 @@
         </div>
       </div>
 
-      <!-- PENDING CLAIMS TAB -->
-      <div id="tabClaims" style="display:none;">
-        <div class="claims-tab-intro">
-          <div><h2>Pending Claims</h2><p>Review ownership proof before approving a physical handover.</p></div>
-          <button class="btn btn-outline" id="refreshClaimsBtn">Refresh Claims</button>
-        </div>
-        <div id="pendingClaimsList" class="pending-claims-list"></div>
+      <!-- BROADCAST MESSAGE TAB -->
+      <div id="tabBroadcast" style="display:none;">
         <div class="broadcast-card">
           <h3>Broadcast Message</h3>
           <p>Send an announcement to registered students by email.</p>

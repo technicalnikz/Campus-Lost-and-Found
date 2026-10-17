@@ -65,9 +65,8 @@ let deleteTargetId = null;
           document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           document.getElementById('tabItems').style.display = activeTab === 'items' ? 'block' : 'none';
-          document.getElementById('tabClaims').style.display = activeTab === 'claims' ? 'block' : 'none';
+          document.getElementById('tabBroadcast').style.display = activeTab === 'broadcast' ? 'block' : 'none';
           document.getElementById('tabUsers').style.display = activeTab === 'users' ? 'block' : 'none';
-          if (activeTab === 'claims') renderPendingClaims();
           if (activeTab === 'users') renderAdminUsers();
         });
       });
@@ -85,7 +84,6 @@ let deleteTargetId = null;
       document.getElementById('bulkArchiveBtn').addEventListener('click', () => runBulkAction('archive'));
       document.getElementById('bulkDeleteBtn').addEventListener('click', () => runBulkAction('delete'));
       document.getElementById('exportSelectedBtn').addEventListener('click', () => exportCSV([...selectedItemIds]));
-      document.getElementById('refreshClaimsBtn').addEventListener('click', refreshAdminClaims);
       document.getElementById('sendBroadcastBtn').addEventListener('click', sendBroadcast);
       document.getElementById('cancelActionConfirm').addEventListener('click', closeActionConfirm);
       document.getElementById('actionConfirmModal').addEventListener('click', event => { if (event.target.id === 'actionConfirmModal') closeActionConfirm(); });
@@ -254,10 +252,8 @@ let deleteTargetId = null;
         if (nextSignature === adminClaimsSignature) return;
         adminClaimsSignature = nextSignature;
         claimRequests = data.claims;
-        document.getElementById('pendingClaimsTabCount').textContent = claimRequests.filter(claim => claim.status === 'pending').length;
         renderAdminPanel(adminItems);
         renderItemsTable();
-        renderPendingClaims();
       } catch (error) {
         // Keep the last claim snapshot when the API is temporarily unavailable.
       }
@@ -268,43 +264,20 @@ let deleteTargetId = null;
       const lost    = items.filter(i => i.type==='lost').length;
       const found   = items.filter(i => i.type==='found').length;
       const claimed = items.filter(i => i.status==='claimed').length;
-      const pendingClaims = claimRequests.filter(claim => claim.status === 'pending');
       const threshold = Date.now() - 30 * 24 * 60 * 60 * 1000;
       const staleActive = items.filter(i => i.status !== 'claimed' && new Date(i.createdAt || i.date).getTime() < threshold).length;
-      const pending = pendingClaims.length + staleActive;
       document.getElementById('adminStats').innerHTML = `
         <div class="stat-card"><div class="stat-number">${items.length}</div><div class="stat-label">Total Items</div></div>
         <div class="stat-card"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
         <div class="stat-card"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
         <div class="stat-card"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
         <div class="stat-card"><div class="stat-number">${staleActive}</div><div class="stat-label">Unresolved</div></div>
-        <div class="stat-card"><div class="stat-number">${pendingClaims.length}</div><div class="stat-label">Pending Claims</div></div>
-        <div class="stat-card action-needed-card"><div class="stat-number">${pending}</div><div class="stat-label">Action Needed</div></div>
+        <div class="stat-card action-needed-card"><div class="stat-number">${staleActive}</div><div class="stat-label">Action Needed</div></div>
       `;
 
       renderAdminInsights(items);
 
       renderItemsTable();
-      renderPendingClaims();
-    }
-
-    function renderPendingClaims() {
-      const container = document.getElementById('pendingClaimsList');
-      if (!container) return;
-      const pending = claimRequests.filter(claim => claim.status === 'pending');
-      if (!pending.length) {
-        container.innerHTML = '<div class="empty-state"><h3>No pending claims</h3><p>New student claim requests will appear here.</p></div>';
-        return;
-      }
-      container.innerHTML = pending.map(claim => {
-        const item = adminItems.find(entry => String(entry.id) === String(claim.itemId));
-        return `<article class="pending-claim-card">
-          <div><span class="claim-status-pending">PENDING REVIEW</span><h3>${escHtml(item?.title || claim.itemTitle || 'Unknown item')}</h3><p>${escHtml(item?.refCode || claim.itemRefCode || '')}</p></div>
-          <div class="pending-claim-details"><strong>${escHtml(claim.claimantName || 'Unknown student')}</strong><span>Student ID: ${escHtml(claim.claimantStudentId || 'Not provided')}</span><span>${escHtml(claim.claimantDepartment || 'Department not provided')} · ${escHtml(claim.claimantCourseYear || 'Course not provided')}</span><span>Submitted ${formatDate(claim.createdAt)}</span></div>
-          <div class="pending-claim-proof"><strong>Ownership proof</strong><p>${escHtml(claim.proof || 'No proof submitted.')}</p></div>
-          <button class="action-btn action-btn-claim" onclick="openClaimReview('${escHtml(claim.id)}')">Review Claim</button>
-        </article>`;
-      }).join('');
     }
 
     function renderAdminInsights(items) {
