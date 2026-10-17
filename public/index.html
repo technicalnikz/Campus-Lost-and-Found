@@ -944,7 +944,7 @@
         }
 
         const canManageStatus = item.canResolve === true || currentUser?.role === 'admin';
-        const canRequestClaim = item.type === 'lost' && !item.claimed && currentUser?.role !== 'admin' && item.canResolve === true && item.potentialMatch;
+        const canRequestClaim = item.type === 'found' && item.canRequestClaim === true;
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
 
         let matchBannerHtml = '';
@@ -964,7 +964,7 @@
           ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>`
           : '';
         const claimBtnHtml = canRequestClaim
-          ? `<button class="btn-sm btn-claim" onclick="openClaimRequestModal(${item.potentialMatch.id}, ${item.id})">Request Claim</button>`
+            ? `<button class="btn-sm btn-claim" onclick="openClaimRequestModal(${item.id}, ${item.potentialMatch.id})">Request Claim</button>`
           : canManageStatus
             ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
             : '';

@@ -57,7 +57,7 @@ function saveUploadedImage(file) {
   return `/uploads/${filename}`;
 }
 
-function publicItemView(item, potentialMatch = null, canResolve = false) {
+function publicItemView(item, potentialMatch = null, canResolve = false, canRequestClaim = false) {
   return {
     id: item.id,
     refCode: item.refCode,
@@ -73,6 +73,7 @@ function publicItemView(item, potentialMatch = null, canResolve = false) {
     claimed: Boolean(item.claimed),
     claimedAt: item.claimedAt || null,
     canResolve,
+    canRequestClaim,
     potentialMatch: potentialMatch ? {
       id: potentialMatch.id,
       title: potentialMatch.title,
@@ -529,9 +530,11 @@ router.get('/', (req, res) => {
     const match = findMatch(item, allItems);
     const user = req.session?.user;
     const canViewPrivateFields = user && (user.role === 'admin' || item.reportedBy === user.id);
+    const canRequestClaim = Boolean(user && item.type === 'found' && !item.claimed
+      && match?.type === 'lost' && String(match.reportedBy) === String(user.id));
     return canViewPrivateFields
-      ? { ...item, canResolve: true, potentialMatch: match ? { id: match.id, title: match.title, location: match.location, type: match.type } : null }
-      : publicItemView(item, match, Boolean(user && (user.role === 'admin' || String(item.reportedBy) === String(user.id))));
+      ? { ...item, canResolve: true, canRequestClaim, potentialMatch: match ? { id: match.id, title: match.title, location: match.location, type: match.type } : null }
+      : publicItemView(item, match, Boolean(user && (user.role === 'admin' || String(item.reportedBy) === String(user.id))), canRequestClaim);
   });
 
   res.json({
