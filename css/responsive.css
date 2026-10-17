@@ -305,6 +305,47 @@ input[type='submit'] {
     box-sizing: border-box;
   }
 
+  #items .project-card-header {
+    min-width: 0;
+  }
+
+  #items .project-card-header > div {
+    min-width: 0;
+    width: 100%;
+  }
+
+  #items .item-card-meta-row {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: .3rem .4rem;
+  }
+
+  #items .item-card-category-ref {
+    min-width: 0;
+    max-width: 100%;
+    flex: 1 1 5rem;
+    overflow-wrap: anywhere;
+  }
+
+  #items .item-card-category-ref .ref-code {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  #items .item-badge {
+    flex: 0 1 auto;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: .18rem .38rem;
+    font-size: .6rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
   #items .item-photo-placeholder {
     width: 100%;
     height: 180px;
