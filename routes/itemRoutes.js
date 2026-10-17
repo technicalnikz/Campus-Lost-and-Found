@@ -308,6 +308,7 @@ function createMatchNotification(lostItem, foundItem) {
     matchItemId: foundItem.id,
     matchItemTitle: foundItem.title,
     matchRefCode: foundItem.refCode,
+    matchLocation: foundItem.location,
     message: 'A found item may match your lost-item report. Sign in to review it.',
     timestamp: new Date().toISOString(),
     read: false
@@ -1053,8 +1054,8 @@ router.post('/', upload.single('photo'), postgresStore.requestMiddleware(), vali
 
       const student = getStudentReporter(lostItem, users);
       if (student) {
-        createMatchNotification(lostItem, foundItem);
-        if (newItem.type === 'found') {
+        const notification = createMatchNotification(lostItem, foundItem);
+        if (notification) {
           emailNotifications.push({ student, lostItem, foundItem });
         }
       }

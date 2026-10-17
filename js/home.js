@@ -651,6 +651,8 @@ let currentUser = null;
             </div>
             ${n.notificationType === 'match'
               ? `<p class="notif-msg"><strong>Possible match—not confirmed</strong></p>
+                 <p class="notif-msg">Found item: ${escapeHtml(n.matchItemTitle || n.matchRefCode || 'Found item')} ${n.matchRefCode ? `(${escapeHtml(n.matchRefCode)})` : ''}</p>
+                 ${n.matchLocation ? `<p class="notif-msg">Reported location: ${escapeHtml(n.matchLocation)}</p>` : ''}
                  <p class="notif-msg">${escapeHtml(n.message)}</p>
                  <a class="btn-mark-read" style="display:inline-block;text-decoration:none;" href="/?search=${encodeURIComponent(n.matchRefCode || '')}&amp;matchItemId=${encodeURIComponent(n.matchItemId || '')}#items">Review possible match</a>`
               : n.notificationType === 'claim'
