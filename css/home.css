@@ -292,6 +292,9 @@
     .item-photo-frame[data-photo-state="error"] .item-photo-spinner {
       display: none;
     }
+    .item-photo-frame[data-photo-state="error"] img {
+      display: none;
+    }
     .item-photo-spinner {
       width: 20px;
       height: 20px;
