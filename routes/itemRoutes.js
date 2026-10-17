@@ -320,9 +320,8 @@ function createMatchNotification(lostItem, foundItem) {
 function getStudentReporter(lostItem, users) {
   if (!lostItem.reportedBy || lostItem.reportedBy === 'guest') return null;
   return users.find(user =>
-    user.id === lostItem.reportedBy &&
-    user.role === 'student' &&
-    /^[^\s@]+@my\.cspc\.edu\.ph$/i.test(user.email || '')
+    String(user.id) === String(lostItem.reportedBy) &&
+    user.role === 'student'
   ) || null;
 }
 
