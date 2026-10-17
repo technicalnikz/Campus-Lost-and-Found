@@ -979,10 +979,20 @@ input[type='submit'] {
   }
 
   #items .item-title-match-row .match-banner.match-banner-qr-only {
-    flex: 1 1 10rem;
-    min-height: 2.25rem;
+    flex: 0 0 auto;
+    min-height: 2rem;
+    height: 2rem;
     margin: 0;
-    padding: 0.35rem 0.5rem;
+    padding: 0.15rem 0.25rem;
+    box-sizing: border-box;
+  }
+
+  #items .item-title-match-row .match-banner.match-banner-qr-only .btn-match-qr {
+    width: 6.5rem;
+    min-width: 0;
+    height: 1.5rem;
+    padding: 0.2rem 0.3rem;
+    font-size: 0.68rem;
   }
 
   #items .match-banner.match-banner-qr-only {
