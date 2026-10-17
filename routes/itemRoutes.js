@@ -16,6 +16,7 @@ const {
   sendBroadcastEmail
 } = require('../services/email');
 const postgresStore = require('../services/postgresStore');
+const supabaseStorage = require('../services/supabaseStorage');
 
 // res.sendFile requires an absolute path. DATA_DIR is commonly configured as
 // a relative value (for example, DATA_DIR=./data) on hosted deployments.
@@ -50,11 +51,19 @@ function isValidImage(file) {
   return false;
 }
 
-function saveUploadedImage(file) {
+function saveUploadedImageLocally(file) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
   const filename = `${crypto.randomUUID()}.${IMAGE_EXTENSIONS[file.mimetype]}`;
   fs.writeFileSync(path.join(UPLOADS_DIR, filename), file.buffer, { flag: 'wx' });
   return `/uploads/${filename}`;
+}
+
+async function saveUploadedImage(file) {
+  if (supabaseStorage.isConfigured()) return supabaseStorage.uploadImage(file);
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Supabase Storage is not configured. Set SUPABASE_URL and SUPABASE_SECRET_KEY.');
+  }
+  return saveUploadedImageLocally(file);
 }
 
 function publicItemView(item, potentialMatch = null, canResolve = false, canRequestClaim = false) {
@@ -66,7 +75,9 @@ function publicItemView(item, potentialMatch = null, canResolve = false, canRequ
     type: item.type,
     location: item.location,
     desc: item.desc || item.description || '',
-    photo: item.photo || item.imageUrl || '',
+    photo: supabaseStorage.objectKey(item.photo)
+      ? `/api/items/${encodeURIComponent(item.id)}/photo`
+      : (item.photo || item.imageUrl || ''),
     date: item.date,
     createdAt: item.createdAt,
     status: item.status,
@@ -781,7 +792,7 @@ router.get('/match-reference/:token', (req, res) => {
 
 // GET /api/items/:id/photo - Serve an uploaded item photo through the API origin.
 // This avoids browser/proxy differences when loading the raw /uploads path.
-router.get('/:id/photo', (req, res) => {
+router.get('/:id/photo', async (req, res) => {
   const item = getItems().find(entry => String(entry.id) === String(req.params.id));
   if (!item || typeof item.photo !== 'string' || !item.photo) {
     return res.sendStatus(404);
@@ -795,6 +806,19 @@ router.get('/:id/photo', (req, res) => {
 
   const filename = path.basename(item.photo);
   if (!filename || filename === '.' || filename === '..') return res.sendStatus(404);
+
+  if (supabaseStorage.objectKey(item.photo)) {
+    try {
+      const image = await supabaseStorage.downloadImage(item.photo);
+      if (!image) return res.sendStatus(404);
+      res.set('Content-Type', image.headers.get('content-type') || 'application/octet-stream');
+      res.set('Cache-Control', 'public, max-age=86400');
+      return res.send(Buffer.from(await image.arrayBuffer()));
+    } catch (error) {
+      console.error('Could not read item photo from Supabase Storage:', error.message);
+      return res.sendStatus(502);
+    }
+  }
 
   res.sendFile(path.join(UPLOADS_DIR, filename), {
     headers: {
@@ -993,7 +1017,7 @@ router.post('/', upload.single('photo'), postgresStore.requestMiddleware(), vali
 
     const nextSeq = items.length + 1;
     const refCode = `CSPC-LF-2026-${String(nextSeq).padStart(3, '0')}`;
-    const photo = req.file ? saveUploadedImage(req.file) : '';
+    const photo = req.file ? await saveUploadedImage(req.file) : '';
 
     const newItem = {
       id: Date.now(),
@@ -1188,7 +1212,7 @@ router.patch('/:id/claim', requireAuth, async (req, res) => {
 });
 
 // DELETE /api/items/:id - Remove item (Admin or original reporter)
-router.delete('/:id', requireRole('admin'), (req, res) => {
+router.delete('/:id', requireRole('admin'), async (req, res) => {
   let items = getItems();
   const item = items.find(i => String(i.id) === String(req.params.id));
   if (!item) {
@@ -1200,6 +1224,7 @@ router.delete('/:id', requireRole('admin'), (req, res) => {
   if (typeof item.photo === 'string' && item.photo.startsWith('/uploads/')) {
     fs.rmSync(path.join(UPLOADS_DIR, path.basename(item.photo)), { force: true });
   }
+  if (supabaseStorage.objectKey(item.photo)) await supabaseStorage.deleteImage(item.photo);
   saveClaims(getClaims().filter(claim => String(claim.itemId) !== String(item.id)));
 
   res.json({ success: true, message: 'Item report deleted.' });
