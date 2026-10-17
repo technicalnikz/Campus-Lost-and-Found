@@ -970,6 +970,23 @@ input[type='submit'] {
 }
 
 @media (min-width: 320px) and (max-width: 440px) {
+  .filter-chips {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: .3rem !important;
+  }
+
+  .filter-chips .chip {
+    min-width: 0;
+    min-height: 40px;
+    padding: .35rem .2rem;
+    font-size: .62rem;
+    white-space: nowrap;
+  }
+
+  .filter-chips .chip-my-vault {
+    grid-column: auto;
+  }
+
   .type-switcher {
     display: flex !important;
     flex-direction: row !important;
