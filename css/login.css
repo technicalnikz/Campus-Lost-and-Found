@@ -1,3 +1,20 @@
+body.auth-checking > .navbar,
+body.auth-checking > .auth-container,
+body.auth-checking > .site-footer {
+      display: none;
+    }
+    .auth-checking-state {
+      display: none;
+    }
+    body.auth-checking > .auth-checking-state {
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
 .auth-container {
       min-height: calc(100vh - 120px);
       display: flex;
