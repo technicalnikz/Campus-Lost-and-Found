@@ -348,26 +348,22 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
 
         // Check for smart matches
         const match = findMatch(item, items);
-        let matchBannerHtml = '';
+        let matchBadgeHtml = '';
         if (match) {
-          matchBannerHtml = `
-            <div class="match-banner">
-              <div>
-                <strong>Potential Match:</strong> ${escapeHtml(match.title)} (${escapeHtml(match.location)})
-              </div>
-              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${match.id})">🤝 Match Reference QR</button>
-            </div>
-          `;
+          matchBadgeHtml = `<button type="button" class="btn-match-qr potential-match-badge" onclick="openMatchQrModal(${item.id}, ${match.id})"><svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z"/><path d="m19 14 1.2 2.8L23 18l-2.8 1.2L19 22l-1.2-2.8L15 18l2.8-1.2L19 14Z"/></svg><span>Potential Match</span></button>`;
         }
         const verificationHtml = item.verification ? `
           <span><strong>Verification Hint:</strong> ${escapeHtml(item.verification)}</span>
         ` : '';
 
-        const photoHtml = item.photo ? `
-          <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin: 0.6rem 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(59,130,246,0.2); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;" onclick="openImageModal('${escapeHtml(item.photo)}', '${escapeHtml(item.title)}')">
-            <img src="${item.photo}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover;" />
+        const photoHtml = `
+          <div class="item-photo-container">
+            <div class="item-photo-frame" ${item.photo ? `role="button" tabindex="0" onclick="openImageModal('${escapeHtml(item.photo)}', '${escapeHtml(item.title)}')" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openImageModal('${escapeHtml(item.photo)}', '${escapeHtml(item.title)}'); }"` : ''}>
+              ${item.photo ? `<img src="${item.photo}" alt="${escapeHtml(item.title)}" />` : '<span>No photo uploaded</span>'}
+            </div>
+            ${matchBadgeHtml}
           </div>
-        ` : '';
+        `;
 
         return `
           <div class="project-card" id="item-card-${item.id}">
@@ -383,8 +379,6 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
                 <h3 style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
               </div>
             </div>
-
-            ${matchBannerHtml}
 
             ${photoHtml}
 

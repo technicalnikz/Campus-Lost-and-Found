@@ -308,6 +308,7 @@ function createMatchNotification(lostItem, foundItem) {
     matchItemId: foundItem.id,
     matchItemTitle: foundItem.title,
     matchRefCode: foundItem.refCode,
+    matchLocation: foundItem.location,
     message: 'A found item may match your lost-item report. Sign in to review it.',
     timestamp: new Date().toISOString(),
     read: false
@@ -319,9 +320,8 @@ function createMatchNotification(lostItem, foundItem) {
 function getStudentReporter(lostItem, users) {
   if (!lostItem.reportedBy || lostItem.reportedBy === 'guest') return null;
   return users.find(user =>
-    user.id === lostItem.reportedBy &&
-    user.role === 'student' &&
-    /^[^\s@]+@my\.cspc\.edu\.ph$/i.test(user.email || '')
+    String(user.id) === String(lostItem.reportedBy) &&
+    user.role === 'student'
   ) || null;
 }
 
@@ -1053,8 +1053,8 @@ router.post('/', upload.single('photo'), postgresStore.requestMiddleware(), vali
 
       const student = getStudentReporter(lostItem, users);
       if (student) {
-        createMatchNotification(lostItem, foundItem);
-        if (newItem.type === 'found') {
+        const notification = createMatchNotification(lostItem, foundItem);
+        if (notification) {
           emailNotifications.push({ student, lostItem, foundItem });
         }
       }
