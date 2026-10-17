@@ -709,7 +709,9 @@ router.get('/match-reference-token', requireAuth, (req, res) => {
       canRequestClaim: String(lost.reportedBy) === String(req.session.user.id) && !found.claimed,
       issuedAt: new Date(issuedAt).toISOString(),
       expiresAt: new Date(expiresAt).toISOString(),
-      status
+      status,
+      lost: { id: lost.id, title: lost.title, refCode: lost.refCode },
+      found: { id: found.id, title: found.title, refCode: found.refCode }
     });
   }
   res.json({
@@ -756,7 +758,9 @@ router.get('/match-reference/:token', (req, res) => {
       issuedAt: new Date(reference.issuedAt).toISOString(),
       expiresAt: new Date(reference.expiresAt).toISOString(),
       referenceId,
-      status
+      status,
+      lost: { id: lost.id, title: lost.title, refCode: lost.refCode },
+      found: { id: found.id, title: found.title, refCode: found.refCode }
     });
   }
 
