@@ -1087,20 +1087,28 @@ input[type='submit'] {
   }
 
   .filter-chips {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(36px, auto) !important;
+    grid-auto-flow: column;
     gap: .3rem !important;
   }
 
   .filter-chips .chip {
     min-width: 0;
-    min-height: 40px;
-    padding: .35rem .2rem;
-    font-size: .62rem;
+    min-height: 36px;
+    padding: .3rem .12rem;
+    font-size: .52rem;
     white-space: nowrap;
   }
 
   .filter-chips .chip-my-vault {
-    grid-column: auto;
+    grid-column: auto !important;
+    grid-row: 1 !important;
+  }
+
+  .filter-chips .my-belongings-icon,
+  .filter-chips .my-belongings-count {
+    display: none;
   }
 
   .type-switcher {
