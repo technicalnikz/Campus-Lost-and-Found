@@ -179,6 +179,8 @@ input[type='submit'] {
   .nav-actions .notif-bell-btn,
   .nav-actions .menu-toggle {
     flex: 0 0 auto;
+    width: 10.8rem;
+    max-width: 100%;
   }
 
   .nav-signin-btn {
@@ -988,7 +990,7 @@ input[type='submit'] {
   }
 
   #items .item-title-match-row .match-banner.match-banner-qr-only .btn-match-qr {
-    width: 6.5rem;
+    width: 100%;
     min-width: 0;
     height: 1.5rem;
     padding: 0.2rem 0.3rem;
