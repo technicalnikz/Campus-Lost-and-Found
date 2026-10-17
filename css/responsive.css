@@ -149,7 +149,7 @@ input[type='submit'] {
 
   .nav-logo-full,
   .nav-logo-short {
-    overflow: hidden;
+    overflow: visible;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -281,10 +281,13 @@ input[type='submit'] {
   }
 
   #items .projects-grid {
-    display: block !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    column-gap: .5rem !important;
+    row-gap: .5rem !important;
     grid-auto-rows: min-content !important;
     grid-template-rows: none !important;
-    align-items: start !important;
+    align-items: stretch !important;
     align-content: start !important;
     place-content: start !important;
     height: fit-content !important;
@@ -295,9 +298,80 @@ input[type='submit'] {
   #items .projects-grid > .item-card {
     display: flex !important;
     min-height: 0 !important;
-    height: auto !important;
+    height: 100% !important;
     margin-top: 0 !important;
-    margin-bottom: .75rem !important;
+    margin-bottom: 0 !important;
+    align-self: stretch !important;
+    box-sizing: border-box;
+  }
+
+  #items .project-card-header {
+    min-width: 0;
+  }
+
+  #items .project-card-header > div {
+    min-width: 0;
+    width: 100%;
+  }
+
+  #items .item-card-meta-row {
+    width: 100%;
+    min-width: 0;
+    position: relative;
+    display: block;
+    align-items: flex-start;
+  }
+
+  #items .item-card-category-ref {
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .08rem;
+    overflow: visible;
+    overflow-wrap: anywhere;
+  }
+
+  #items .item-card-category-ref .project-type {
+    font-size: .56rem;
+    line-height: 1.1;
+  }
+
+  #items .item-card-category-ref .ref-code {
+    min-width: 0;
+    width: max-content;
+    max-width: 100%;
+    overflow: visible;
+    white-space: nowrap;
+    text-overflow: clip;
+    font-size: .52rem;
+    line-height: 1.1;
+  }
+
+  #items .item-badge {
+    position: absolute;
+    top: 0;
+    right: -.75rem;
+    flex: none;
+    min-width: 2.2rem;
+    max-width: 3.5rem;
+    box-sizing: border-box;
+    padding: .17rem .3rem;
+    font-size: .5rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  #items .item-photo-placeholder {
+    width: 100%;
+    height: 180px;
+    flex: 0 0 180px;
+    margin: 0.6rem 0;
+    border-radius: 8px;
+    background: transparent;
   }
 
   #itemsGrid > * {
@@ -891,6 +965,197 @@ input[type='submit'] {
   .projects-grid,
   .browse-grid {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+
+}
+
+@media (min-width: 320px) and (max-width: 440px) {
+  #items .match-banner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(4.1rem, 4.7rem);
+    align-items: stretch;
+    gap: .35rem;
+    min-width: 0;
+    padding: .45rem .5rem;
+    overflow: hidden;
+  }
+
+  #items .match-banner > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  #items .btn-match-qr {
+    width: 100%;
+    min-width: 0;
+    min-height: 100%;
+    height: 100%;
+    padding: .5rem .25rem;
+    align-self: stretch;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.1;
+    font-size: .58rem;
+  }
+
+  .category-picker-modal {
+    width: 94%;
+    padding: 1rem;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .5rem;
+  }
+
+  .category-option {
+    min-height: 3.2rem;
+    padding: .5rem;
+    gap: .4rem;
+    font-size: .68rem;
+    line-height: 1.2;
+  }
+
+  .category-option svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  #report {
+    padding-inline: .65rem !important;
+  }
+
+  #report > h2 {
+    margin-bottom: .75rem !important;
+    font-size: 1rem;
+  }
+
+  #report .simple-card {
+    padding: .8rem !important;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+  }
+
+  #report .input-field {
+    gap: .12rem;
+    margin-bottom: .45rem !important;
+  }
+
+  #report .form-row {
+    gap: .45rem;
+    margin-bottom: .45rem;
+  }
+
+  #report .input-field label {
+    font-size: .68rem;
+    line-height: 1.2;
+  }
+
+  #report .input-field input,
+  #report .input-field select,
+  #report .input-field textarea,
+  #report .category-picker {
+    min-height: 38px !important;
+    height: 38px;
+    padding: .45rem .6rem !important;
+    font-size: .74rem !important;
+    border-radius: 7px;
+  }
+
+  #report .input-field textarea {
+    height: auto;
+    min-height: 70px !important;
+  }
+
+  #report .photo-upload-area {
+    min-height: 7.5rem;
+    padding: .65rem;
+    gap: .2rem;
+  }
+
+  #report .photo-upload-icon {
+    height: 2.2rem;
+  }
+
+  #report .photo-upload-icon svg {
+    width: 2.8rem;
+    height: 2.2rem;
+  }
+
+  .filter-chips {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: .3rem !important;
+  }
+
+  .filter-chips .chip {
+    min-width: 0;
+    min-height: 40px;
+    padding: .35rem .2rem;
+    font-size: .62rem;
+    white-space: nowrap;
+  }
+
+  .filter-chips .chip-my-vault {
+    grid-column: auto;
+  }
+
+  .type-switcher {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: .5rem !important;
+    align-items: stretch;
+  }
+
+  .type-switcher .type-option {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: .6rem .45rem;
+    font-size: .68rem;
+    text-align: center;
+  }
+
+  #items .projects-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .5rem !important;
+    align-items: stretch !important;
+  }
+
+  #items .projects-grid > .project-card,
+  #items .projects-grid > .item-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: .75rem !important;
+    box-sizing: border-box;
+  }
+
+  #items .item-card-meta-row {
+    min-height: 2.35rem;
+  }
+
+  #items .item-card-category-ref {
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  #items .item-card-category-ref .ref-code {
+    width: auto;
+    max-width: 100%;
+    font-size: .48rem;
+    white-space: nowrap;
+    overflow: visible;
+  }
+
+  #items .item-badge {
+    top: 0;
+    right: 0;
+    min-width: 2.15rem;
+    padding: .16rem .28rem;
+    font-size: .48rem;
   }
 }
 

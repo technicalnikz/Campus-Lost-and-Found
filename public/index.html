@@ -352,7 +352,7 @@
     <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; max-width: 650px; width: 92%; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid rgba(59,130,246,0.15); padding-bottom: 0.75rem;">
         <h3 id="imageModalTitle" style="font-size: 1.05rem; font-weight: 700; color: var(--blue-main); margin: 0; text-align: left;">Item Photo View</h3>
-        <button type="button" onclick="closeImageModal()" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; cursor: pointer; font-weight: 700;">✕ Close</button>
+        <button type="button" onclick="closeImageModal()" aria-label="Close image preview" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 0.3rem 0.55rem; font-size: 0.9rem; cursor: pointer; font-weight: 700;">✕</button>
       </div>
       <div style="min-height: 180px; max-height: 70vh; overflow: auto; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2); background: #000; display: flex; align-items: center; justify-content: center; position: relative;">
         <img id="imageModalImg" src="" alt="Full Item View" style="display: block; width: auto; height: auto; max-width: 100%; max-height: 70vh; object-fit: contain;" />
@@ -665,20 +665,12 @@
          <div style="display: block; width: max-content; margin: 0 auto 0.5rem; padding: 0.5rem; background: #ffffff; border: 1.5px solid #0f172a; border-radius: 8px;">
           <img id="matchQrImage" src="" alt="Match Verification QR" style="width: 130px; height: 130px; display: block;" />
          </div>
-        <div id="matchQrStatus" style="margin-top: 0.55rem; font-size: 0.78rem; font-weight: 900; color: #2563eb;">Status: Pending Verification</div>
-        <div id="matchQrDates" style="margin-top: 0.25rem; font-size: 0.68rem; color: #64748b; overflow-wrap:anywhere; white-space:pre-line;">Generated: —\nExpires: —</div>
-        <div id="matchQrCountdown" style="margin-top:0.2rem; font-size:0.7rem; font-weight:800; color:#2563eb;">Expires in —</div>
-        <div id="matchQrReferenceId" style="margin-top:0.2rem; font-family:monospace; font-size:0.65rem; color:#64748b;">Verification ID: —</div>
-        <div id="matchQrScanMeta" style="display:none; margin-top:0.2rem; font-size:0.65rem; color:#64748b;"></div>
         <div style="margin-top:0.45rem; font-size:0.68rem; color:#64748b;">Scan this QR code to view the match status.</div>
         <div id="matchQrAccessNote" style="display:none; margin-top:0.55rem; font-size:0.75rem; color:#475569;">Read-only status view. CSPC Admin verification details are restricted.</div>
         <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Reference lookup only — not handover approval</div>
       </div>
 
       <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end;">
-        <button class="btn btn-outline" onclick="closeMatchQrModal()">Close</button>
-        <button class="btn btn-primary" id="matchClaimAction" onclick="requestMatchClaimFromQr()" style="display:none;">Request Claim</button>
-        <button class="btn btn-outline" id="matchRegenerateAction" onclick="regenerateMatchQr()">Regenerate QR</button>
         <button class="btn btn-primary" onclick="printMatchQr()">🖨️ Print Match Reference</button>
       </div>
     </div>
@@ -944,7 +936,6 @@
         }
 
         const canManageStatus = item.canResolve === true || currentUser?.role === 'admin';
-        const canRequestClaim = item.type === 'found' && item.canRequestClaim === true;
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
 
         let matchBannerHtml = '';
@@ -963,25 +954,16 @@
         const delBtnHtml = canDelete
           ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>`
           : '';
-        const claimBtnHtml = canRequestClaim
-            ? `<button class="btn-sm btn-claim" onclick="openClaimRequestModal(${item.id}, ${item.potentialMatch.id})">Request Claim</button>`
-          : canManageStatus
+        const claimBtnHtml = canManageStatus
             ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
             : '';
 
         const photoUrl = getItemPhotoUrl(item);
-        const photoInteraction = photoUrl
-          ? `role="button" tabindex="0" onclick="openImageModal('${escapeHtml(photoUrl)}', '${escapeHtml(item.title)}')" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openImageModal('${escapeHtml(photoUrl)}', '${escapeHtml(item.title)}'); }"`
-          : '';
-        const photoHtml = `
-          <div class="item-photo-frame" data-photo-state="${photoUrl ? 'loading' : 'empty'}" ${photoInteraction}>
-            ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" onload="setItemPhotoState(this, 'loaded')" onerror="setItemPhotoState(this, 'error')" />` : ''}
-            <div class="item-photo-status" role="status" aria-live="polite">
-              ${photoUrl ? '<span class="item-photo-spinner" aria-hidden="true"></span>' : ''}
-              <span class="item-photo-status-text">${photoUrl ? 'Loading photo...' : 'No photo uploaded'}</span>
-            </div>
+        const photoHtml = photoUrl ? `
+          <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin: 0.6rem 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(59,130,246,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;" onclick="openImageModal('${escapeHtml(photoUrl)}', '${escapeHtml(item.title)}')">
+            <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.closest('div').style.display='none';" />
           </div>
-        `;
+        ` : '';
 
         return `
           <div class="project-card" id="item-card-${item.id}">
@@ -1299,75 +1281,17 @@
     }
 
     // ── Match QR Modal ────────────────────────────────────────────────────────
-    let activeMatchQrIds = { lostId: null, foundId: null };
-    let activeMatchFoundId = null;
-    let matchQrCountdownTimer = null;
-
-    function formatQrTimestamp(value) {
-      if (!value) return '—';
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return '—';
-      return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
-    }
-
-    function updateMatchQrCountdown(expiresAt) {
-      if (matchQrCountdownTimer) clearInterval(matchQrCountdownTimer);
-      const countdown = document.getElementById('matchQrCountdown');
-      const update = () => {
-        const remaining = new Date(expiresAt).getTime() - Date.now();
-        if (remaining <= 0) {
-          countdown.textContent = 'Expired — generate a new QR code.';
-          countdown.style.color = '#dc2626';
-          clearInterval(matchQrCountdownTimer);
-          return;
-        }
-        const days = Math.floor(remaining / 86400000);
-        const hours = Math.floor((remaining % 86400000) / 3600000);
-        const minutes = Math.floor((remaining % 3600000) / 60000);
-        countdown.textContent = `Expires in ${days}d ${hours}h ${minutes}m`;
-        countdown.style.color = '#2563eb';
-      };
-      update();
-      matchQrCountdownTimer = setInterval(update, 60000);
-    }
-
-    function setMatchQrMetadata(data) {
-      document.getElementById('matchQrCountdown').textContent = 'Expires in —';
-      updateMatchQrCountdown(data.expiresAt);
-      document.getElementById('matchQrReferenceId').textContent = `Verification ID: ${data.referenceId || '—'}`;
-      const scanMeta = document.getElementById('matchQrScanMeta');
-      scanMeta.style.display = data.view === 'admin' && data.scanCount ? 'block' : 'none';
-      scanMeta.textContent = data.view === 'admin' && data.scanCount
-        ? `Admin scans: ${data.scanCount} · Last scanned: ${formatQrTimestamp(data.lastScannedAt)}`
-        : '';
-    }
-
-    async function regenerateMatchQr() {
-      if (activeMatchQrIds.lostId && activeMatchQrIds.foundId) {
-        await openMatchQrModal(activeMatchQrIds.lostId, activeMatchQrIds.foundId);
-      }
-    }
-
-    function requestMatchClaimFromQr() {
-      if (!activeMatchFoundId) return showToast('The found-item reference is unavailable.', 'error');
-      closeMatchQrModal();
-      openClaimRequestModal(activeMatchFoundId, activeMatchQrIds.lostId);
-    }
-
     async function openMatchQrModal(lostId, foundId) {
-      activeMatchQrIds = { lostId, foundId };
-      activeMatchFoundId = foundId;
       try {
         const response = await fetch(`/api/items/match-reference-token?lostId=${encodeURIComponent(lostId)}&foundId=${encodeURIComponent(foundId)}`);
         const data = await response.json();
         if (!response.ok || !data.success) throw new Error(data.message || 'Could not create match reference.');
         const statusOnly = data.view === 'status-only';
-        const lost = data.lost || { title: 'Hidden', refCode: 'Hidden' };
-        const found = data.found || { title: 'Hidden', refCode: 'Hidden' };
+        const lost = data.lost || { title: '—', refCode: '—' };
+        const found = data.found || { title: '—', refCode: '—' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
-        document.getElementById('matchClaimAction').style.display = statusOnly && data.canRequestClaim ? '' : 'none';
-        document.getElementById('matchLostRef').style.display = statusOnly ? 'none' : '';
-        document.getElementById('matchFoundRef').style.display = statusOnly ? 'none' : '';
+        document.getElementById('matchLostRef').style.display = '';
+        document.getElementById('matchFoundRef').style.display = '';
         const printAction = document.querySelector('button[onclick="printMatchQr()"]');
         if (printAction) printAction.style.display = statusOnly ? 'none' : '';
 
@@ -1376,9 +1300,6 @@
         document.getElementById('matchLostRef').textContent    = lost.refCode  || '—';
         document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
 
-        document.getElementById('matchQrStatus').textContent = `Status: ${data.status.label}`;
-        document.getElementById('matchQrDates').textContent = `Generated: ${formatQrTimestamp(data.issuedAt)}\nExpires: ${formatQrTimestamp(data.expiresAt)}`;
-        setMatchQrMetadata(data);
 
         const legacyMatchPayload = encodeURIComponent(
           `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
@@ -1418,22 +1339,17 @@
           throw new Error(data.message || 'This match reference is unavailable.');
         }
         const statusOnly = data.view === 'status-only';
-        activeMatchFoundId = data.foundItemId || activeMatchFoundId;
-        data.lost = data.lost || { title: 'Hidden', refCode: 'Hidden' };
-        data.found = data.found || { title: 'Hidden', refCode: 'Hidden' };
+        data.lost = data.lost || { title: '—', refCode: '—' };
+        data.found = data.found || { title: '—', refCode: '—' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
-        document.getElementById('matchClaimAction').style.display = statusOnly ? '' : 'none';
-        document.getElementById('matchLostRef').style.display = statusOnly ? 'none' : '';
-        document.getElementById('matchFoundRef').style.display = statusOnly ? 'none' : '';
+        document.getElementById('matchLostRef').style.display = '';
+        document.getElementById('matchFoundRef').style.display = '';
         const printAction = document.querySelector('button[onclick="printMatchQr()"]');
         if (printAction) printAction.style.display = statusOnly ? 'none' : '';
         document.getElementById('matchLostTitle').textContent = data.lost.title || '—';
         document.getElementById('matchFoundTitle').textContent = data.found.title || '—';
         document.getElementById('matchLostRef').textContent = data.lost.refCode || '—';
         document.getElementById('matchFoundRef').textContent = data.found.refCode || '—';
-        document.getElementById('matchQrStatus').textContent = `Status: ${data.status.label}`;
-        document.getElementById('matchQrDates').textContent = `Generated: ${formatQrTimestamp(data.issuedAt)}\nExpires: ${formatQrTimestamp(data.expiresAt)}`;
-        setMatchQrMetadata(data);
         document.getElementById('matchQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
         document.getElementById('matchQrModal').classList.add('open');
       } catch (error) {
@@ -1705,7 +1621,6 @@
 
     let targetDeleteId = null;
     let targetClaimId = null;
-    let targetClaimLostId = null;
     let lastCreatedItemId = null;
 
     function openReportSuccessModal(refCode, itemId, potentialMatch) {
@@ -1775,7 +1690,6 @@
     function openClaimModal(id) {
       const item = loadedItems.find(i => String(i.id) === String(id));
       if (!item) return;
-      claimRequestMode = false;
       targetClaimId = id;
 
       const titleEl = document.getElementById('claimModalTitle');
@@ -1814,72 +1728,31 @@
       document.getElementById('claimConfirmModal').classList.add('open');
     }
 
-    function openClaimRequestModal(id, lostId = null) {
-      const item = loadedItems.find(i => String(i.id) === String(id));
-      if (!item || item.type !== 'found' || item.claimed) return;
-      if (!currentUser) {
-        window.location.href = '/login';
-        return;
-      }
-
-      claimRequestMode = true;
-      targetClaimId = id;
-      targetClaimLostId = lostId;
-      document.getElementById('claimModalTitle').innerText = 'Request this item';
-      document.getElementById('claimModalSubtitle').innerText = 'Describe identifying details only the rightful owner would know. Only moderators can view your response.';
-      document.getElementById('claimVerificationBox').style.display = 'none';
-      document.getElementById('claimProofGroup').style.display = 'block';
-      document.getElementById('claimantDetailsGroup').style.display = 'block';
-      document.querySelector('label[for="claimProofInput"]').textContent = 'Private ownership details';
-      const proofInput = document.getElementById('claimProofInput');
-      proofInput.value = '';
-      proofInput.placeholder = 'Describe a mark, contents, or other private identifying detail';
-      document.getElementById('claimantCourseYearInput').value = currentUser.courseYear || currentUser.yearLevel || '';
-      document.getElementById('claimantContactInput').value = currentUser.phone || currentUser.contactNumber || '';
-      document.getElementById('claimModalBtn').innerText = 'Submit Request';
-      document.getElementById('claimConfirmModal').classList.add('open');
-    }
-
     function closeClaimModal() {
       document.getElementById('claimConfirmModal').classList.remove('open');
       document.getElementById('claimantDetailsGroup').style.display = 'none';
       targetClaimId = null;
-      targetClaimLostId = null;
-      claimRequestMode = false;
     }
 
     async function executeClaimToggle() {
       if (!targetClaimId) return;
       const id = targetClaimId;
       const proof = document.getElementById('claimProofInput').value.trim();
-      const isRequest = claimRequestMode;
-      const courseYear = isRequest ? document.getElementById('claimantCourseYearInput').value.trim() : '';
-      const contactNumber = isRequest ? document.getElementById('claimantContactInput').value.trim() : '';
-      if (isRequest && (proof.length < 5 || proof.length > 500)) {
-        showToast('Enter ownership details between 5 and 500 characters.', true);
-        return;
-      }
-      if (isRequest && !courseYear) {
-        showToast('Enter your course and year level.', true);
-        return;
-      }
       closeClaimModal();
 
       try {
-        const response = await fetch(isRequest ? `/api/items/${id}/claim-requests` : `/api/items/${id}/claim`, {
-          method: isRequest ? 'POST' : 'PATCH',
+        const response = await fetch(`/api/items/${id}/claim`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ proof, courseYear, contactNumber, lostId: isRequest ? targetClaimLostId : undefined })
+          body: JSON.stringify({ proof })
         });
         const data = await response.json();
         if (!response.ok || !data.success) throw new Error(data.message || 'Unable to update item status.');
-        if (!isRequest) {
-          fetchStats();
-          fetchAndRenderItems();
-        }
+        fetchStats();
+        fetchAndRenderItems();
         showToast(data.message);
       } catch (error) {
-        showToast(error.message || (isRequest ? 'Failed to submit the claim request.' : 'Failed to update status.'), true);
+        showToast(error.message || 'Failed to update status.', true);
       }
     }
 

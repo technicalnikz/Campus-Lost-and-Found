@@ -241,7 +241,6 @@ let currentUser = null;
 
         const canManageStatus = item.canResolve === true || currentUser?.role === 'admin';
         const canGetQrSticker = currentUser?.role === 'admin';
-        const canRequestClaim = item.type === 'found' && item.canRequestClaim === true;
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
 
         let matchBannerHtml = '';
@@ -260,9 +259,7 @@ let currentUser = null;
         const delBtnHtml = canDelete
           ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>`
           : '';
-        const claimBtnHtml = canRequestClaim
-            ? `<button class="btn-sm btn-claim" onclick="openClaimRequestModal(${item.id}, ${item.potentialMatch.id})">Request Claim</button>`
-          : canManageStatus
+        const claimBtnHtml = canManageStatus
             ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
             : '';
 
@@ -270,7 +267,7 @@ let currentUser = null;
           <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin: 0.6rem 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(59,130,246,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;" onclick="openImageModal('${escapeHtml(item.photo)}', '${escapeHtml(item.title)}')">
             <img src="${item.photo}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover;" />
           </div>
-        ` : '';
+        ` : '<div class="item-photo-placeholder" aria-hidden="true"></div>';
 
         return `
           <div class="project-card" id="item-card-${item.id}">
@@ -839,8 +836,6 @@ let currentUser = null;
 
     let targetDeleteId = null;
     let targetClaimId = null;
-    let targetClaimLostId = null;
-    let claimRequestMode = false;
     let claimSubmissionInProgress = false;
     let lastCreatedItemId = null;
 
@@ -911,7 +906,6 @@ let currentUser = null;
     function openClaimModal(id) {
       const item = loadedItems.find(i => String(i.id) === String(id));
       if (!item) return;
-      claimRequestMode = false;
       targetClaimId = id;
 
       const titleEl = document.getElementById('claimModalTitle');
@@ -952,42 +946,12 @@ let currentUser = null;
       document.getElementById('claimConfirmModal').classList.add('open');
     }
 
-    function openClaimRequestModal(id, lostId = null) {
-      const item = loadedItems.find(i => String(i.id) === String(id));
-      if (!item || item.type !== 'found' || item.claimed) return;
-      if (!currentUser) {
-        window.location.href = '/login';
-        return;
-      }
-
-      claimRequestMode = true;
-      targetClaimId = id;
-      targetClaimLostId = lostId;
-      document.getElementById('claimModalTitle').innerText = 'Request this item';
-      document.getElementById('claimModalSubtitle').innerText = 'Describe identifying details only the rightful owner would know. Only moderators can view your response.';
-      document.getElementById('claimVerificationBox').style.display = 'none';
-      document.getElementById('claimProofGroup').style.display = 'block';
-      document.getElementById('claimantDetailsGroup').style.display = 'block';
-      document.querySelector('label[for="claimProofInput"]').textContent = 'Private ownership details';
-      const proofInput = document.getElementById('claimProofInput');
-      clearClaimFeedback();
-      proofInput.value = '';
-      proofInput.placeholder = 'Describe a mark, contents, or other private identifying detail';
-      proofInput.oninput = clearClaimFeedback;
-      document.getElementById('claimantCourseYearInput').value = currentUser.courseYear || currentUser.yearLevel || '';
-      document.getElementById('claimantContactInput').value = currentUser.phone || currentUser.contactNumber || '';
-      document.getElementById('claimModalBtn').innerText = 'Submit Request';
-      document.getElementById('claimConfirmModal').classList.add('open');
-    }
-
     function closeClaimModal(force = false) {
       if (claimSubmissionInProgress && !force) return;
       document.getElementById('claimConfirmModal').classList.remove('open');
       document.getElementById('claimantDetailsGroup').style.display = 'none';
       clearClaimFeedback();
       targetClaimId = null;
-      targetClaimLostId = null;
-      claimRequestMode = false;
     }
 
     function clearClaimFeedback() {
@@ -1027,45 +991,28 @@ let currentUser = null;
       if (!targetClaimId || claimSubmissionInProgress) return;
       const id = targetClaimId;
       const proof = document.getElementById('claimProofInput').value.trim();
-      const isRequest = claimRequestMode;
-      const courseYear = isRequest ? document.getElementById('claimantCourseYearInput').value.trim() : '';
-      const contactNumber = isRequest ? document.getElementById('claimantContactInput').value.trim() : '';
       clearClaimFeedback();
-      if (isRequest && proof.length < 5) {
-        showClaimFieldError('claimProofInput', 'claimProofError', 'Enter private ownership details (at least 5 characters).');
-        return;
-      }
-      if (isRequest && proof.length > 500) {
-        showClaimFieldError('claimProofInput', 'claimProofError', 'Ownership details must be 500 characters or fewer.');
-        return;
-      }
-      if (isRequest && !courseYear) {
-        showClaimFieldError('claimantCourseYearInput', 'claimCourseYearError', 'Enter your course and year level.');
-        return;
-      }
 
       const submitButton = document.getElementById('claimModalBtn');
       const originalButtonText = submitButton.textContent;
       claimSubmissionInProgress = true;
       submitButton.disabled = true;
       submitButton.setAttribute('aria-busy', 'true');
-      submitButton.textContent = isRequest ? 'Submitting...' : 'Saving...';
+      submitButton.textContent = 'Saving...';
       try {
-        const response = await fetch(isRequest ? `/api/items/${id}/claim-requests` : `/api/items/${id}/claim`, {
-          method: isRequest ? 'POST' : 'PATCH',
+        const response = await fetch(`/api/items/${id}/claim`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ proof, courseYear, contactNumber, lostId: isRequest ? targetClaimLostId : undefined })
+          body: JSON.stringify({ proof })
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.success) throw new Error(data.message || 'Unable to update item status.');
         closeClaimModal(true);
-        if (!isRequest) {
-          fetchStats();
-          fetchAndRenderItems();
-        }
-        showToast(data.message || (isRequest ? 'Claim request submitted for review.' : 'Item status updated.'));
+        fetchStats();
+        fetchAndRenderItems();
+        showToast(data.message || 'Item status updated.');
       } catch (error) {
-        showClaimModalError(error.message || (isRequest ? 'Failed to submit the claim request.' : 'Failed to update status.'));
+        showClaimModalError(error.message || 'Failed to update status.');
       } finally {
         claimSubmissionInProgress = false;
         submitButton.disabled = false;
