@@ -154,14 +154,14 @@
 
     /* ── Table ── */
     .admin-table-card { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; }
-    .overflow-x-auto { max-width: 100%; overflow-x: auto; }
+    .overflow-x-auto { width: 100%; max-width: 100%; overflow-x: auto; }
     .admin-table-wrap { overflow-y: hidden; }
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: .84rem;
     }
-    #adminItemsTable { width: 100%; min-width: 1180px; table-layout: fixed; }
+    #adminItemsTable { width: 100%; min-width: 1400px; table-layout: fixed; }
     #adminItemsTable th,
     #adminItemsTable td {
       overflow: visible;
@@ -181,7 +181,18 @@
       line-height: 1.35;
       text-align: center;
     }
-    .admin-cell-truncate { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #adminItemsTable .item-title-cell,
+    #adminItemsTable .location-cell,
+    #adminItemsTable .reporter-cell {
+      min-width: 0;
+      text-align: left;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    #adminItemsTable .item-title-cell { min-width: 120px; }
+    #adminItemsTable .location-cell { min-width: 220px; }
+    #adminItemsTable .reporter-cell { min-width: 220px; }
+    .admin-cell-wrap { display: block; white-space: normal; overflow-wrap: anywhere; }
     .reporter-contact { color: var(--text-muted); font-size: .72rem; }
     #adminItemsTable .action-buttons {
       display: flex;
@@ -426,7 +437,7 @@
       text-align: left;
       box-sizing: border-box;
     }
-    #adminItemsTable { min-width: 1180px; }
+    #adminItemsTable { min-width: 1400px; }
     #adminPanel .page-header h1 {
       font-size: 2.2rem;
       font-weight: 900;

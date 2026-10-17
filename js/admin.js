@@ -407,14 +407,14 @@ let deleteTargetId = null;
         return `
         <tr>
           <td title="${rowNumber}"><span class="table-select-cell"><input class="admin-checkbox item-select" type="checkbox" data-item-id="${escHtml(item.id)}" ${selectedItemIds.has(String(item.id)) ? 'checked' : ''} aria-label="Select ${escHtml(item.title)}" /><span>${rowNumber}</span></span></td>
-          <td class="td-title" title="${escHtml(item.title)}">
+          <td class="td-title item-title-cell" title="${escHtml(item.title)}">
             <a href="item-detail.html?id=${encodeURIComponent(item.id)}" target="_blank" title="${escHtml(item.title)}">${escHtml(item.title)}</a>
           </td>
           <td title="${escHtml(item.type)}"><span class="badge ${item.type === 'lost' ? 'badge-lost' : 'badge-found'}">${escHtml(item.type)}</span></td>
           <td title="${escHtml(item.category)}">${escHtml(item.category)}</td>
-          <td title="${escHtml(item.location)}"><span class="admin-cell-truncate">${escHtml(item.location)}</span></td>
-          <td title="${escHtml(reporterValues.join(' · ') || '—')}">${reporterValues.length
-            ? reporterValues.map((value, index) => `<span class="admin-cell-truncate${index ? ' reporter-contact' : ''}">${escHtml(value)}</span>`).join('')
+          <td class="location-cell" title="${escHtml(item.location)}">${escHtml(item.location)}</td>
+          <td class="reporter-cell" title="${escHtml(reporterValues.join(' · ') || '—')}">${reporterValues.length
+            ? reporterValues.map((value, index) => `<span class="admin-cell-wrap${index ? ' reporter-contact' : ''}">${escHtml(value)}</span>`).join('')
             : '—'}</td>
           <td title="${escHtml(date)}">${date}</td>
           <td class="status-cell" title="${pendingClaim ? 'Pending Verification' : latestClaim?.status === 'rejected' && !item.claimed ? 'Rejected · Available' : escHtml(item.status)}">${itemStatus}</td>
