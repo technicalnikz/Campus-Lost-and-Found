@@ -52,16 +52,20 @@ function togglePasswordVisibility(inputId, btn) {
     }
 
     async function redirectAuthenticatedUser() {
+      document.body.classList.add('auth-checking');
       try {
         const response = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' });
-        if (!response.ok) return;
-        const data = await response.json();
-        if (data.authenticated && data.user && ['admin', 'student'].includes(data.user.role)) {
-          window.location.replace(getPostLoginUrl(data.user));
+        if (response.ok) {
+          const data = await response.json();
+          if (data.authenticated && data.user && ['admin', 'student'].includes(data.user.role)) {
+            window.location.replace(getPostLoginUrl(data.user));
+            return;
+          }
         }
       } catch (error) {
         // Leave the sign-in form available while session verification is unavailable.
       }
+      document.body.classList.remove('auth-checking');
     }
 
     // Theme initialization and click handling are provided by the shared main.js.
@@ -178,3 +182,6 @@ function togglePasswordVisibility(inputId, btn) {
     document.getElementById('regPassword').addEventListener('input', updatePasswordRequirements);
     updatePasswordRequirements();
     redirectAuthenticatedUser();
+    window.addEventListener('pageshow', event => {
+      if (event.persisted) redirectAuthenticatedUser();
+    });
