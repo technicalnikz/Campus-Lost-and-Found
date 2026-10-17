@@ -273,13 +273,13 @@ let deleteTargetId = null;
       const staleActive = items.filter(i => i.status !== 'claimed' && new Date(i.createdAt || i.date).getTime() < threshold).length;
       const pending = pendingClaims.length + staleActive;
       document.getElementById('adminStats').innerHTML = `
-        <div class="stat-card"><div class="stat-number">${items.length}</div><div class="stat-label">Total Items</div></div>
-        <div class="stat-card"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
-        <div class="stat-card"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
-        <div class="stat-card"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
-        <div class="stat-card"><div class="stat-number">${staleActive}</div><div class="stat-label">Unresolved</div></div>
-        <div class="stat-card"><div class="stat-number">${pendingClaims.length}</div><div class="stat-label">Pending Claims</div></div>
-        <div class="stat-card action-needed-card"><div class="stat-number">${pending}</div><div class="stat-label">Action Needed</div></div>
+        <div class="stat-card stat-card--total"><div class="stat-number">${items.length}</div><div class="stat-label">Total Items</div></div>
+        <div class="stat-card stat-card--lost"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
+        <div class="stat-card stat-card--found"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
+        <div class="stat-card stat-card--claimed"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
+        <div class="stat-card stat-card--unresolved"><div class="stat-number">${staleActive}</div><div class="stat-label">Unresolved</div></div>
+        <div class="stat-card stat-card--pending"><div class="stat-number">${pendingClaims.length}</div><div class="stat-label">Pending Claims</div></div>
+        <div class="stat-card stat-card--action-needed action-needed-card"><div class="stat-number">${pending}</div><div class="stat-label">Action Needed</div></div>
       `;
 
       renderAdminInsights(items);
@@ -399,7 +399,7 @@ let deleteTargetId = null;
         const rowNumber = startIndex + idx + 1;
         return `
         <tr>
-          <td title="${rowNumber}"><input class="item-select" type="checkbox" data-item-id="${escHtml(item.id)}" ${selectedItemIds.has(String(item.id)) ? 'checked' : ''} aria-label="Select ${escHtml(item.title)}" /> ${rowNumber}</td>
+          <td title="${rowNumber}"><span class="table-select-cell"><input class="admin-checkbox item-select" type="checkbox" data-item-id="${escHtml(item.id)}" ${selectedItemIds.has(String(item.id)) ? 'checked' : ''} aria-label="Select ${escHtml(item.title)}" /><span>${rowNumber}</span></span></td>
           <td class="td-title" title="${escHtml(item.title)}">
             <a href="item-detail.html?id=${encodeURIComponent(item.id)}" target="_blank" title="${escHtml(item.title)}">${escHtml(item.title)}</a>
           </td>
