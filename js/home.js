@@ -267,7 +267,7 @@ let currentUser = null;
           <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin: 0.6rem 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(59,130,246,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;" onclick="openImageModal('${escapeHtml(item.photo)}', '${escapeHtml(item.title)}')">
             <img src="${item.photo}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover;" />
           </div>
-        ` : '';
+        ` : '<div class="item-photo-placeholder" aria-hidden="true"></div>';
 
         return `
           <div class="project-card" id="item-card-${item.id}">
