@@ -98,7 +98,7 @@
           <button class="btn btn-primary" id="exportBtn" style="font-size:.8rem;padding:.55rem 1rem;">Export CSV</button>
         </div>
         <div class="bulk-toolbar" id="bulkToolbar" aria-live="polite">
-          <label><input type="checkbox" id="selectAllItems" /> Select all visible</label>
+          <label><input class="admin-checkbox" type="checkbox" id="selectAllItems" /> Select all visible</label>
           <span id="selectedItemsCount">0 selected</span>
           <button class="action-btn action-btn-claim" id="bulkClaimBtn" disabled>Mark Claimed</button>
           <button class="action-btn action-btn-outline" id="bulkArchiveBtn" disabled>Archive Selected</button>
@@ -110,18 +110,18 @@
           <table id="adminItemsTable">
             <colgroup>
               <col style="width:5%" />
-              <col style="width:13%" />
-              <col style="width:8%" />
-              <col style="width:10%" />
-              <col style="width:15%" />
               <col style="width:12%" />
+              <col style="width:7%" />
+              <col style="width:9%" />
+              <col style="width:18%" />
+              <col style="width:18%" />
               <col style="width:8%" />
-              <col style="width:14%" />
-              <col style="width:15%" />
+              <col style="width:11%" />
+              <col style="width:12%" />
             </colgroup>
             <thead>
               <tr>
-                <th title="Row number"># / ID</th>
+                <th title="Row number"><span class="table-select-cell"># / ID</span></th>
                 <th>Item</th>
                 <th>Type</th>
                 <th><button class="sort-button" data-sort="category">Category</button></th>

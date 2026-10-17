@@ -9,6 +9,7 @@ let deleteTargetId = null;
     let actionConfirmResolver = null;
     let cachedServerItems = [];
     const selectedItemIds = new Set();
+    let visibleAdminItems = [];
     let adminSort = { key: 'date', direction: 'desc' };
     const adminItemsPerPage = 10;
     let adminCurrentPage = 1;
@@ -236,6 +237,10 @@ let deleteTargetId = null;
         if (nextSignature !== adminItemsSignature) {
           adminItemsSignature = nextSignature;
           adminItems = nextItems;
+          const existingItemIds = new Set(adminItems.map(item => String(item.id)));
+          selectedItemIds.forEach(id => {
+            if (!existingItemIds.has(id)) selectedItemIds.delete(id);
+          });
           renderAdminPanel(adminItems);
         }
       } finally {
@@ -267,12 +272,22 @@ let deleteTargetId = null;
       const threshold = Date.now() - 30 * 24 * 60 * 60 * 1000;
       const staleActive = items.filter(i => i.status !== 'claimed' && new Date(i.createdAt || i.date).getTime() < threshold).length;
       document.getElementById('adminStats').innerHTML = `
+<<<<<<< HEAD
         <div class="stat-card"><div class="stat-number">${items.length}</div><div class="stat-label">Total Items</div></div>
         <div class="stat-card"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
         <div class="stat-card"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
         <div class="stat-card"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
         <div class="stat-card"><div class="stat-number">${staleActive}</div><div class="stat-label">Unresolved</div></div>
         <div class="stat-card action-needed-card"><div class="stat-number">${staleActive}</div><div class="stat-label">Action Needed</div></div>
+=======
+        <div class="stat-card stat-card--total"><div class="stat-number">${items.length}</div><div class="stat-label">Total Items</div></div>
+        <div class="stat-card stat-card--lost"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
+        <div class="stat-card stat-card--found"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
+        <div class="stat-card stat-card--claimed"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
+        <div class="stat-card stat-card--unresolved"><div class="stat-number">${staleActive}</div><div class="stat-label">Unresolved</div></div>
+        <div class="stat-card stat-card--pending"><div class="stat-number">${pendingClaims.length}</div><div class="stat-label">Pending Claims</div></div>
+        <div class="stat-card stat-card--action-needed action-needed-card"><div class="stat-number">${pending}</div><div class="stat-label">Action Needed</div></div>
+>>>>>>> 18a66b276ce447c9dfc7be5cc8b19c37dde2b394
       `;
 
       renderAdminInsights(items);
@@ -343,11 +358,13 @@ let deleteTargetId = null;
       adminCurrentPage = totalPages ? Math.min(adminCurrentPage, totalPages) : 1;
       const startIndex = (adminCurrentPage - 1) * adminItemsPerPage;
       const pageItems = items.slice(startIndex, startIndex + adminItemsPerPage);
+      visibleAdminItems = pageItems;
       renderItemsPagination(totalItems, totalPages, startIndex);
 
       if (totalItems === 0) {
         tbody.innerHTML = '';
         empty.style.display = 'block';
+        updateBulkToolbar();
         return;
       }
       empty.style.display = 'none';
@@ -372,15 +389,15 @@ let deleteTargetId = null;
         const rowNumber = startIndex + idx + 1;
         return `
         <tr>
-          <td title="${rowNumber}"><input class="item-select" type="checkbox" data-item-id="${escHtml(item.id)}" ${selectedItemIds.has(String(item.id)) ? 'checked' : ''} aria-label="Select ${escHtml(item.title)}" /> ${rowNumber}</td>
-          <td class="td-title" title="${escHtml(item.title)}">
+          <td title="${rowNumber}"><span class="table-select-cell"><input class="admin-checkbox item-select" type="checkbox" data-item-id="${escHtml(item.id)}" ${selectedItemIds.has(String(item.id)) ? 'checked' : ''} aria-label="Select ${escHtml(item.title)}" /><span>${rowNumber}</span></span></td>
+          <td class="td-title item-title-cell" title="${escHtml(item.title)}">
             <a href="item-detail.html?id=${encodeURIComponent(item.id)}" target="_blank" title="${escHtml(item.title)}">${escHtml(item.title)}</a>
           </td>
           <td title="${escHtml(item.type)}"><span class="badge ${item.type === 'lost' ? 'badge-lost' : 'badge-found'}">${escHtml(item.type)}</span></td>
           <td title="${escHtml(item.category)}">${escHtml(item.category)}</td>
-          <td title="${escHtml(item.location)}"><span class="admin-cell-truncate">${escHtml(item.location)}</span></td>
-          <td title="${escHtml(reporterValues.join(' · ') || '—')}">${reporterValues.length
-            ? reporterValues.map((value, index) => `<span class="admin-cell-truncate${index ? ' reporter-contact' : ''}">${escHtml(value)}</span>`).join('')
+          <td class="location-cell" title="${escHtml(item.location)}">${escHtml(item.location)}</td>
+          <td class="reporter-cell" title="${escHtml(reporterValues.join(' · ') || '—')}">${reporterValues.length
+            ? reporterValues.map((value, index) => `<span class="admin-cell-wrap${index ? ' reporter-contact' : ''}">${escHtml(value)}</span>`).join('')
             : '—'}</td>
           <td title="${escHtml(date)}">${date}</td>
           <td class="status-cell" title="${pendingClaim ? 'Pending Verification' : latestClaim?.status === 'rejected' && !item.claimed ? 'Rejected · Available' : escHtml(item.status)}">${itemStatus}</td>
@@ -649,8 +666,9 @@ let deleteTargetId = null;
     }
 
     function toggleSelectAllVisible(event) {
-      getFilteredAdminItems().slice((adminCurrentPage - 1) * adminItemsPerPage, adminCurrentPage * adminItemsPerPage).forEach(item => {
-        if (event.target.checked) selectedItemIds.add(String(item.id)); else selectedItemIds.delete(String(item.id));
+      visibleAdminItems.forEach(item => {
+        if (event.currentTarget.checked) selectedItemIds.add(String(item.id));
+        else selectedItemIds.delete(String(item.id));
       });
       renderItemsTable();
     }
@@ -659,6 +677,10 @@ let deleteTargetId = null;
       const count = selectedItemIds.size;
       document.getElementById('selectedItemsCount').textContent = `${count} selected`;
       ['bulkClaimBtn', 'bulkArchiveBtn', 'bulkDeleteBtn', 'exportSelectedBtn'].forEach(id => { document.getElementById(id).disabled = count === 0; });
+      const selectAll = document.getElementById('selectAllItems');
+      const selectedVisibleCount = visibleAdminItems.filter(item => selectedItemIds.has(String(item.id))).length;
+      selectAll.checked = visibleAdminItems.length > 0 && selectedVisibleCount === visibleAdminItems.length;
+      selectAll.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleAdminItems.length;
     }
 
     function openActionConfirm(title, message) {
