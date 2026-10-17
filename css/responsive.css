@@ -1447,3 +1447,19 @@ input[type='submit'] {
     to { opacity: 1; }
   }
 }
+/* Header action controls stay square and identical at every compact breakpoint. */
+@media (max-width: 900px) {
+  .nav-actions .theme-toggle,
+  .nav-actions .notif-bell-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    flex: 0 0 32px !important;
+    box-sizing: border-box !important;
+  }
+}

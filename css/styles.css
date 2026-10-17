@@ -248,13 +248,35 @@ body::after {
   justify-content: center;
   flex-shrink: 0;
   line-height: 1;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  touch-action: manipulation;
+}
+
+.theme-toggle-icon,
+.notif-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 1.25rem;
+  line-height: 1;
+  font-size: 1rem;
+}
+
+.theme-toggle svg,
+.notif-bell-btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 1.25rem;
+  display: block;
 }
 
 .theme-toggle {
   background: rgba(59, 130, 246, 0.1);
   border: 1px solid rgba(59, 130, 246, 0.3);
   color: var(--blue-main);
-  border-radius: 999px;
   font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -346,7 +368,6 @@ body::after {
   background: rgba(59, 130, 246, 0.1);
   border: 1px solid rgba(59, 130, 246, 0.3);
   color: var(--blue-light);
-  border-radius: 999px;
   font-size: 0.85rem;
   cursor: pointer;
   position: relative;

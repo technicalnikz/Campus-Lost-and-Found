@@ -38,7 +38,7 @@ let currentUser = null;
           const roleLabel = isAdmin ? '' : 'Student';
           document.getElementById('userNavSlot').innerHTML = `
             <button type="button" id="notifBellBtn" onclick="openNotificationsModal()" class="notif-bell-btn" title="View QR Recovery Alerts">
-              🔔 <span id="notifCountBadge" class="notif-badge" style="display:none;">0</span>
+              <span class="notif-icon" aria-hidden="true">🔔</span><span id="notifCountBadge" class="notif-badge" style="display:none;">0</span>
             </button>
             <div class="user-pill">
               <span class="user-name">${escapeHtml(isAdmin ? 'Admin' : currentUser.fullName)}</span>
