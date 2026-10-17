@@ -671,8 +671,6 @@
       </div>
 
       <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end;">
-        <button class="btn btn-outline" onclick="closeMatchQrModal()">Close</button>
-        <button class="btn btn-outline" id="matchRegenerateAction" onclick="regenerateMatchQr()">Regenerate QR</button>
         <button class="btn btn-primary" onclick="printMatchQr()">🖨️ Print Match Reference</button>
       </div>
     </div>
@@ -1283,15 +1281,7 @@
     }
 
     // ── Match QR Modal ────────────────────────────────────────────────────────
-    let activeMatchQrIds = { lostId: null, foundId: null };
-    async function regenerateMatchQr() {
-      if (activeMatchQrIds.lostId && activeMatchQrIds.foundId) {
-        await openMatchQrModal(activeMatchQrIds.lostId, activeMatchQrIds.foundId);
-      }
-    }
-
     async function openMatchQrModal(lostId, foundId) {
-      activeMatchQrIds = { lostId, foundId };
       try {
         const response = await fetch(`/api/items/match-reference-token?lostId=${encodeURIComponent(lostId)}&foundId=${encodeURIComponent(foundId)}`);
         const data = await response.json();
