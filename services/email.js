@@ -107,6 +107,27 @@ async function sendClaimStatusEmail(user, item, claim, status) {
   });
 }
 
+async function sendFinderNotificationEmail(user, item, notification) {
+  const transport = createTransport();
+  const name = user.fullName || 'there';
+  const safeName = escapeHtml(name);
+  const signInUrl = getAppUrl('/login');
+  const finderContact = notification.finderContact === 'Anonymous Student / Finder'
+    ? 'The finder chose to remain anonymous.'
+    : `Optional finder contact: ${notification.finderContact}`;
+  const subject = `Finder alert for your registered item: ${item.title}`;
+  const text = `Hi ${name},\n\nSomeone scanned the recovery QR code for your registered item and reported finding it.\n\nItem: ${item.title} (${item.refCode})\nLocation found: ${notification.locationFound}\nFinder's message: ${notification.message}\n${finderContact}\n\nSign in to Back2You to view the alert: ${signInUrl}\n\nBack2You – CSPC Lost & Found`;
+  const html = `<p>Hi ${safeName},</p><p>Someone scanned the recovery QR code for your registered item and reported finding it.</p><ul><li><strong>Item:</strong> ${escapeHtml(item.title)} (${escapeHtml(item.refCode)})</li><li><strong>Location found:</strong> ${escapeHtml(notification.locationFound)}</li><li><strong>Finder's message:</strong> ${escapeHtml(notification.message)}</li><li>${escapeHtml(finderContact)}</li></ul><p><a href="${escapeHtml(signInUrl)}">Sign in to Back2You to view the alert</a></p><p>Back2You – CSPC Lost &amp; Found</p>`;
+
+  await transport.sendMail({
+    from: process.env.SMTP_FROM,
+    to: user.email,
+    subject,
+    text,
+    html
+  });
+}
+
 async function sendBroadcastEmail(user, subject, message) {
   const transport = createTransport();
   const name = user.fullName || 'there';
@@ -119,4 +140,10 @@ async function sendBroadcastEmail(user, subject, message) {
   });
 }
 
-module.exports = { sendRegistrationEmail, sendPossibleMatchEmail, sendClaimStatusEmail, sendBroadcastEmail };
+module.exports = {
+  sendRegistrationEmail,
+  sendPossibleMatchEmail,
+  sendClaimStatusEmail,
+  sendFinderNotificationEmail,
+  sendBroadcastEmail
+};

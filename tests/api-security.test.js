@@ -351,6 +351,73 @@ test('registered belongings are private except through QR reference lookup', asy
   assert.equal(Object.hasOwn(item, 'ownerEmail'), false);
 });
 
+test('finder QR alerts appear in the owner inbox and are emailed to the owner', async t => {
+  const studentCookie = await login('student@my.cspc.edu.ph', studentPassword);
+  const smtp = await startSmtpCaptureServer();
+  let notificationId;
+  t.after(() => {
+    if (!notificationId) return;
+    const itemsPath = path.join(dataDir, 'items.json');
+    const items = JSON.parse(fs.readFileSync(itemsPath, 'utf8'));
+    const item = items.find(entry => entry.refCode === 'CSPC-REG-QR-0012');
+    if (item) item.notifications = item.notifications.filter(notification => notification.id !== notificationId);
+    fs.writeFileSync(itemsPath, JSON.stringify(items));
+  });
+  const mailEnvironment = Object.fromEntries(
+    smtpEnvironmentKeys.map(key => [key, process.env[key]])
+  );
+  process.env.SMTP_HOST = '127.0.0.1';
+  process.env.SMTP_PORT = String(smtp.port);
+  process.env.SMTP_SECURE = 'false';
+  process.env.SMTP_FROM = 'Back2You <noreply@example.edu>';
+  process.env.APP_BASE_URL = baseUrl;
+  delete process.env.SMTP_USER;
+  delete process.env.SMTP_PASS;
+
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/api/items/anonymous-notify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        refCode: 'CSPC-REG-QR-0012',
+        message: 'I found it by the library entrance.',
+        locationFound: 'Library entrance',
+        finderContact: 'finder@example.edu'
+      })
+    });
+  } finally {
+    await new Promise((resolve, reject) => smtp.server.close(error => error ? reject(error) : resolve()));
+    Object.entries(mailEnvironment).forEach(([key, value]) => {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    });
+  }
+
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.equal(result.emailSent, true);
+  assert.equal(result.notification.read, false);
+  notificationId = result.notification.id;
+  assert.equal(smtp.messages.length, 1);
+  assert.match(smtp.messages[0].recipient, /owner@example\.edu/i);
+  const emailContent = smtp.messages[0].content.replace(/=\r\n/g, '');
+  assert.match(emailContent, /Finder alert for your registered item: Registered laptop/i);
+  assert.match(emailContent, /Library entrance/);
+  assert.match(emailContent, /I found it by the library entrance\./);
+
+  const inboxResponse = await fetch(`${baseUrl}/api/items/my-notifications`, {
+    headers: { Cookie: studentCookie }
+  });
+  assert.equal(inboxResponse.status, 200);
+  const { notifications, unreadCount } = await inboxResponse.json();
+  const finderAlert = notifications.find(notification => notification.refCode === 'CSPC-REG-QR-0012');
+  assert.ok(finderAlert);
+  assert.equal(finderAlert.message, 'I found it by the library entrance.');
+  assert.equal(finderAlert.locationFound, 'Library entrance');
+  assert.equal(unreadCount, 1);
+});
+
 test('finder QR landing URL serves the app for the anonymous finder screen', async () => {
   const response = await fetch(`${baseUrl}/found?ref=CSPC-REG-QR-0012`);
   assert.equal(response.status, 200);

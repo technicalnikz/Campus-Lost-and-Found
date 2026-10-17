@@ -1280,7 +1280,8 @@
         });
         const data = await res.json();
         if (data.success) {
-          showToast('📲 Anonymous alert delivered to the owner\'s account!');
+          showToast(data.message || 'Finder alert submitted.');
+          loadMyNotifications();
           closeAnonymousFinderModal();
         } else {
           showToast(data.message || 'Failed to send notification.', 'error');
