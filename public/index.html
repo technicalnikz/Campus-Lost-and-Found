@@ -587,6 +587,7 @@
 
       <form id="anonymousFinderForm" onsubmit="handleAnonymousFinderSubmit(event)">
         <input type="hidden" id="finderRefCodeInput" />
+        <input type="hidden" id="finderMatchTokenInput" />
         <div class="input-field" style="margin-bottom: 0.85rem;">
           <label for="finderLocationInput">Where is the item right now? <span class="required">*</span></label>
           <input type="text" id="finderLocationInput" placeholder="e.g. Left with Ms. Santos at Library 2nd floor desk" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
@@ -1241,12 +1242,13 @@
     }
 
     // ── Anonymous Finder Modal ────────────────────────────────────────────────
-    function showAnonymousFinderForItem(item) {
+    function showAnonymousFinderForItem(item, matchToken = '') {
       const safeItem = item || {};
       document.getElementById('finderScreenItemTitle').textContent = safeItem.title || 'Found Item';
       document.getElementById('finderScreenRefCode').textContent = safeItem.refCode || '—';
       document.getElementById('finderScreenInstructions').textContent = safeItem.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.';
       document.getElementById('finderRefCodeInput').value = safeItem.refCode || '';
+      document.getElementById('finderMatchTokenInput').value = matchToken || '';
       document.getElementById('finderMessageInput').value = '';
       document.getElementById('finderLocationInput').value = '';
       document.getElementById('finderContactInput').value = '';
@@ -1275,6 +1277,7 @@
     async function handleAnonymousFinderSubmit(e) {
       e.preventDefault();
       const refCode       = document.getElementById('finderRefCodeInput').value;
+      const matchToken    = document.getElementById('finderMatchTokenInput').value;
       const message       = document.getElementById('finderMessageInput').value.trim();
       const locationFound = document.getElementById('finderLocationInput').value.trim();
       const finderContact = document.getElementById('finderContactInput').value.trim();
@@ -1285,10 +1288,14 @@
       }
 
       try {
-        const res = await fetch('/api/items/anonymous-notify', {
+        const endpoint = matchToken ? '/api/items/match-reference-notify' : '/api/items/anonymous-notify';
+        const body = matchToken
+          ? { token: matchToken, message, locationFound, finderContact }
+          : { refCode, message, locationFound, finderContact };
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refCode, message, locationFound, finderContact })
+          body: JSON.stringify(body)
         });
         const data = await res.json();
         if (data.success) {
@@ -1380,7 +1387,7 @@
         document.getElementById('matchFoundLocation').textContent = data.found.location || 'Location unavailable';
         document.getElementById('matchQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
         document.getElementById('matchQrModal').classList.remove('open');
-        showAnonymousFinderForItem(data.found);
+        showAnonymousFinderForItem(data.found, token);
       } catch (error) {
         showToast(error.message || 'Could not open match verification.', 'error');
       }

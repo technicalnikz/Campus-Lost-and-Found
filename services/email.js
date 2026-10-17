@@ -146,6 +146,23 @@ async function sendFinderNotificationEmail(user, item, notification) {
   });
 }
 
+async function sendMatchFinderNotificationEmail(user, item, notification) {
+  const transport = createTransport();
+  const name = user.fullName || 'there';
+  const safeName = escapeHtml(name);
+  const signInUrl = getAppUrl('/login');
+  const finderContact = notification.finderContact === 'Anonymous Student / Finder'
+    ? 'The finder chose to remain anonymous.'
+    : `Optional finder contact: ${notification.finderContact}`;
+  const subject = `Finder alert for your possible match: ${item.title}`;
+  const text = `Hi ${name},\n\nSomeone submitted a recovery alert for an item that may match your lost-item report.\n\n- Item: ${item.title} (${item.refCode})\n- Location found: ${notification.locationFound}\n- Finder's message: ${notification.message}\n- ${finderContact}\n\nSign in to Back2You to view the alert: ${signInUrl}\n\nBack2You – CSPC Lost & Found`;
+  const html = `<p>Hi ${safeName},</p><p>Someone submitted a recovery alert for an item that may match your lost-item report.</p><ul><li><strong>Item:</strong> ${escapeHtml(item.title)} (${escapeHtml(item.refCode)})</li><li><strong>Location found:</strong> ${escapeHtml(notification.locationFound)}</li><li><strong>Finder's message:</strong> ${escapeHtml(notification.message)}</li><li>${escapeHtml(finderContact)}</li></ul><p><a href="${escapeHtml(signInUrl)}">Sign in to Back2You to view the alert</a></p><p>Back2You – CSPC Lost &amp; Found</p>`;
+  const info = await transport.sendMail({ from: process.env.SMTP_FROM, to: user.email, subject, text, html });
+  if (info.rejected && info.rejected.length) throw new Error(`SMTP rejected recipient(s): ${info.rejected.join(', ')}`);
+  console.log(`Match finder alert email accepted for ${user.email} (messageId=${info.messageId || 'unknown'})`);
+  return info;
+}
+
 async function sendBroadcastEmail(user, subject, message) {
   const transport = createTransport();
   const name = user.fullName || 'there';
@@ -164,5 +181,6 @@ module.exports = {
   sendClaimStatusEmail,
   sendClaimRequestEmail,
   sendFinderNotificationEmail,
+  sendMatchFinderNotificationEmail,
   sendBroadcastEmail
 };
