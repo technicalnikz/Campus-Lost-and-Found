@@ -56,7 +56,7 @@ function saveUploadedImage(file) {
   return `/uploads/${filename}`;
 }
 
-function publicItemView(item, potentialMatch = null) {
+function publicItemView(item, potentialMatch = null, canResolve = false) {
   return {
     id: item.id,
     refCode: item.refCode,
@@ -71,6 +71,7 @@ function publicItemView(item, potentialMatch = null) {
     status: item.status,
     claimed: Boolean(item.claimed),
     claimedAt: item.claimedAt || null,
+    canResolve,
     potentialMatch: potentialMatch ? {
       id: potentialMatch.id,
       title: potentialMatch.title,
@@ -515,8 +516,8 @@ router.get('/', (req, res) => {
     const user = req.session?.user;
     const canViewPrivateFields = user && (user.role === 'admin' || item.reportedBy === user.id);
     return canViewPrivateFields
-      ? { ...item, potentialMatch: match ? { id: match.id, title: match.title, location: match.location, type: match.type } : null }
-      : publicItemView(item, match);
+      ? { ...item, canResolve: true, potentialMatch: match ? { id: match.id, title: match.title, location: match.location, type: match.type } : null }
+      : publicItemView(item, match, Boolean(user && (user.role === 'admin' || String(item.reportedBy) === String(user.id))));
   });
 
   res.json({
@@ -1044,8 +1045,8 @@ router.patch('/:id/status', requireRole('admin'), (req, res) => {
   res.json({ success: true, message: `Item status updated to ${status}.`, item });
 });
 
-// PATCH /api/items/:id/claim - Claim or restore item
-router.patch('/:id/claim', requireRole('admin'), async (req, res) => {
+// PATCH /api/items/:id/claim - Resolve or restore item for admins and the original reporter.
+router.patch('/:id/claim', requireAuth, async (req, res) => {
   const items = getItems();
   const itemIndex = items.findIndex(i => String(i.id) === String(req.params.id));
   if (itemIndex === -1) {
@@ -1053,6 +1054,11 @@ router.patch('/:id/claim', requireRole('admin'), async (req, res) => {
   }
 
   const item = items[itemIndex];
+  const canResolve = req.session.user.role === 'admin'
+    || String(item.reportedBy) === String(req.session.user.id);
+  if (!canResolve) {
+    return res.status(403).json({ success: false, message: 'Only the original reporter or an administrator can resolve this item.' });
+  }
 
   // If already claimed, allow unclaiming/restoring
   if (item.claimed) {

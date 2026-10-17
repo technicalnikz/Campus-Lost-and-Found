@@ -239,7 +239,7 @@ let currentUser = null;
           badgeHtml = '<span class="item-badge badge-found">Found</span>';
         }
 
-        const canManageStatus = currentUser?.role === 'admin';
+        const canManageStatus = item.canResolve === true || currentUser?.role === 'admin';
         const canGetQrSticker = currentUser?.role === 'admin';
         const canRequestClaim = item.type === 'found' && !item.claimed && (!currentUser || item.reportedBy !== currentUser.id);
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
@@ -261,7 +261,7 @@ let currentUser = null;
           ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>`
           : '';
         const claimBtnHtml = canManageStatus
-          ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${claimBtnText}</button>`
+          ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
           : canRequestClaim
             ? `<button class="btn-sm btn-claim" onclick="openClaimRequestModal(${item.id})">Request Claim</button>`
             : '';
