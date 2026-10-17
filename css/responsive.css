@@ -975,6 +975,7 @@ input[type='submit'] {
 
   #items .match-banner.match-banner-qr-only .btn-match-qr {
     min-width: 7rem;
+    width: 100%;
     height: 2.25rem;
     box-sizing: border-box;
   }
