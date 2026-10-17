@@ -972,7 +972,7 @@ input[type='submit'] {
 @media (min-width: 320px) and (max-width: 440px) {
   #items .match-banner {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(3.7rem, 4.4rem);
+    grid-template-columns: minmax(0, 1fr) minmax(4.1rem, 4.7rem);
     align-items: stretch;
     gap: .35rem;
     min-width: 0;
@@ -989,7 +989,10 @@ input[type='submit'] {
   #items .btn-match-qr {
     width: 100%;
     min-width: 0;
-    padding: .3rem .2rem;
+    min-height: 100%;
+    height: 100%;
+    padding: .5rem .25rem;
+    align-self: stretch;
     justify-content: center;
     text-align: center;
     white-space: normal;
