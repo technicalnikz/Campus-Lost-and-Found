@@ -980,6 +980,10 @@ input[type='submit'] {
     overflow: hidden;
   }
 
+  #items .match-banner.match-banner-qr-only {
+    grid-template-columns: 1fr;
+  }
+
   #items .match-banner > div {
     min-width: 0;
     overflow-wrap: anywhere;
