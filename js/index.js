@@ -350,7 +350,7 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
         const match = findMatch(item, items);
         let matchBadgeHtml = '';
         if (match) {
-          matchBadgeHtml = `<button type="button" class="btn-match-qr potential-match-badge" onclick="openMatchQrModal(${item.id}, ${match.id})"><svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fde68a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="m19 14 .9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z"/></svg><span>Potential Match</span></button>`;
+          matchBadgeHtml = `<button type="button" class="btn-match-qr potential-match-badge" onclick="openMatchQrModal(${item.id}, ${match.id})"><span class="potential-match-shimmer" aria-hidden="true"></span><svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fde68a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="m19 14 .9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z"/></svg><span class="potential-match-label">Potential Match</span></button>`;
         }
         const verificationHtml = item.verification ? `
           <span><strong>Verification Hint:</strong> ${escapeHtml(item.verification)}</span>
