@@ -665,11 +665,6 @@
          <div style="display: block; width: max-content; margin: 0 auto 0.5rem; padding: 0.5rem; background: #ffffff; border: 1.5px solid #0f172a; border-radius: 8px;">
           <img id="matchQrImage" src="" alt="Match Verification QR" style="width: 130px; height: 130px; display: block;" />
          </div>
-        <div id="matchQrStatus" style="margin-top: 0.55rem; font-size: 0.78rem; font-weight: 900; color: #2563eb;">Status: Pending Verification</div>
-        <div id="matchQrDates" style="margin-top: 0.25rem; font-size: 0.68rem; color: #64748b; overflow-wrap:anywhere; white-space:pre-line;">Generated: —\nExpires: —</div>
-        <div id="matchQrCountdown" style="margin-top:0.2rem; font-size:0.7rem; font-weight:800; color:#2563eb;">Expires in —</div>
-        <div id="matchQrReferenceId" style="margin-top:0.2rem; font-family:monospace; font-size:0.65rem; color:#64748b;">Verification ID: —</div>
-        <div id="matchQrScanMeta" style="display:none; margin-top:0.2rem; font-size:0.65rem; color:#64748b;"></div>
         <div style="margin-top:0.45rem; font-size:0.68rem; color:#64748b;">Scan this QR code to view the match status.</div>
         <div id="matchQrAccessNote" style="display:none; margin-top:0.55rem; font-size:0.75rem; color:#475569;">Read-only status view. CSPC Admin verification details are restricted.</div>
         <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Reference lookup only — not handover approval</div>
@@ -1289,48 +1284,6 @@
 
     // ── Match QR Modal ────────────────────────────────────────────────────────
     let activeMatchQrIds = { lostId: null, foundId: null };
-    let activeMatchFoundId = null;
-    let matchQrCountdownTimer = null;
-
-    function formatQrTimestamp(value) {
-      if (!value) return '—';
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return '—';
-      return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
-    }
-
-    function updateMatchQrCountdown(expiresAt) {
-      if (matchQrCountdownTimer) clearInterval(matchQrCountdownTimer);
-      const countdown = document.getElementById('matchQrCountdown');
-      const update = () => {
-        const remaining = new Date(expiresAt).getTime() - Date.now();
-        if (remaining <= 0) {
-          countdown.textContent = 'Expired — generate a new QR code.';
-          countdown.style.color = '#dc2626';
-          clearInterval(matchQrCountdownTimer);
-          return;
-        }
-        const days = Math.floor(remaining / 86400000);
-        const hours = Math.floor((remaining % 86400000) / 3600000);
-        const minutes = Math.floor((remaining % 3600000) / 60000);
-        countdown.textContent = `Expires in ${days}d ${hours}h ${minutes}m`;
-        countdown.style.color = '#2563eb';
-      };
-      update();
-      matchQrCountdownTimer = setInterval(update, 60000);
-    }
-
-    function setMatchQrMetadata(data) {
-      document.getElementById('matchQrCountdown').textContent = 'Expires in —';
-      updateMatchQrCountdown(data.expiresAt);
-      document.getElementById('matchQrReferenceId').textContent = `Verification ID: ${data.referenceId || '—'}`;
-      const scanMeta = document.getElementById('matchQrScanMeta');
-      scanMeta.style.display = data.view === 'admin' && data.scanCount ? 'block' : 'none';
-      scanMeta.textContent = data.view === 'admin' && data.scanCount
-        ? `Admin scans: ${data.scanCount} · Last scanned: ${formatQrTimestamp(data.lastScannedAt)}`
-        : '';
-    }
-
     async function regenerateMatchQr() {
       if (activeMatchQrIds.lostId && activeMatchQrIds.foundId) {
         await openMatchQrModal(activeMatchQrIds.lostId, activeMatchQrIds.foundId);
@@ -1339,7 +1292,6 @@
 
     async function openMatchQrModal(lostId, foundId) {
       activeMatchQrIds = { lostId, foundId };
-      activeMatchFoundId = foundId;
       try {
         const response = await fetch(`/api/items/match-reference-token?lostId=${encodeURIComponent(lostId)}&foundId=${encodeURIComponent(foundId)}`);
         const data = await response.json();
@@ -1358,9 +1310,6 @@
         document.getElementById('matchLostRef').textContent    = lost.refCode  || '—';
         document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
 
-        document.getElementById('matchQrStatus').textContent = `Status: ${data.status.label}`;
-        document.getElementById('matchQrDates').textContent = `Generated: ${formatQrTimestamp(data.issuedAt)}\nExpires: ${formatQrTimestamp(data.expiresAt)}`;
-        setMatchQrMetadata(data);
 
         const legacyMatchPayload = encodeURIComponent(
           `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
@@ -1400,7 +1349,6 @@
           throw new Error(data.message || 'This match reference is unavailable.');
         }
         const statusOnly = data.view === 'status-only';
-        activeMatchFoundId = data.foundItemId || activeMatchFoundId;
         data.lost = data.lost || { title: 'Hidden', refCode: 'Hidden' };
         data.found = data.found || { title: 'Hidden', refCode: 'Hidden' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
@@ -1412,9 +1360,6 @@
         document.getElementById('matchFoundTitle').textContent = data.found.title || '—';
         document.getElementById('matchLostRef').textContent = data.lost.refCode || '—';
         document.getElementById('matchFoundRef').textContent = data.found.refCode || '—';
-        document.getElementById('matchQrStatus').textContent = `Status: ${data.status.label}`;
-        document.getElementById('matchQrDates').textContent = `Generated: ${formatQrTimestamp(data.issuedAt)}\nExpires: ${formatQrTimestamp(data.expiresAt)}`;
-        setMatchQrMetadata(data);
         document.getElementById('matchQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
         document.getElementById('matchQrModal').classList.add('open');
       } catch (error) {
