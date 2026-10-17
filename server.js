@@ -29,13 +29,16 @@ function createApp() {
   if (isProduction) {
     app.set('trust proxy', 1);
   }
+  const sessionStore = postgresStore.isConfigured()
+    ? postgresStore.createSessionStore(session)
+    : new FileStore({ path: path.join(dataDir, 'sessions'), ttl: 86400, retries: 0 });
 
   app.use(express.json({ limit: '256kb' }));
   app.use(express.urlencoded({ extended: true, limit: '64kb' }));
   app.use(session({
     name: 'cspc.sid',
     secret: sessionSecret,
-    store: new FileStore({ path: path.join(dataDir, 'sessions'), ttl: 86400, retries: 0 }),
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -99,6 +102,9 @@ async function startServer() {
   const PORT = process.env.PORT || 3000;
   if (process.env.NODE_ENV === 'production' || postgresStore.isConfigured()) {
     await postgresStore.initialize();
+    const dataDir = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
+    const importedSessions = await postgresStore.importFileSessions(path.join(dataDir, 'sessions'));
+    if (importedSessions) console.log(`Migrated ${importedSessions} active session(s) to shared PostgreSQL storage.`);
   }
   await authRoutes.ensureDefaultAdminAccount();
   createApp().listen(PORT, '0.0.0.0', () => console.log(`Server running at: http://localhost:${PORT}`));
