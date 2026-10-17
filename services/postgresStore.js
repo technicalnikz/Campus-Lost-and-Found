@@ -3,8 +3,6 @@ const path = require('path');
 const { AsyncLocalStorage } = require('async_hooks');
 const { Pool } = require('pg');
 
-// Shared application data and session storage for the configured Supabase PostgreSQL database.
-// DATABASE_URL (or SUPABASE_DB_URL) connects this app to that existing database; no database is created here.
 const collections = {
   users: { table: 'app_users' },
   items: { table: 'app_items' },
@@ -57,44 +55,6 @@ function writeCollection(filePath, value) {
   context.dirty.add(name);
 }
 
-function createSessionStore(session) {
-  const store = new session.Store();
-  const complete = (callback, error, value) => {
-    if (typeof callback === 'function') callback(error, value);
-  };
-  const expiryFor = sessionData => sessionData.cookie?.expires
-    ? new Date(sessionData.cookie.expires)
-    : new Date(Date.now() + (sessionData.cookie?.maxAge || 86400000));
-
-  store.get = (sessionId, callback) => {
-    getPool().query(
-      'SELECT session_data FROM app_sessions WHERE session_id = $1 AND expires_at > NOW()',
-      [sessionId]
-    ).then(result => complete(callback, null, result.rows[0]?.session_data || null))
-      .catch(error => complete(callback, error));
-  };
-  store.set = (sessionId, sessionData, callback) => {
-    getPool().query(
-      `INSERT INTO app_sessions (session_id, session_data, expires_at)
-       VALUES ($1, $2::jsonb, $3)
-       ON CONFLICT (session_id) DO UPDATE
-       SET session_data = EXCLUDED.session_data, expires_at = EXCLUDED.expires_at`,
-      [sessionId, JSON.stringify(sessionData), expiryFor(sessionData)]
-    ).then(() => complete(callback, null)).catch(error => complete(callback, error));
-  };
-  store.touch = (sessionId, sessionData, callback) => {
-    getPool().query(
-      `UPDATE app_sessions SET session_data = $2::jsonb, expires_at = $3 WHERE session_id = $1`,
-      [sessionId, JSON.stringify(sessionData), expiryFor(sessionData)]
-    ).then(() => complete(callback, null)).catch(error => complete(callback, error));
-  };
-  store.destroy = (sessionId, callback) => {
-    getPool().query('DELETE FROM app_sessions WHERE session_id = $1', [sessionId])
-      .then(() => complete(callback, null)).catch(error => complete(callback, error));
-  };
-  return store;
-}
-
 async function createTables(connection) {
   for (const definition of Object.values(collections)) {
     await connection.query(`
@@ -115,14 +75,6 @@ async function createTables(connection) {
       lock_id SMALLINT PRIMARY KEY
     )
   `);
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS app_sessions (
-      session_id VARCHAR(255) PRIMARY KEY,
-      session_data JSONB NOT NULL,
-      expires_at TIMESTAMPTZ NOT NULL
-    )
-  `);
-  await connection.query('CREATE INDEX IF NOT EXISTS app_sessions_expires_at_idx ON app_sessions (expires_at)');
   await connection.query(
     'INSERT INTO app_store_lock (lock_id) VALUES (1) ON CONFLICT (lock_id) DO NOTHING'
   );
@@ -260,41 +212,6 @@ async function initialize() {
   }
 }
 
-async function importFileSessions(sessionDirectory) {
-  if (!isConfigured()) return 0;
-  let filenames;
-  try {
-    filenames = fs.readdirSync(sessionDirectory)
-      .filter(filename => /^[A-Za-z0-9_-]+\.json$/.test(filename));
-  } catch (error) {
-    if (error.code === 'ENOENT') return 0;
-    throw error;
-  }
-
-  let imported = 0;
-  for (const filename of filenames) {
-    let sessionData;
-    try {
-      sessionData = JSON.parse(fs.readFileSync(path.join(sessionDirectory, filename), 'utf8'));
-    } catch (error) {
-      continue;
-    }
-    const expiresAt = sessionData.cookie?.expires
-      ? new Date(sessionData.cookie.expires)
-      : new Date(Date.now() + (sessionData.cookie?.originalMaxAge || 86400000));
-    if (!Number.isFinite(expiresAt.getTime()) || expiresAt <= new Date()) continue;
-
-    const result = await getPool().query(
-      `INSERT INTO app_sessions (session_id, session_data, expires_at)
-       VALUES ($1, $2::jsonb, $3)
-       ON CONFLICT (session_id) DO NOTHING`,
-      [filename.slice(0, -5), JSON.stringify(sessionData), expiresAt]
-    );
-    imported += result.rowCount;
-  }
-  return imported;
-}
-
 async function importJsonFiles(dataDir) {
   const importedData = {};
   for (const name of Object.keys(collections)) {
@@ -349,8 +266,6 @@ async function close() {
 
 module.exports = {
   close,
-  createSessionStore,
-  importFileSessions,
   importJsonFiles,
   initialize,
   isConfigured,
