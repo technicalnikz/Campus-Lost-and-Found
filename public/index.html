@@ -944,7 +944,7 @@
         }
 
         const canManageStatus = item.canResolve === true || currentUser?.role === 'admin';
-        const canRequestClaim = item.type === 'found' && !item.claimed && (!currentUser || item.reportedBy !== currentUser.id);
+        const canRequestClaim = item.type === 'lost' && !item.claimed && currentUser?.role !== 'admin' && item.canResolve === true && item.potentialMatch;
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
 
         let matchBannerHtml = '';
@@ -963,10 +963,10 @@
         const delBtnHtml = canDelete
           ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>`
           : '';
-        const claimBtnHtml = canManageStatus
-          ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
-          : canRequestClaim
-            ? `<button class="btn-sm btn-claim" onclick="openClaimRequestModal(${item.id})">Request Claim</button>`
+        const claimBtnHtml = canRequestClaim
+          ? `<button class="btn-sm btn-claim" onclick="openClaimRequestModal(${item.potentialMatch.id}, ${item.id})">Request Claim</button>`
+          : canManageStatus
+            ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
             : '';
 
         const photoUrl = getItemPhotoUrl(item);
@@ -1344,7 +1344,7 @@
     function requestMatchClaimFromQr() {
       if (!activeMatchFoundId) return showToast('The found-item reference is unavailable.', 'error');
       closeMatchQrModal();
-      openClaimRequestModal(activeMatchFoundId);
+      openClaimRequestModal(activeMatchFoundId, activeMatchQrIds.lostId);
     }
 
     async function openMatchQrModal(lostId, foundId) {
@@ -1358,7 +1358,7 @@
         const lost = data.lost || { title: 'Hidden', refCode: 'Hidden' };
         const found = data.found || { title: 'Hidden', refCode: 'Hidden' };
         document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
-        document.getElementById('matchClaimAction').style.display = statusOnly ? '' : 'none';
+        document.getElementById('matchClaimAction').style.display = statusOnly && data.canRequestClaim ? '' : 'none';
         document.getElementById('matchLostRef').style.display = statusOnly ? 'none' : '';
         document.getElementById('matchFoundRef').style.display = statusOnly ? 'none' : '';
         const printAction = document.querySelector('button[onclick="printMatchQr()"]');
@@ -1660,6 +1660,7 @@
 
     let targetDeleteId = null;
     let targetClaimId = null;
+    let targetClaimLostId = null;
     let lastCreatedItemId = null;
 
     function openReportSuccessModal(refCode, itemId, potentialMatch) {
@@ -1768,7 +1769,7 @@
       document.getElementById('claimConfirmModal').classList.add('open');
     }
 
-    function openClaimRequestModal(id) {
+    function openClaimRequestModal(id, lostId = null) {
       const item = loadedItems.find(i => String(i.id) === String(id));
       if (!item || item.type !== 'found' || item.claimed) return;
       if (!currentUser) {
@@ -1778,6 +1779,7 @@
 
       claimRequestMode = true;
       targetClaimId = id;
+      targetClaimLostId = lostId;
       document.getElementById('claimModalTitle').innerText = 'Request this item';
       document.getElementById('claimModalSubtitle').innerText = 'Describe identifying details only the rightful owner would know. Only moderators can view your response.';
       document.getElementById('claimVerificationBox').style.display = 'none';
@@ -1797,6 +1799,7 @@
       document.getElementById('claimConfirmModal').classList.remove('open');
       document.getElementById('claimantDetailsGroup').style.display = 'none';
       targetClaimId = null;
+      targetClaimLostId = null;
       claimRequestMode = false;
     }
 
@@ -1821,7 +1824,7 @@
         const response = await fetch(isRequest ? `/api/items/${id}/claim-requests` : `/api/items/${id}/claim`, {
           method: isRequest ? 'POST' : 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ proof, courseYear, contactNumber })
+          body: JSON.stringify({ proof, courseYear, contactNumber, lostId: isRequest ? targetClaimLostId : undefined })
         });
         const data = await response.json();
         if (!response.ok || !data.success) throw new Error(data.message || 'Unable to update item status.');

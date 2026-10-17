@@ -107,6 +107,24 @@ async function sendClaimStatusEmail(user, item, claim, status) {
   });
 }
 
+async function sendClaimRequestEmail(user, item, claim, event = 'submitted') {
+  const transport = createTransport();
+  const name = user.fullName || claim.claimantName || 'there';
+  const eventText = event === 'submitted'
+    ? `A claim request was submitted for ${item.title} (${item.refCode}). Ownership proof has been sent for moderator review.`
+    : event === 'approved'
+      ? `The claim request for ${item.title} (${item.refCode}) was approved.`
+      : `The claim request for ${item.title} (${item.refCode}) was rejected. ${claim.rejectionReason || 'Please contact campus staff for clarification.'}`;
+  const signInUrl = getAppUrl('/login');
+  await transport.sendMail({
+    from: process.env.SMTP_FROM,
+    to: user.email,
+    subject: `Back2You claim request ${event}: ${item.title}`,
+    text: `Hi ${name},\n\n${eventText}\n\nReview Back2You: ${signInUrl}\n\nBack2You – CSPC Lost & Found`,
+    html: `<p>Hi ${escapeHtml(name)},</p><p>${escapeHtml(eventText)}</p><p><a href="${escapeHtml(signInUrl)}">Open Back2You</a></p><p>Back2You – CSPC Lost &amp; Found</p>`
+  });
+}
+
 async function sendFinderNotificationEmail(user, item, notification) {
   const transport = createTransport();
   const name = user.fullName || 'there';
@@ -144,6 +162,7 @@ module.exports = {
   sendRegistrationEmail,
   sendPossibleMatchEmail,
   sendClaimStatusEmail,
+  sendClaimRequestEmail,
   sendFinderNotificationEmail,
   sendBroadcastEmail
 };
