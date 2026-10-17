@@ -978,6 +978,10 @@ input[type='submit'] {
     width: 100%;
     height: 2.25rem;
     box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
 }
