@@ -8,7 +8,12 @@ const multer = require('multer');
 const { validateItemReport, sanitizeString } = require('../middleware/validate');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
-const { sendPossibleMatchEmail, sendClaimStatusEmail, sendBroadcastEmail } = require('../services/email');
+const {
+  sendPossibleMatchEmail,
+  sendClaimStatusEmail,
+  sendFinderNotificationEmail,
+  sendBroadcastEmail
+} = require('../services/email');
 const postgresStore = require('../services/postgresStore');
 
 // res.sendFile requires an absolute path. DATA_DIR is commonly configured as
@@ -547,7 +552,7 @@ router.get('/qr-lookup/:refCode', (req, res) => {
 });
 
 // POST /api/items/anonymous-notify - Public finder messaging (delivers alert straight to owner's account)
-router.post('/anonymous-notify', (req, res) => {
+router.post('/anonymous-notify', async (req, res) => {
   try {
     const { refCode, message, locationFound, finderContact } = req.body;
     if (!refCode || !message) {
@@ -586,9 +591,24 @@ router.post('/anonymous-notify', (req, res) => {
     item.notifications = item.notifications.slice(0, 100);
     saveItems(items);
 
+    let emailSent = false;
+    try {
+      const owner = item.ownerEmail
+        ? { email: item.ownerEmail, fullName: item.ownerName }
+        : readJsonArray(USERS_FILE).find(user => String(user.id) === String(item.reportedBy));
+      if (!owner?.email) throw new Error('Registered item has no owner email address.');
+      await sendFinderNotificationEmail(owner, item, newNotification);
+      emailSent = true;
+    } catch (error) {
+      console.error('Finder alert email could not be sent:', error.message);
+    }
+
     res.json({
       success: true,
-      message: 'Anonymous alert sent straight to the owner\'s account notification inbox! 📲',
+      message: emailSent
+        ? 'Finder alert saved to the owner\'s inbox and sent by email.'
+        : 'Finder alert saved to the owner\'s inbox, but email delivery is unavailable.',
+      emailSent,
       itemTitle: item.title,
       notification: newNotification
     });
@@ -601,7 +621,7 @@ router.post('/anonymous-notify', (req, res) => {
 router.get('/my-notifications', requireAuth, (req, res) => {
   const items = getItems();
   const userId = req.session.user.id;
-  const userItems = items.filter(i => i.reportedBy === userId);
+  const userItems = items.filter(i => String(i.reportedBy) === String(userId));
   const notifications = [];
 
   userItems.forEach(i => {
