@@ -244,6 +244,66 @@
       border: 1px solid rgba(59, 130, 246, 0.4);
     }
 
+    .item-photo-frame {
+      width: 100%;
+      height: 180px;
+      overflow: hidden;
+      border-radius: 8px;
+      margin: 0.6rem 0;
+      background: rgba(0, 0, 0, 0.24);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      color: var(--text-muted);
+    }
+    .item-photo-frame[role="button"] {
+      cursor: pointer;
+    }
+    .item-photo-frame[role="button"]:focus-visible {
+      outline: 2px solid var(--blue-light);
+      outline-offset: 2px;
+    }
+    .item-photo-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .item-photo-status {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      padding: 1rem;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-align: center;
+      pointer-events: none;
+    }
+    .item-photo-frame[data-photo-state="loaded"] .item-photo-status {
+      display: none;
+    }
+    .item-photo-frame[data-photo-state="error"] .item-photo-spinner {
+      display: none;
+    }
+    .item-photo-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(148, 163, 184, 0.35);
+      border-top-color: var(--blue-light);
+      border-radius: 50%;
+      animation: item-photo-spin 0.8s linear infinite;
+    }
+    @keyframes item-photo-spin {
+      to { transform: rotate(360deg); }
+    }
+
     .card-meta-line {
       font-size: 0.78rem;
       color: var(--text-muted);

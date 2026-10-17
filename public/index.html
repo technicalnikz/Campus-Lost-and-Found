@@ -970,11 +970,18 @@
             : '';
 
         const photoUrl = getItemPhotoUrl(item);
-        const photoHtml = photoUrl ? `
-          <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin: 0.6rem 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(59,130,246,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;" onclick="openImageModal('${escapeHtml(photoUrl)}', '${escapeHtml(item.title)}')">
-            <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.closest('div').style.display='none';" />
+        const photoInteraction = photoUrl
+          ? `role="button" tabindex="0" onclick="openImageModal('${escapeHtml(photoUrl)}', '${escapeHtml(item.title)}')" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openImageModal('${escapeHtml(photoUrl)}', '${escapeHtml(item.title)}'); }"`
+          : '';
+        const photoHtml = `
+          <div class="item-photo-frame" data-photo-state="${photoUrl ? 'loading' : 'empty'}" ${photoInteraction}>
+            ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" onload="setItemPhotoState(this, 'loaded')" onerror="setItemPhotoState(this, 'error')" />` : ''}
+            <div class="item-photo-status" role="status" aria-live="polite">
+              ${photoUrl ? '<span class="item-photo-spinner" aria-hidden="true"></span>' : ''}
+              <span class="item-photo-status-text">${photoUrl ? 'Loading photo...' : 'No photo uploaded'}</span>
+            </div>
           </div>
-        ` : '';
+        `;
 
         return `
           <div class="project-card" id="item-card-${item.id}">
@@ -1531,6 +1538,14 @@
         return `/api/items/${encodeURIComponent(item.id)}/photo`;
       }
       return item.photo;
+    }
+
+    function setItemPhotoState(image, state) {
+      const frame = image.closest('.item-photo-frame');
+      if (!frame) return;
+      frame.dataset.photoState = state;
+      const statusText = frame.querySelector('.item-photo-status-text');
+      if (statusText && state === 'error') statusText.textContent = 'Photo unavailable';
     }
 
     function openImageModal(photoSrc, title) {
