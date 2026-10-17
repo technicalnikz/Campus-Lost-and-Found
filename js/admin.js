@@ -257,7 +257,6 @@ let deleteTargetId = null;
         if (nextSignature === adminClaimsSignature) return;
         adminClaimsSignature = nextSignature;
         claimRequests = data.claims;
-        document.getElementById('pendingClaimsTabCount').textContent = claimRequests.filter(claim => claim.status === 'pending').length;
         renderAdminPanel(adminItems);
         renderItemsTable();
       } catch (error) {
