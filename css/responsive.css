@@ -1124,10 +1124,9 @@ input[type='submit'] {
     transform: translateY(-6px) rotate(-45deg);
   }
 
-  /* Keep the header space stable while removing the open-state hamburger/X. */
+  /* Remove the hamburger control from the open header; the drawer close button remains available. */
   .navbar.mobile-drawer-active .menu-toggle {
-    visibility: hidden;
-    pointer-events: none;
+    display: none !important;
   }
 
   .nav-drawer-backdrop[hidden] {
