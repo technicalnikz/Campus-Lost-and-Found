@@ -207,6 +207,30 @@ test.before(async () => {
       desc: 'A wallet that has been returned to its owner.',
       status: 'claimed',
       claimed: false
+    },
+    {
+      id: 17,
+      refCode: 'CSPC-LF-2026-017',
+      title: 'Lost green notebook',
+      category: 'Books & Documents',
+      type: 'lost',
+      location: 'Library',
+      desc: 'Green notebook with a fabric cover.',
+      reportedBy: 'student-test',
+      status: 'archived',
+      claimed: false
+    },
+    {
+      id: 18,
+      refCode: 'CSPC-LF-2026-018',
+      title: 'Lost water bottle',
+      category: 'Others',
+      type: 'lost',
+      location: 'Gymnasium',
+      desc: 'Blue bottle with a silver cap.',
+      reportedBy: 'student-test',
+      status: 'archived',
+      claimed: false
     }
   ]));
 
@@ -509,8 +533,9 @@ test('claim requests are private and require moderator review', async () => {
   const requestResponse = await fetch(`${baseUrl}/api/items/13/claim-requests`, {
     method: 'POST',
     headers: { Cookie: studentCookie, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+      body: JSON.stringify({
       proof: 'A small university logo is on the inside cover.',
+        lostId: 17,
       courseYear: 'BS Information Technology, 3rd Year',
       contactNumber: '09171234567'
     })
@@ -522,7 +547,7 @@ test('claim requests are private and require moderator review', async () => {
   const duplicateResponse = await fetch(`${baseUrl}/api/items/13/claim-requests`, {
     method: 'POST',
     headers: { Cookie: studentCookie, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ proof: 'Another private detail about this notebook.' })
+    body: JSON.stringify({ proof: 'Another private detail about this notebook.', lostId: 17 })
   });
   assert.equal(duplicateResponse.status, 409);
 
@@ -569,7 +594,7 @@ test('rejected claims restore availability and notify the claimant', async () =>
   const claimResponse = await fetch(`${baseUrl}/api/items/14/claim-requests`, {
     method: 'POST',
     headers: { Cookie: studentCookie, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ proof: 'A small star is scratched under the base.' })
+    body: JSON.stringify({ proof: 'A small star is scratched under the base.', lostId: 18 })
   });
   assert.equal(claimResponse.status, 201);
 

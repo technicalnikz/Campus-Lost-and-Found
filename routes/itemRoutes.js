@@ -11,6 +11,7 @@ const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
 const {
   sendPossibleMatchEmail,
   sendClaimStatusEmail,
+  sendClaimRequestEmail,
   sendFinderNotificationEmail,
   sendBroadcastEmail
 } = require('../services/email');
@@ -56,7 +57,7 @@ function saveUploadedImage(file) {
   return `/uploads/${filename}`;
 }
 
-function publicItemView(item, potentialMatch = null) {
+function publicItemView(item, potentialMatch = null, canResolve = false, canRequestClaim = false) {
   return {
     id: item.id,
     refCode: item.refCode,
@@ -71,6 +72,8 @@ function publicItemView(item, potentialMatch = null) {
     status: item.status,
     claimed: Boolean(item.claimed),
     claimedAt: item.claimedAt || null,
+    canResolve,
+    canRequestClaim,
     potentialMatch: potentialMatch ? {
       id: potentialMatch.id,
       title: potentialMatch.title,
@@ -440,6 +443,19 @@ router.patch('/claims/:claimId', requireRole('admin'), async (req, res) => {
     }
   }
 
+  const users = readJsonArray(USERS_FILE).filter(user =>
+    user.email &&
+    String(user.id) !== String(claim.claimantId) &&
+    (user.role === 'admin' || String(user.id) === String(item.reportedBy))
+  );
+  for (const recipient of users) {
+    try {
+      await sendClaimRequestEmail(recipient, item, claim, status);
+    } catch (error) {
+      console.error('Claim status notification email could not be sent:', error.message);
+    }
+  }
+
   res.json({ success: true, message: `Claim request ${status}.`, claim });
 });
 
@@ -514,9 +530,11 @@ router.get('/', (req, res) => {
     const match = findMatch(item, allItems);
     const user = req.session?.user;
     const canViewPrivateFields = user && (user.role === 'admin' || item.reportedBy === user.id);
+    const canRequestClaim = Boolean(user && item.type === 'found' && !item.claimed
+      && match?.type === 'lost' && String(match.reportedBy) === String(user.id));
     return canViewPrivateFields
-      ? { ...item, potentialMatch: match ? { id: match.id, title: match.title, location: match.location, type: match.type } : null }
-      : publicItemView(item, match);
+      ? { ...item, canResolve: true, canRequestClaim, potentialMatch: match ? { id: match.id, title: match.title, location: match.location, type: match.type } : null }
+      : publicItemView(item, match, Boolean(user && (user.role === 'admin' || String(item.reportedBy) === String(user.id))), canRequestClaim);
   });
 
   res.json({
@@ -688,6 +706,7 @@ router.get('/match-reference-token', requireAuth, (req, res) => {
       url,
       referenceId,
       foundItemId: found.id,
+      canRequestClaim: String(lost.reportedBy) === String(req.session.user.id) && !found.claimed,
       issuedAt: new Date(issuedAt).toISOString(),
       expiresAt: new Date(expiresAt).toISOString(),
       status
@@ -840,7 +859,7 @@ router.get('/:id', (req, res) => {
   });
 });
 
-router.post('/:id/claim-requests', requireAuth, (req, res) => {
+router.post('/:id/claim-requests', requireAuth, async (req, res) => {
   const proof = sanitizeString(req.body.proof || '');
   const courseYear = sanitizeString(req.body.courseYear || req.session.user.courseYear || req.session.user.yearLevel || '');
   const contactNumber = sanitizeString(req.body.contactNumber || req.session.user.phone || req.session.user.contactNumber || '');
@@ -856,8 +875,15 @@ router.post('/:id/claim-requests', requireAuth, (req, res) => {
   if (!item || item.type !== 'found' || item.claimed) {
     return res.status(404).json({ success: false, message: 'Found item is no longer available for a claim.' });
   }
-  if (item.reportedBy === req.session.user.id) {
-    return res.status(403).json({ success: false, message: 'You cannot submit a claim for your own report.' });
+
+  const lostItem = items.find(entry =>
+    String(entry.id) === String(req.body.lostId) &&
+    entry.type === 'lost'
+  );
+  const isLostReporter = lostItem && String(lostItem.reportedBy) === String(req.session.user.id);
+  const isPotentialMatch = lostItem && findMatches(lostItem, items).some(match => String(match.id) === String(item.id));
+  if (!isLostReporter || !isPotentialMatch) {
+    return res.status(403).json({ success: false, message: 'Only the original reporter of the matching lost item can submit this claim request.' });
   }
 
   const claims = getClaims();
@@ -875,6 +901,9 @@ router.post('/:id/claim-requests', requireAuth, (req, res) => {
     itemId: item.id,
     itemTitle: item.title,
     itemRefCode: item.refCode,
+    lostItemId: lostItem.id,
+    lostItemTitle: lostItem.title,
+    lostItemRefCode: lostItem.refCode,
     claimantId: req.session.user.id,
     claimantName: req.session.user.fullName,
     claimantEmail: req.session.user.email,
@@ -888,6 +917,22 @@ router.post('/:id/claim-requests', requireAuth, (req, res) => {
   };
   claims.unshift(claim);
   saveClaims(claims);
+
+  const users = readJsonArray(USERS_FILE);
+  const recipients = users.filter(user =>
+    user.email && (
+      user.role === 'admin' ||
+      String(user.id) === String(item.reportedBy) ||
+      String(user.id) === String(req.session.user.id)
+    )
+  );
+  for (const recipient of recipients) {
+    try {
+      await sendClaimRequestEmail(recipient, item, claim, 'submitted');
+    } catch (error) {
+      console.error('Claim request email could not be sent:', error.message);
+    }
+  }
 
   res.status(201).json({ success: true, message: 'Claim request submitted for moderator review.', claim: { id: claim.id, status: claim.status } });
 });
@@ -1089,8 +1134,8 @@ router.patch('/:id/status', requireRole('admin'), (req, res) => {
   res.json({ success: true, message: `Item status updated to ${status}.`, item });
 });
 
-// PATCH /api/items/:id/claim - Claim or restore item
-router.patch('/:id/claim', requireRole('admin'), async (req, res) => {
+// PATCH /api/items/:id/claim - Resolve or restore item for admins and the original reporter.
+router.patch('/:id/claim', requireAuth, async (req, res) => {
   const items = getItems();
   const itemIndex = items.findIndex(i => String(i.id) === String(req.params.id));
   if (itemIndex === -1) {
@@ -1098,6 +1143,11 @@ router.patch('/:id/claim', requireRole('admin'), async (req, res) => {
   }
 
   const item = items[itemIndex];
+  const canResolve = req.session.user.role === 'admin'
+    || String(item.reportedBy) === String(req.session.user.id);
+  if (!canResolve) {
+    return res.status(403).json({ success: false, message: 'Only the original reporter or an administrator can resolve this item.' });
+  }
 
   // If already claimed, allow unclaiming/restoring
   if (item.claimed) {

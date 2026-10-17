@@ -449,6 +449,12 @@ document.addEventListener('click', event => {
     return;
   }
 
+  if (event.target.closest('.mobile-drawer-close')) {
+    const navbar = event.target.closest('.navbar');
+    if (navbar) closeMobileNav(navbar, true);
+    return;
+  }
+
   if (event.target.closest('.nav-drawer-backdrop')) {
     const navbar = event.target.closest('.navbar');
     if (navbar) closeMobileNav(navbar, true);

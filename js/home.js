@@ -239,9 +239,9 @@ let currentUser = null;
           badgeHtml = '<span class="item-badge badge-found">Found</span>';
         }
 
-        const canManageStatus = currentUser?.role === 'admin';
+        const canManageStatus = item.canResolve === true || currentUser?.role === 'admin';
         const canGetQrSticker = currentUser?.role === 'admin';
-        const canRequestClaim = item.type === 'found' && !item.claimed && (!currentUser || item.reportedBy !== currentUser.id);
+        const canRequestClaim = item.type === 'found' && item.canRequestClaim === true;
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
 
         let matchBannerHtml = '';
@@ -260,10 +260,10 @@ let currentUser = null;
         const delBtnHtml = canDelete
           ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>`
           : '';
-        const claimBtnHtml = canManageStatus
-          ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${claimBtnText}</button>`
-          : canRequestClaim
-            ? `<button class="btn-sm btn-claim" onclick="openClaimRequestModal(${item.id})">Request Claim</button>`
+        const claimBtnHtml = canRequestClaim
+            ? `<button class="btn-sm btn-claim" onclick="openClaimRequestModal(${item.id}, ${item.potentialMatch.id})">Request Claim</button>`
+          : canManageStatus
+            ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
             : '';
 
         const photoHtml = item.photo ? `
@@ -839,6 +839,7 @@ let currentUser = null;
 
     let targetDeleteId = null;
     let targetClaimId = null;
+    let targetClaimLostId = null;
     let claimRequestMode = false;
     let claimSubmissionInProgress = false;
     let lastCreatedItemId = null;
@@ -951,7 +952,7 @@ let currentUser = null;
       document.getElementById('claimConfirmModal').classList.add('open');
     }
 
-    function openClaimRequestModal(id) {
+    function openClaimRequestModal(id, lostId = null) {
       const item = loadedItems.find(i => String(i.id) === String(id));
       if (!item || item.type !== 'found' || item.claimed) return;
       if (!currentUser) {
@@ -961,6 +962,7 @@ let currentUser = null;
 
       claimRequestMode = true;
       targetClaimId = id;
+      targetClaimLostId = lostId;
       document.getElementById('claimModalTitle').innerText = 'Request this item';
       document.getElementById('claimModalSubtitle').innerText = 'Describe identifying details only the rightful owner would know. Only moderators can view your response.';
       document.getElementById('claimVerificationBox').style.display = 'none';
@@ -984,6 +986,7 @@ let currentUser = null;
       document.getElementById('claimantDetailsGroup').style.display = 'none';
       clearClaimFeedback();
       targetClaimId = null;
+      targetClaimLostId = null;
       claimRequestMode = false;
     }
 
@@ -1051,7 +1054,7 @@ let currentUser = null;
         const response = await fetch(isRequest ? `/api/items/${id}/claim-requests` : `/api/items/${id}/claim`, {
           method: isRequest ? 'POST' : 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ proof, courseYear, contactNumber })
+          body: JSON.stringify({ proof, courseYear, contactNumber, lostId: isRequest ? targetClaimLostId : undefined })
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.success) throw new Error(data.message || 'Unable to update item status.');
