@@ -970,6 +970,21 @@ input[type='submit'] {
 }
 
 @media (min-width: 320px) and (max-width: 440px) {
+  .type-switcher {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: .5rem !important;
+    align-items: stretch;
+  }
+
+  .type-switcher .type-option {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: .6rem .45rem;
+    font-size: .68rem;
+    text-align: center;
+  }
+
   #items .projects-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: .5rem !important;
