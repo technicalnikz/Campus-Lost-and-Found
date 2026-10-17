@@ -887,7 +887,7 @@
       if (currentPage > totalPages) currentPage = totalPages;
       const pageItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-      grid.innerHTML = pageItems.map(item => {
+      grid.innerHTML = pageItems.map((item, itemIndex) => {
         // Special render for personal preventive registered belongings
         if (item.type === 'registered') {
           return `
@@ -964,7 +964,7 @@
           : '';
         const photoHtml = `
           <div class="item-photo-frame" data-photo-state="${photoUrl ? 'loading' : 'empty'}" ${photoInteraction}>
-            ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" onload="setItemPhotoState(this, 'loaded')" onerror="setItemPhotoState(this, 'error')" />` : ''}
+            ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="${itemIndex < 2 ? 'eager' : 'lazy'}" fetchpriority="${itemIndex === 0 ? 'high' : 'auto'}" decoding="async" onload="setItemPhotoState(this, 'loaded')" onerror="setItemPhotoState(this, 'error')" />` : ''}
             <div class="item-photo-status" role="status" aria-live="polite">
               ${photoUrl ? '<span class="item-photo-spinner" aria-hidden="true"></span>' : ''}
               <span class="item-photo-status-text">${photoUrl ? 'Loading photo...' : 'No photo uploaded'}</span>
