@@ -1464,8 +1464,8 @@ input[type='submit'] {
   }
 }
 
-/* Galaxy A / 360px-wide viewport: keep both header controls identical. */
-@media (max-width: 360px) {
+/* Small-device / 420px-wide viewport: keep both header controls identical. */
+@media (max-width: 420px) {
   .nav-actions .theme-toggle,
   .nav-actions .notif-bell-btn {
     width: 32px !important;
