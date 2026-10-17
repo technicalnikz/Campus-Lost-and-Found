@@ -988,6 +988,8 @@
               </div>
             </div>
 
+            ${matchBannerHtml}
+
             ${photoHtml}
 
             <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
@@ -998,8 +1000,6 @@
               <span><strong>Date:</strong> ${escapeHtml(item.date || 'Recently')}${item.createdAt ? ` <span style="color:var(--text-muted);font-size:0.72rem;">· ${timeAgo(item.createdAt)}</span>` : ''}</span>
               ${verificationHtml}
             </div>
-
-            ${matchBannerHtml}
 
             <div class="card-actions">
               <button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>

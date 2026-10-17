@@ -986,6 +986,8 @@
               </div>
             </div>
 
+            ${matchBannerHtml}
+
             ${photoHtml}
 
             <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
@@ -995,8 +997,6 @@
               <span><strong>Reported:</strong> ${formatTimestamp(item.createdAt || item.date)}</span>
               ${item.claimedAt ? `<span><strong>Claimed:</strong> ${formatTimestamp(item.claimedAt)}</span>` : ''}
             </div>
-
-            ${matchBannerHtml}
 
             <div class="card-actions">
 
