@@ -654,11 +654,13 @@
             <span style="color: #ef4444; font-weight: 800; font-size: 0.68rem; text-transform: uppercase;">Lost Report</span>
             <div style="font-weight: 800; color: #0f172a;" id="matchLostTitle">Lost Item</div>
             <div style="font-family: monospace; color: #64748b; font-size: 0.68rem;" id="matchLostRef">CSPC-LF-000</div>
+            <div style="color: #64748b; font-size: 0.68rem;" id="matchLostLocation">Location unavailable</div>
           </div>
           <div>
             <span style="color: #22c55e; font-weight: 800; font-size: 0.68rem; text-transform: uppercase;">Found Report</span>
             <div style="font-weight: 800; color: #0f172a;" id="matchFoundTitle">Found Item</div>
             <div style="font-family: monospace; color: #64748b; font-size: 0.68rem;" id="matchFoundRef">CSPC-LF-000</div>
+            <div style="color: #64748b; font-size: 0.68rem;" id="matchFoundLocation">Location unavailable</div>
           </div>
         </div>
 
@@ -969,11 +971,8 @@
         let matchBannerHtml = '';
         if (item.potentialMatch && currentUser) {
           matchBannerHtml = `
-            <div class="match-banner">
-              <div>
-                <strong>Potential Match:</strong> ${escapeHtml(item.potentialMatch.title)} (${escapeHtml(item.potentialMatch.location)})
-              </div>
-              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${item.potentialMatch.id})">🤝 Match Reference QR</button>
+            <div class="match-banner match-banner-qr-only">
+              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${item.potentialMatch.id})">Potential Match</button>
             </div>
           `;
         }
@@ -1011,13 +1010,14 @@
                   </div>
                   ${badgeHtml}
                 </div>
-                <h3 style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
+                <div class="item-title-match-row">
+                  <h3 style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
+                  ${matchBannerHtml}
+                </div>
               </div>
             </div>
 
             ${photoHtml}
-
-            ${matchBannerHtml}
 
             <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
 
@@ -1336,6 +1336,9 @@
         document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
 
 
+        document.getElementById('matchLostLocation').textContent = lost.location || 'Location unavailable';
+        document.getElementById('matchFoundLocation').textContent = found.location || 'Location unavailable';
+
         const legacyMatchPayload = encodeURIComponent(
           `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
         );
@@ -1385,6 +1388,8 @@
         document.getElementById('matchFoundTitle').textContent = data.found.title || '—';
         document.getElementById('matchLostRef').textContent = data.lost.refCode || '—';
         document.getElementById('matchFoundRef').textContent = data.found.refCode || '—';
+        document.getElementById('matchLostLocation').textContent = data.lost.location || 'Location unavailable';
+        document.getElementById('matchFoundLocation').textContent = data.found.location || 'Location unavailable';
         document.getElementById('matchQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
         document.getElementById('matchQrModal').classList.add('open');
       } catch (error) {
