@@ -984,6 +984,11 @@ input[type='submit'] {
     grid-template-columns: 1fr;
   }
 
+  #items .match-banner.match-banner-qr-only .btn-match-qr {
+    min-height: 2.25rem;
+    height: 2.25rem;
+  }
+
   #items .match-banner > div {
     min-width: 0;
     overflow-wrap: anywhere;
