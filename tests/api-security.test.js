@@ -321,6 +321,54 @@ test('public item responses exclude private fields', async () => {
   }
 });
 
+test('retries with the same report key return the original item instead of duplicating it', async t => {
+  const submissionKey = 'report-submit-duplicate-test-01';
+  const report = {
+    title: 'Blue insulated water bottle',
+    category: 'Others',
+    type: 'lost',
+    location: 'Library',
+    contact: 'student@example.edu',
+    desc: 'Blue bottle with a silver cap and a small sticker.'
+  };
+  t.after(() => {
+    const itemsPath = path.join(dataDir, 'items.json');
+    const items = JSON.parse(fs.readFileSync(itemsPath, 'utf8'))
+      .filter(item => item.submissionKey !== submissionKey);
+    fs.writeFileSync(itemsPath, JSON.stringify(items));
+  });
+
+  const originalResponse = await fetch(`${baseUrl}/api/items`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': submissionKey },
+    body: reportFormData(null, report)
+  });
+  assert.equal(originalResponse.status, 201);
+  const original = await originalResponse.json();
+  assert.equal(Object.hasOwn(original.item, 'submissionKey'), false);
+
+  const retryResponse = await fetch(`${baseUrl}/api/items`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': submissionKey },
+    body: reportFormData(null, report)
+  });
+  assert.equal(retryResponse.status, 200);
+  const retry = await retryResponse.json();
+  assert.equal(retry.duplicate, true);
+  assert.equal(retry.item.id, original.item.id);
+  assert.equal(retry.item.refCode, original.item.refCode);
+
+  const changedPayloadResponse = await fetch(`${baseUrl}/api/items`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': submissionKey },
+    body: reportFormData(null, { ...report, desc: 'A different item description for this report.' })
+  });
+  assert.equal(changedPayloadResponse.status, 409);
+
+  const savedItems = JSON.parse(fs.readFileSync(path.join(dataDir, 'items.json'), 'utf8'));
+  assert.equal(savedItems.filter(item => item.submissionKey === submissionKey).length, 1);
+});
+
 test('claimed items are excluded from lost and found results and included in claimed results', async () => {
   const lostResponse = await fetch(`${baseUrl}/api/items?type=lost`);
   assert.equal(lostResponse.status, 200);
