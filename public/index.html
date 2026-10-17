@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Back2You</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="stylesheet" href="/css/styles.css?v=20261017-6" />
-  <link rel="stylesheet" href="/css/home.css?v=20261017-6" />
-  <link rel="stylesheet" href="/css/responsive.css?v=20261017-6" />
-  <script src="/js/main.js?v=20261017-6"></script>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/home.css" />
+  <link rel="stylesheet" href="/css/responsive.css?v=20261017-5" />
+  <script src="/js/main.js?v=20261017-5"></script>
 </head>
 <body>
 
@@ -961,7 +961,7 @@
         const photoUrl = getItemPhotoUrl(item);
         const photoHtml = photoUrl ? `
           <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin: 0.6rem 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(59,130,246,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;" onclick="openImageModal('${escapeHtml(photoUrl)}', '${escapeHtml(item.title)}')">
-            <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" width="320" height="180" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.hidden=true; this.closest('div').classList.add('image-load-failed');" />
+            <img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.closest('div').style.display='none';" />
           </div>
         ` : '<div class="item-photo-placeholder" aria-hidden="true"></div>';
 

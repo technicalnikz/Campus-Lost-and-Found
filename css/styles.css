@@ -1850,12 +1850,6 @@ select::placeholder,
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 
-.image-load-failed::after {
-  content: 'Image unavailable';
-  color: var(--text-muted);
-  font-size: .75rem;
-}
-
 .photo-upload-area:hover,
 .photo-upload-area:focus-visible,
 .photo-upload-area.dragover {
