@@ -153,22 +153,22 @@
     .bulk-status-select { width:auto !important; min-width:125px; }
 
     /* ── Table ── */
-    .admin-table-card { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; }
-    .overflow-x-auto { width: 100%; max-width: 100%; overflow-x: auto; }
+    .admin-table-card { width: 100%; overflow: hidden; border: 1px solid var(--border); border-radius: 14px; }
     .admin-table-wrap { overflow-y: hidden; }
+    .admin-items-table-wrap { width: 100%; overflow: hidden; }
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: .84rem;
     }
-    #adminItemsTable { width: 100%; min-width: 1400px; table-layout: fixed; }
+    #adminItemsTable { width: 100%; min-width: 0; table-layout: fixed; font-size: .75rem; }
     #adminItemsTable th,
     #adminItemsTable td {
-      overflow: visible;
+      overflow: hidden;
       text-overflow: clip;
       white-space: normal;
-      word-break: break-word;
-      padding: 12px 10px;
+      overflow-wrap: anywhere;
+      padding: .625rem .5rem;
       text-align: center;
     }
     #adminItemsTable th { text-align: center; }
@@ -189,11 +189,15 @@
       white-space: normal;
       overflow-wrap: anywhere;
     }
-    #adminItemsTable .item-title-cell { min-width: 120px; }
-    #adminItemsTable .location-cell { min-width: 220px; }
-    #adminItemsTable .reporter-cell { min-width: 220px; }
-    .admin-cell-wrap { display: block; white-space: normal; overflow-wrap: anywhere; }
-    .reporter-contact { color: var(--text-muted); font-size: .72rem; }
+    #adminItemsTable .item-title-cell { min-width: 0; }
+    #adminItemsTable .location-cell,
+    #adminItemsTable .reporter-cell,
+    #adminItemsTable .admin-cell-wrap {
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    #adminItemsTable .reporter-contact { color: var(--text-muted); font-size: .6875rem; word-break: break-all; }
     #adminItemsTable .action-buttons {
       display: flex;
       flex-direction: column;
@@ -437,7 +441,7 @@
       text-align: left;
       box-sizing: border-box;
     }
-    #adminItemsTable { min-width: 1400px; }
+    #adminItemsTable { min-width: 0; }
     #adminPanel .page-header h1 {
       font-size: 2.2rem;
       font-weight: 900;
