@@ -243,16 +243,9 @@ let currentUser = null;
         const canGetQrSticker = currentUser?.role === 'admin';
         const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
 
-        let matchBannerHtml = '';
+        let matchBadgeHtml = '';
         if (item.potentialMatch) {
-          matchBannerHtml = `
-            <div class="match-banner">
-              <div>
-                <strong>Potential Match:</strong> ${escapeHtml(item.potentialMatch.title)} (${escapeHtml(item.potentialMatch.location)})
-              </div>
-              <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${item.potentialMatch.id})">🤝 Match Reference QR</button>
-            </div>
-          `;
+          matchBadgeHtml = `<button type="button" class="btn-match-qr potential-match-badge" onclick="openMatchQrModal(${item.id}, ${item.potentialMatch.id})">Potential Match</button>`;
         }
 
         const canDelete = currentUser?.role === 'admin';
@@ -263,11 +256,14 @@ let currentUser = null;
             ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
             : '';
 
-        const photoHtml = item.photo ? `
-          <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin: 0.6rem 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(59,130,246,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;" onclick="openImageModal('${escapeHtml(item.photo)}', '${escapeHtml(item.title)}')">
-            <img src="${item.photo}" alt="${escapeHtml(item.title)}" style="width: 100%; height: 100%; object-fit: cover;" />
+        const photoHtml = `
+          <div class="item-photo-container">
+            <div class="item-photo-frame" ${item.photo ? `role="button" tabindex="0" onclick="openImageModal('${escapeHtml(item.photo)}', '${escapeHtml(item.title)}')" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openImageModal('${escapeHtml(item.photo)}', '${escapeHtml(item.title)}'); }"` : ''}>
+              ${item.photo ? `<img src="${item.photo}" alt="${escapeHtml(item.title)}" />` : '<span>No photo uploaded</span>'}
+            </div>
+            ${matchBadgeHtml}
           </div>
-        ` : '<div class="item-photo-placeholder" aria-hidden="true"></div>';
+        `;
 
         return `
           <div class="project-card" id="item-card-${item.id}">
@@ -283,8 +279,6 @@ let currentUser = null;
                 <h3 style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
               </div>
             </div>
-
-            ${matchBannerHtml}
 
             ${photoHtml}
 
