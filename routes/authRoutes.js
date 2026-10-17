@@ -7,6 +7,7 @@ const { validateUserAuth, sanitizeString } = require('../middleware/validate');
 const { sendRegistrationEmail } = require('../services/email');
 const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
 const postgresStore = require('../services/postgresStore');
+const { requireRole } = require('../middleware/auth');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -241,6 +242,74 @@ router.get('/me', (req, res) => {
     authenticated: false,
     user: null
   });
+});
+
+// GET /api/auth/users - Admin-only user directory (never expose password hashes).
+router.get('/users', requireRole('admin'), (req, res) => {
+  const users = getUsers().map(({ passwordHash, ...user }) => user);
+  res.json({ success: true, users });
+});
+
+// POST /api/auth/users - Admin-only user creation.
+router.post('/users', requireRole('admin'), async (req, res) => {
+  try {
+    const fullName = sanitizeString(req.body.fullName);
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body.password === 'string' ? req.body.password : '';
+    const role = req.body.role === 'admin' ? 'admin' : 'student';
+    const studentId = sanitizeString(req.body.studentId) || 'N/A';
+    const department = sanitizeString(req.body.department) || (role === 'admin' ? 'Administration' : '');
+    const errors = [];
+
+    if (!fullName || fullName.length < 2 || fullName.length > 100) errors.push('Full name must be between 2 and 100 characters.');
+    if (!/^[^\s@]+@(?:my\.)?cspc\.edu\.ph$/.test(email)) errors.push('Use a valid CSPC email address.');
+    if ((role === 'student' && !email.endsWith('@my.cspc.edu.ph')) || (role === 'admin' && !email.endsWith('@cspc.edu.ph'))) {
+      errors.push(role === 'student' ? 'Student accounts must use an @my.cspc.edu.ph email.' : 'Admin accounts must use an @cspc.edu.ph email.');
+    }
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%?&*]/.test(password)) {
+      errors.push('Password must be at least 8 characters and include uppercase, lowercase, number, and special character.');
+    }
+    if (role === 'student' && !STUDENT_DEPARTMENTS.has(department)) errors.push('Select a valid college department.');
+    if (role === 'admin' && department !== 'Administration') errors.push('Admin accounts must use the Administration department.');
+
+    const users = getUsers();
+    if (users.some(user => user.email.toLowerCase() === email)) errors.push('An account with this email address already exists.');
+    if (errors.length) return res.status(400).json({ success: false, message: 'User validation failed.', errors });
+
+    const newUser = {
+      id: `usr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      email,
+      passwordHash: await bcrypt.hash(password, 10),
+      fullName,
+      studentId,
+      role,
+      department,
+      createdAt: new Date().toISOString()
+    };
+    users.push(newUser);
+    saveUsers(users);
+    const { passwordHash, ...safeUser } = newUser;
+    res.status(201).json({ success: true, message: 'User created successfully.', user: safeUser });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Could not create user.' });
+  }
+});
+
+// DELETE /api/auth/users/:id - Admin-only user deletion.
+router.delete('/users/:id', requireRole('admin'), (req, res) => {
+  const users = getUsers();
+  const index = users.findIndex(user => String(user.id) === String(req.params.id));
+  if (index === -1) return res.status(404).json({ success: false, message: 'User not found.' });
+
+  const target = users[index];
+  if (target.id === req.session.user.id) return res.status(400).json({ success: false, message: 'You cannot delete the account currently in use.' });
+  if (target.role === 'admin' && users.filter(user => user.role === 'admin').length <= 1) {
+    return res.status(400).json({ success: false, message: 'The last administrator account cannot be deleted.' });
+  }
+
+  users.splice(index, 1);
+  saveUsers(users);
+  res.json({ success: true, message: 'User deleted successfully.' });
 });
 
 router.ensureDefaultAdminAccount = ensureDefaultAdminAccount;

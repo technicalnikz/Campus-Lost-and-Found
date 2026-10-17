@@ -12,6 +12,8 @@ let deleteTargetId = null;
     let adminSort = { key: 'date', direction: 'desc' };
     const adminItemsPerPage = 10;
     let adminCurrentPage = 1;
+    let adminUsers = [];
+    let deleteUserTargetId = null;
 
     async function adminFetch(url, options = {}) {
       const response = await fetch(url, { ...options, credentials: 'same-origin' });
@@ -25,7 +27,10 @@ let deleteTargetId = null;
       try {
         const response = await adminFetch('/api/auth/me', { cache: 'no-store' });
         const data = await response.json();
-        if (response.ok && data.authenticated && data.user?.role === 'admin') return true;
+        if (response.ok && data.authenticated && data.user?.role === 'admin') {
+          window.currentAdminUserId = data.user.id;
+          return true;
+        }
       } catch (error) {
         // Treat an unavailable auth session as unauthenticated.
       }
@@ -38,6 +43,7 @@ let deleteTargetId = null;
       if (!await requireAdminSession()) return;
       refreshAdminItems();
       refreshAdminClaims();
+      refreshAdminUsers();
       window.setInterval(() => {
         refreshAdminItems();
         refreshAdminClaims();
@@ -58,7 +64,9 @@ let deleteTargetId = null;
           tab.classList.add('active');
           document.getElementById('tabItems').style.display = activeTab === 'items' ? 'block' : 'none';
           document.getElementById('tabClaims').style.display = activeTab === 'claims' ? 'block' : 'none';
+          document.getElementById('tabUsers').style.display = activeTab === 'users' ? 'block' : 'none';
           if (activeTab === 'claims') renderPendingClaims();
+          if (activeTab === 'users') renderAdminUsers();
         });
       });
 
@@ -79,6 +87,17 @@ let deleteTargetId = null;
       document.getElementById('sendBroadcastBtn').addEventListener('click', sendBroadcast);
       document.getElementById('cancelActionConfirm').addEventListener('click', closeActionConfirm);
       document.getElementById('actionConfirmModal').addEventListener('click', event => { if (event.target.id === 'actionConfirmModal') closeActionConfirm(); });
+      document.getElementById('openCreateUserBtn').addEventListener('click', () => { document.getElementById('userFormPanel').hidden = false; });
+      document.getElementById('cancelCreateUserBtn').addEventListener('click', closeCreateUserForm);
+      document.getElementById('createUserForm').addEventListener('submit', createAdminUser);
+      document.querySelector('#createUserForm [name="role"]').addEventListener('change', event => {
+        const department = document.querySelector('#createUserForm [name="department"]');
+        if (event.target.value === 'admin') department.value = 'Administration';
+        else if (department.value === 'Administration') department.value = '';
+      });
+      document.getElementById('confirmDeleteUser').addEventListener('click', deleteAdminUser);
+      document.getElementById('cancelDeleteUser').addEventListener('click', closeDeleteUserModal);
+      document.getElementById('deleteUserModal').addEventListener('click', event => { if (event.target.id === 'deleteUserModal') closeDeleteUserModal(); });
       document.getElementById('selectAllItems').addEventListener('change', toggleSelectAllVisible);
       document.getElementById('adminFilterDate').addEventListener('change', () => { adminCurrentPage = 1; renderItemsTable(); });
       document.querySelectorAll('.sort-button').forEach(button => button.addEventListener('click', () => {
@@ -98,6 +117,90 @@ let deleteTargetId = null;
       });
       updateBulkToolbar();
     });
+
+    async function refreshAdminUsers() {
+      try {
+        const response = await adminFetch('/api/auth/users', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        adminUsers = Array.isArray(data.users) ? data.users : [];
+        renderAdminUsers();
+      } catch (error) {
+        showToast('Could not load users.', 'error');
+      }
+    }
+
+    function renderAdminUsers() {
+      const body = document.getElementById('adminUsersBody');
+      const empty = document.getElementById('adminUsersEmptyState');
+      if (!body) return;
+      empty.hidden = adminUsers.length > 0;
+      body.innerHTML = adminUsers.map(user => `
+        <tr>
+          <td>${escHtml(user.fullName || '—')}</td>
+          <td>${escHtml(user.email || '—')}</td>
+          <td><span class="badge">${escHtml(user.role || 'student')}</span></td>
+          <td>${escHtml(user.department || '—')}</td>
+          <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</td>
+          <td><button type="button" class="action-btn action-btn-delete user-delete-button" data-user-id="${escHtml(user.id)}" data-user-name="${escHtml(user.fullName || user.email)}"${user.id === window.currentAdminUserId ? ' disabled' : ''}>Delete</button></td>
+        </tr>`).join('');
+      body.querySelectorAll('.user-delete-button').forEach(button => button.addEventListener('click', () => openDeleteUserModal(button.dataset.userId, button.dataset.userName)));
+    }
+
+    function closeCreateUserForm() {
+      const form = document.getElementById('createUserForm');
+      form.reset();
+      form.elements.studentId.value = 'N/A';
+      document.getElementById('userFormPanel').hidden = true;
+    }
+
+    async function createAdminUser(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const submit = form.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      try {
+        const response = await adminFetch('/api/auth/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.errors?.join(' ') || data.message || 'Could not create user.');
+        closeCreateUserForm();
+        await refreshAdminUsers();
+        showToast('User created successfully.');
+      } catch (error) {
+        showToast(error.message, 'error');
+      } finally {
+        submit.disabled = false;
+      }
+    }
+
+    function openDeleteUserModal(id, name) {
+      deleteUserTargetId = id;
+      document.getElementById('deleteUserMsg').textContent = `Are you sure you want to permanently delete ${name}? This action cannot be undone.`;
+      document.getElementById('deleteUserModal').classList.add('open');
+    }
+
+    function closeDeleteUserModal() {
+      deleteUserTargetId = null;
+      document.getElementById('deleteUserModal').classList.remove('open');
+    }
+
+    async function deleteAdminUser() {
+      if (!deleteUserTargetId) return;
+      const button = document.getElementById('confirmDeleteUser');
+      button.disabled = true;
+      try {
+        const response = await adminFetch(`/api/auth/users/${encodeURIComponent(deleteUserTargetId)}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Could not delete user.');
+        closeDeleteUserModal();
+        await refreshAdminUsers();
+        showToast('User deleted successfully.');
+      } catch (error) {
+        showToast(error.message, 'error');
+      } finally {
+        button.disabled = false;
+      }
+    }
 
     function normalizeAdminItem(item) {
       const normalized = { ...item };
