@@ -382,6 +382,9 @@
       align-items: center;
       gap: 0.5rem;
     }
+    .match-banner.match-banner-qr-only {
+      justify-content: flex-end;
+    }
     .btn-match-qr {
       background: var(--blue-main);
       color: #ffffff;

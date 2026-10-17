@@ -629,11 +629,13 @@
             <span style="color: #ef4444; font-weight: 800; font-size: 0.68rem; text-transform: uppercase;">Lost Report</span>
             <div style="font-weight: 800; color: #0f172a;" id="matchLostTitle">Lost Item</div>
             <div style="font-family: monospace; color: #64748b; font-size: 0.68rem;" id="matchLostRef">CSPC-LF-000</div>
+            <div style="color: #64748b; font-size: 0.68rem;" id="matchLostLocation">Location unavailable</div>
           </div>
           <div>
             <span style="color: #22c55e; font-weight: 800; font-size: 0.68rem; text-transform: uppercase;">Found Report</span>
             <div style="font-weight: 800; color: #0f172a;" id="matchFoundTitle">Found Item</div>
             <div style="font-family: monospace; color: #64748b; font-size: 0.68rem;" id="matchFoundRef">CSPC-LF-000</div>
+            <div style="color: #64748b; font-size: 0.68rem;" id="matchFoundLocation">Location unavailable</div>
           </div>
         </div>
 
@@ -955,10 +957,7 @@
         let matchBannerHtml = '';
         if (match) {
           matchBannerHtml = `
-            <div class="match-banner">
-              <div>
-                <strong>Potential Match:</strong> ${escapeHtml(match.title)} (${escapeHtml(match.location)})
-              </div>
+            <div class="match-banner match-banner-qr-only">
               <button class="btn-match-qr" onclick="openMatchQrModal(${item.id}, ${match.id})">🤝 Match Reference QR</button>
             </div>
           `;
@@ -1239,6 +1238,9 @@
       document.getElementById('matchFoundTitle').textContent = found.title || '—';
       document.getElementById('matchLostRef').textContent    = lost.refCode  || '—';
       document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
+
+      document.getElementById('matchLostLocation').textContent = lost.location || 'Location unavailable';
+      document.getElementById('matchFoundLocation').textContent = found.location || 'Location unavailable';
 
       const matchPayload = encodeURIComponent(
         `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
