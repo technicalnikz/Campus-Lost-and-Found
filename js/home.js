@@ -530,7 +530,11 @@ let currentUser = null;
         const item = data.item;
         document.getElementById('finderScreenItemTitle').textContent = item.title;
         document.getElementById('finderScreenRefCode').textContent = item.refCode;
-        document.getElementById('finderScreenInstructions').textContent = item.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.';
+        const instructionsElement = document.getElementById('finderScreenInstructions');
+        instructionsElement.textContent = String(item.instructions || '')
+          .replace(/If found, please (notify owner via QR or )?leave with CSPC SASO \/ Campus Security(?: Desk)?\.?/gi, '')
+          .trim();
+        instructionsElement.style.display = instructionsElement.textContent ? '' : 'none';
         document.getElementById('finderRefCodeInput').value = item.refCode;
         document.getElementById('finderMessageInput').value = '';
         document.getElementById('finderLocationInput').value = '';

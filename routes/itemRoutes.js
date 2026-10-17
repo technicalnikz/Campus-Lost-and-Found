@@ -575,7 +575,7 @@ router.get('/qr-lookup/:refCode', (req, res) => {
       category: item.category,
       type: item.type,
       location: item.location,
-      instructions: item.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.',
+      instructions: item.instructions || '',
       isRegisteredBelonging: item.type === 'registered'
     }
   });
@@ -1324,7 +1324,7 @@ router.post('/register-belonging', requireAuth, (req, res) => {
       type: 'registered', // Preventive personal belonging
       location: sanitizeString(location || 'Campus-wide'),
       locationDetails: sanitizeString(identifiers || ''),
-      instructions: sanitizeString(instructions || 'If found, please notify owner via QR or leave with CSPC SASO / Campus Security.'),
+      instructions: sanitizeString(instructions || ''),
       contact: `${user.fullName} (${user.studentId || user.email})`,
       desc: identifiers ? `Valuable belonging: ${sanitizeString(identifiers)}` : 'Valuable personal belonging registered in student vault.',
       verification: identifiers || 'Registered by verified CSPC account',

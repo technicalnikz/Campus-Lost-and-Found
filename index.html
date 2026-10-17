@@ -1143,7 +1143,7 @@
         type: 'registered',
         location,
         locationDetails: identifiers,
-        instructions: instructions || 'If found, please notify owner via QR or leave with CSPC SASO / Campus Security.',
+        instructions: instructions || '',
         contact: 'Verified CSPC Account',
         desc: identifiers ? `Valuable belonging: ${identifiers}` : 'Valuable personal belonging registered in student vault.',
         verification: identifiers || 'Registered by verified CSPC account',
@@ -1171,7 +1171,12 @@
       const safeItem = item || {};
       document.getElementById('finderScreenItemTitle').textContent = safeItem.title || 'Found Item';
       document.getElementById('finderScreenRefCode').textContent = safeItem.refCode || '—';
-      document.getElementById('finderScreenInstructions').textContent = safeItem.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.';
+      const instructions = String(safeItem.instructions || '')
+        .replace(/If found, please (notify owner via QR or )?leave with CSPC SASO \/ Campus Security(?: Desk)?\.?/gi, '')
+        .trim();
+      const instructionsElement = document.getElementById('finderScreenInstructions');
+      instructionsElement.textContent = instructions;
+      instructionsElement.style.display = instructions ? '' : 'none';
       document.getElementById('finderRefCodeInput').value = safeItem.refCode || '';
       document.getElementById('finderMessageInput').value = '';
       document.getElementById('finderLocationInput').value = '';
