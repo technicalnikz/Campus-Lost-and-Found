@@ -235,25 +235,29 @@ body::after {
   --nav-control-size: 36px;
 }
 
-.theme-toggle {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  color: var(--blue-main);
-  border-radius: 999px;
+.theme-toggle,
+.notif-bell-btn {
   width: var(--nav-control-size);
   height: var(--nav-control-size);
   min-width: var(--nav-control-size);
   min-height: var(--nav-control-size);
   padding: 0;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
   flex-shrink: 0;
-  box-sizing: border-box;
+  line-height: 1;
+}
+
+.theme-toggle {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--blue-main);
+  border-radius: 999px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .theme-toggle:hover {
@@ -343,22 +347,11 @@ body::after {
   border: 1px solid rgba(59, 130, 246, 0.3);
   color: var(--blue-light);
   border-radius: 999px;
-  padding: 0 0.65rem;
-  width: var(--nav-control-size);
-  height: var(--nav-control-size);
-  min-width: var(--nav-control-size);
-  min-height: var(--nav-control-size);
   font-size: 0.85rem;
   cursor: pointer;
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: 0.35rem;
   transition: all 0.2s ease;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  line-height: 1;
 }
 
 .notif-bell-btn:hover {
@@ -1180,12 +1173,7 @@ select option {
   .nav-actions { gap: .25rem; min-width: 0; }
   .nav-logo { gap: .35rem; font-size: .78rem; }
   .nav-logo img { width: 29px; height: 29px; }
-  .theme-toggle, .notif-bell-btn {
-    width: 32px;
-    min-width: 32px;
-    height: 32px;
-    min-height: 32px;
-  }
+  :root { --nav-control-size: 32px; }
   #userNavSlot, .user-nav-slot { gap: .25rem; min-width: 0; }
   .user-pill { max-width: 150px; gap: .2rem; padding-inline: .35rem; overflow: hidden; height: 32px; }
   .user-pill .user-name { flex: 1 1 auto; min-width: 0; max-width: 66px; }
