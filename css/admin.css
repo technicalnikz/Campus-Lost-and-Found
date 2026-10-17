@@ -1,14 +1,9 @@
 /* ── Admin Panel ── */
     .admin-navbar .nav-logo-full,
     .admin-navbar .nav-logo-short {
-      background-image: linear-gradient(to right, #60a5fa, #818cf8, #a855f7);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      font-size: 1rem;
-      font-weight: 800;
-      letter-spacing: -0.025em;
+      background: none;
+      color: var(--text-main);
+      -webkit-text-fill-color: currentColor;
     }
 
     .admin-tabs {
@@ -434,18 +429,22 @@
     #adminItemsTable { min-width: 1180px; }
     #adminPanel .page-header h1 {
       font-size: 2.2rem;
-      font-weight: 800;
-      background: none;
-      color: var(--blue-main);
-      -webkit-text-fill-color: var(--blue-main);
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      background: linear-gradient(to right, #fff, #e2e8f0, #3b82f6);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
     }
     [data-theme='light'] #adminPanel .page-header h1 {
-      background: linear-gradient(90deg, #0f172a 40%, var(--blue-main) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      background: linear-gradient(to right, #fff, #e2e8f0, #3b82f6);
       background-clip: text;
-      font-weight: 800;
-      letter-spacing: -0.02em;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      font-weight: 900;
+      letter-spacing: -0.025em;
     }
     #adminLogoutModal {
       position: fixed;
