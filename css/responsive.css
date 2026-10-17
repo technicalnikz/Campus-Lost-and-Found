@@ -1106,6 +1106,11 @@ input[type='submit'] {
     grid-row: 1 !important;
   }
 
+  .filter-chips .my-belongings-icon,
+  .filter-chips .my-belongings-count {
+    display: none;
+  }
+
   .type-switcher {
     display: flex !important;
     flex-direction: row !important;
