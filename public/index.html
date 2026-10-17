@@ -1586,13 +1586,35 @@
 
     function resetItemForm() {
       document.getElementById('itemForm').reset();
+      rotateReportSubmissionKey();
       removePhoto();
       resetCategoryPicker('itemCategory');
       updateTypeRadio();
     }
 
+    const reportSubmissionKeyStorage = 'back2you.reportSubmissionKey';
+    function createReportSubmissionKey() {
+      return window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+    function rotateReportSubmissionKey() {
+      reportSubmissionKey = createReportSubmissionKey();
+      sessionStorage.setItem(reportSubmissionKeyStorage, reportSubmissionKey);
+    }
+    let reportSubmissionKey = sessionStorage.getItem(reportSubmissionKeyStorage) || createReportSubmissionKey();
+    sessionStorage.setItem(reportSubmissionKeyStorage, reportSubmissionKey);
+    let reportSubmissionInProgress = false;
+
     async function handleFormSubmit(e) {
       e.preventDefault();
+      if (reportSubmissionInProgress) return;
+      reportSubmissionInProgress = true;
+      const submitButton = document.querySelector('#itemForm button[type="submit"]');
+      const originalSubmitLabel = submitButton ? submitButton.textContent : '';
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Submitting...';
+      }
+
       const type = document.querySelector('input[name="itemType"]:checked').value;
       const title = document.getElementById('itemTitle').value.trim();
       const category = document.getElementById('itemCategory').value;
@@ -1617,11 +1639,13 @@
       try {
         const res = await fetch('/api/items', {
           method: 'POST',
+          headers: { 'Idempotency-Key': reportSubmissionKey },
           body: payload
         });
 
         const data = await res.json();
         if (data.success) {
+          rotateReportSubmissionKey();
           document.getElementById('itemForm').reset();
           removePhoto();
           updateTypeRadio();
@@ -1643,6 +1667,12 @@
         }
       } catch (err) {
         showToast('Network error while saving report.', true);
+      } finally {
+        reportSubmissionInProgress = false;
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = originalSubmitLabel;
+        }
       }
     }
 

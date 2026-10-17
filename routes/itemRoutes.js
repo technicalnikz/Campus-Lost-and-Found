@@ -941,13 +941,54 @@ router.post('/:id/claim-requests', requireAuth, async (req, res) => {
 router.post('/', upload.single('photo'), postgresStore.requestMiddleware(), validateItemReport, async (req, res) => {
   try {
     const items = getItems();
-    const nextSeq = items.length + 1;
-    const refCode = `CSPC-LF-2026-${String(nextSeq).padStart(3, '0')}`;
-
     const { title, category, type, location, locationDetails, contact, desc, verification } = req.body;
     if (req.file && !isValidImage(req.file)) {
       return res.status(400).json({ success: false, message: 'The uploaded file is not a valid supported image.' });
     }
+
+    const submissionKey = req.get('Idempotency-Key')?.trim();
+    if (submissionKey && !/^[A-Za-z0-9_-]{16,128}$/.test(submissionKey)) {
+      return res.status(400).json({ success: false, message: 'Invalid report submission key.' });
+    }
+
+    const reporterId = req.session?.user ? req.session.user.id : 'guest';
+    const submissionFingerprint = crypto.createHash('sha256').update(JSON.stringify({
+      title,
+      category,
+      type,
+      location,
+      locationDetails,
+      contact,
+      desc,
+      verification,
+      photo: req.file ? crypto.createHash('sha256').update(req.file.buffer).digest('hex') : ''
+    })).digest('hex');
+
+    if (submissionKey) {
+      const previousSubmission = items.find(item => item.submissionKey === submissionKey);
+      if (previousSubmission) {
+        if (String(previousSubmission.reportedBy) !== String(reporterId)) {
+          return res.status(409).json({ success: false, message: 'This submission key is already in use.' });
+        }
+        if (previousSubmission.submissionFingerprint !== submissionFingerprint) {
+          return res.status(409).json({ success: false, message: 'This submission key was already used for a different report.' });
+        }
+
+        const responseItem = { ...previousSubmission };
+        delete responseItem.submissionKey;
+        delete responseItem.submissionFingerprint;
+        return res.json({
+          success: true,
+          duplicate: true,
+          message: `This report was already received with Reference Code: ${previousSubmission.refCode}`,
+          item: responseItem,
+          potentialMatch: null
+        });
+      }
+    }
+
+    const nextSeq = items.length + 1;
+    const refCode = `CSPC-LF-2026-${String(nextSeq).padStart(3, '0')}`;
     const photo = req.file ? saveUploadedImage(req.file) : '';
 
     const newItem = {
@@ -965,7 +1006,8 @@ router.post('/', upload.single('photo'), postgresStore.requestMiddleware(), vali
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       status: 'active',
       claimed: false,
-      reportedBy: req.session?.user ? req.session.user.id : 'guest',
+      reportedBy: reporterId,
+      ...(submissionKey ? { submissionKey, submissionFingerprint } : {}),
       createdAt: new Date().toISOString()
     };
 
@@ -1000,10 +1042,13 @@ router.post('/', upload.single('photo'), postgresStore.requestMiddleware(), vali
       }
     }
 
+    const responseItem = { ...newItem };
+    delete responseItem.submissionKey;
+    delete responseItem.submissionFingerprint;
     res.status(201).json({
       success: true,
       message: `Item successfully reported with Reference Code: ${refCode}`,
-      item: newItem,
+      item: responseItem,
       potentialMatch: match ? { id: match.id, title: match.title, location: match.location, type: match.type } : null
     });
   } catch (error) {
