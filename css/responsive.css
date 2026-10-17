@@ -317,7 +317,7 @@ input[type='submit'] {
   #items .item-card-meta-row {
     width: 100%;
     min-width: 0;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: flex-start;
     gap: .3rem .4rem;
   }
@@ -325,7 +325,8 @@ input[type='submit'] {
   #items .item-card-category-ref {
     min-width: 0;
     max-width: 100%;
-    flex: 1 1 5rem;
+    flex: 1 1 auto;
+    overflow: hidden;
     overflow-wrap: anywhere;
   }
 
@@ -337,7 +338,7 @@ input[type='submit'] {
   }
 
   #items .item-badge {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     max-width: 100%;
     box-sizing: border-box;
     padding: .18rem .38rem;
