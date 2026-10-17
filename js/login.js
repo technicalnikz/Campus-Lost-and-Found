@@ -51,6 +51,19 @@ function togglePasswordVisibility(inputId, btn) {
       return user.role === 'admin' ? '/admin.html' : '/';
     }
 
+    async function redirectAuthenticatedUser() {
+      try {
+        const response = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.authenticated && data.user && ['admin', 'student'].includes(data.user.role)) {
+          window.location.replace(getPostLoginUrl(data.user));
+        }
+      } catch (error) {
+        // Leave the sign-in form available while session verification is unavailable.
+      }
+    }
+
     // Theme initialization and click handling are provided by the shared main.js.
 
     function switchTab(tab) {
@@ -111,7 +124,7 @@ function togglePasswordVisibility(inputId, btn) {
           if (data.emailSent === false) window.alert(data.message);
           sessionStorage.setItem('currentUser', JSON.stringify(data.user));
           sessionStorage.setItem('userRole', data.user.role);
-          window.location.href = getPostLoginUrl(data.user);
+          window.location.replace(getPostLoginUrl(data.user));
         } else {
           showError(data.message || 'Login failed. Please check your credentials.');
         }
@@ -153,7 +166,7 @@ function togglePasswordVisibility(inputId, btn) {
         if (data.success) {
           sessionStorage.setItem('currentUser', JSON.stringify(data.user));
           sessionStorage.setItem('userRole', data.user.role);
-          window.location.href = '/';
+          window.location.replace('/');
         } else {
           showError(data.message || (data.errors ? data.errors.join(' ') : 'Registration failed.'));
         }
@@ -164,3 +177,4 @@ function togglePasswordVisibility(inputId, btn) {
 
     document.getElementById('regPassword').addEventListener('input', updatePasswordRequirements);
     updatePasswordRequirements();
+    redirectAuthenticatedUser();
