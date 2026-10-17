@@ -54,7 +54,12 @@
           <label>Password</label>
           <div class="password-wrap">
             <input type="password" id="loginPassword" placeholder="Enter your password" required />
-            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('loginPassword', this)">Show</button>
+            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('loginPassword', this)" aria-label="Show password" aria-pressed="false" title="Show password">
+              <svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
           </div>
         </div>
         <button type="submit" class="btn btn-primary" style="width: 100%; border: none; cursor: pointer; margin-top: 0.5rem;">
@@ -93,7 +98,12 @@
           <label for="regPassword">Password *</label>
           <div class="password-wrap">
             <input type="password" id="regPassword" placeholder="Create a secure password" minlength="8" required aria-describedby="passwordRequirements" />
-            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('regPassword', this)">Show</button>
+            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('regPassword', this)" aria-label="Show password" aria-pressed="false" title="Show password">
+              <svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
           </div>
           <ul class="password-requirements" id="passwordRequirements" aria-live="polite">
             <li data-requirement="length">At least 8 characters</li>
