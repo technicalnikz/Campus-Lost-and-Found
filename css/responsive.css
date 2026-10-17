@@ -355,11 +355,13 @@ input[type='submit'] {
     top: 0;
     right: 0;
     flex: none;
-    max-width: 100%;
+    min-width: 2.55rem;
+    max-width: 4rem;
     box-sizing: border-box;
-    padding: .18rem .38rem;
-    font-size: .6rem;
+    padding: .2rem .42rem;
+    font-size: .58rem;
     line-height: 1.2;
+    text-align: center;
     white-space: nowrap;
   }
 
