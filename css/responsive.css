@@ -325,6 +325,7 @@ input[type='submit'] {
   }
 
   #items .item-card-category-ref {
+    display: flex;
     min-width: 0;
     width: 100%;
     max-width: none;
@@ -342,6 +343,7 @@ input[type='submit'] {
   }
 
   #items .item-card-category-ref .ref-code {
+    margin-left: 0 !important;
     min-width: 0;
     width: max-content;
     max-width: 100%;
