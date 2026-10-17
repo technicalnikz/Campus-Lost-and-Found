@@ -33,9 +33,18 @@ let deleteTargetId = null;
         }
       } catch (error) {
         // Treat an unavailable auth session as unauthenticated.
+          const panel = document.getElementById('adminPanel');
+          if (panel) {
+            const notice = document.createElement('div');
+            notice.setAttribute('role', 'alert');
+            notice.style.cssText = 'margin:1rem;padding:1rem;border:1px solid #f59e0b;border-radius:8px;color:var(--text-main);';
+            notice.innerHTML = 'Could not verify your session because the server is temporarily unavailable. You have not been signed out. <button type="button" class="btn-sm" onclick="window.location.reload()">Retry</button>';
+            panel.prepend(notice);
+          }
+          return false;
       }
-      window.location.replace('/login?redirect=%2Fadmin.html');
-      return false;
+        window.location.replace('/login?redirect=%2Fadmin.html');
+        return false;
     }
 
     document.addEventListener('DOMContentLoaded', async () => {

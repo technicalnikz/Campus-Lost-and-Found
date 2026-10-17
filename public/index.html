@@ -718,6 +718,35 @@
       if (mobileLogout) mobileLogout.classList.remove('visible');
     }
 
+    function preserveCachedSessionAfterCheckFailure() {
+      let cachedUser;
+      try {
+        cachedUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+      } catch (error) {
+        cachedUser = null;
+      }
+      if (!cachedUser || !['admin', 'student'].includes(cachedUser.role)
+        || sessionStorage.getItem('userRole') !== cachedUser.role) {
+        renderGuestHeader();
+        return;
+      }
+
+      currentUser = cachedUser;
+      const slot = document.getElementById('userNavSlot');
+      if (slot) {
+        slot.innerHTML = `
+          <div class="user-pill">
+            <span class="user-name">${escapeHtml(cachedUser.role === 'admin' ? 'Admin' : cachedUser.fullName)}</span>
+            <span class="role-badge" role="status">Session check unavailable</span>
+            <button type="button" class="user-pill-logout" onclick="checkAuthSession()" title="Retry session check">Retry</button>
+          </div>
+        `;
+      }
+      const chipVault = document.getElementById('chipMyBelongings');
+      if (chipVault) chipVault.style.display = 'inline-block';
+      showToast('Could not verify your session right now. You have not been signed out; retry when connected.', true);
+    }
+
     async function checkAuthSession() {
       try {
         const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' });
@@ -760,8 +789,7 @@
           renderGuestHeader();
         }
       } catch (err) {
-        clearStoredAuth();
-        renderGuestHeader();
+        preserveCachedSessionAfterCheckFailure();
       }
     }
 
