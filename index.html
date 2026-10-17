@@ -1626,7 +1626,13 @@
     function toggleMobileNav(e) {
       if (e) e.stopPropagation();
       const links = document.getElementById('navLinks');
-      if (links) links.classList.toggle('open');
+      const navbar = document.querySelector('.navbar');
+      const toggle = document.getElementById('menuToggle');
+      if (!links) return;
+      const isOpen = links.classList.toggle('open');
+      navbar?.classList.toggle('mobile-drawer-active', isOpen);
+      toggle?.classList.toggle('open', isOpen);
+      toggle?.setAttribute('aria-expanded', String(isOpen));
     }
 
     // Theme toggle
@@ -1666,6 +1672,9 @@
       document.addEventListener('click', (e) => {
         if (links && toggle && !links.contains(e.target) && !toggle.contains(e.target)) {
           links.classList.remove('open');
+          document.querySelector('.navbar')?.classList.remove('mobile-drawer-active');
+          toggle.classList.remove('open');
+          toggle.setAttribute('aria-expanded', 'false');
         }
       });
       if (links) {
