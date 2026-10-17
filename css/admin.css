@@ -161,30 +161,26 @@
       border-collapse: collapse;
       font-size: .84rem;
     }
-    #adminItemsTable { width: 100%; min-width: 0; table-layout: auto; border-collapse: collapse; font-size: .75rem; }
+    #adminItemsTable { width: 100%; min-width: 0; table-layout: fixed; font-size: .75rem; }
     #adminItemsTable th,
     #adminItemsTable td {
-      vertical-align: middle;
-      overflow: visible;
+      overflow: hidden;
+      text-overflow: clip;
       white-space: normal;
       overflow-wrap: anywhere;
-      padding: .75rem;
-      text-align: left;
+      padding: .625rem .5rem;
+      text-align: center;
     }
-    #adminItemsTable .table-select-cell { justify-content: flex-start; }
-    #adminItemsTable .status-cell { overflow: visible; }
+    #adminItemsTable th { text-align: center; }
+    #adminItemsTable .status-cell { overflow: hidden; }
     #adminItemsTable .status-cell .badge {
       display: inline-block;
-      max-width: none;
-      white-space: nowrap;
+      max-width: 100%;
+      white-space: normal;
       word-break: normal;
       line-height: 1.35;
-      padding: .125rem .5rem;
-      font-size: 11px;
-      font-weight: 700;
-      text-align: left;
+      text-align: center;
     }
-    #adminItemsTable td[title] > .badge { white-space: nowrap; }
     #adminItemsTable .item-title-cell,
     #adminItemsTable .location-cell,
     #adminItemsTable .reporter-cell {
@@ -213,12 +209,11 @@
       width: 100%;
       max-width: 100%;
       flex: none;
-      min-height: 30px;
+      min-height: 34px;
       align-items: center;
       justify-content: center;
-      padding: .25rem;
-      font-size: .62rem;
-      line-height: 1.1;
+      padding: .35rem .4rem;
+      line-height: 1.2;
       text-align: center;
       white-space: normal;
       overflow-wrap: anywhere;
