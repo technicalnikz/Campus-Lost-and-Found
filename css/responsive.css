@@ -989,6 +989,60 @@ input[type='submit'] {
 }
 
 @media (min-width: 320px) and (max-width: 440px) {
+  #anonymousFinderModal .modal-card {
+    width: calc(100% - 1rem) !important;
+    max-height: calc(100vh - 1rem) !important;
+    padding: 1rem !important;
+    border-radius: 14px !important;
+    box-sizing: border-box;
+  }
+
+  #anonymousFinderModal .modal-card > div:first-child {
+    padding-bottom: 0.55rem !important;
+    margin-bottom: 0.7rem !important;
+  }
+
+  #anonymousFinderModal .modal-card > div:first-child img {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  #anonymousFinderModal .modal-item-preview {
+    padding: 0.55rem !important;
+    margin-bottom: 0.7rem !important;
+  }
+
+  #anonymousFinderModal .modal-green-notice {
+    padding: 0.55rem !important;
+    margin-bottom: 0.75rem !important;
+    font-size: 0.7rem !important;
+    line-height: 1.35 !important;
+  }
+
+  #anonymousFinderModal .input-field {
+    margin-bottom: 0.6rem !important;
+  }
+
+  #anonymousFinderModal .input-field input,
+  #anonymousFinderModal .input-field textarea {
+    padding: 0.45rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  #anonymousFinderModal .input-field textarea {
+    min-height: 4.2rem;
+    height: 4.2rem;
+  }
+
+  #anonymousFinderModal form > div:last-child {
+    gap: 0.5rem !important;
+  }
+
+  #anonymousFinderModal form > div:last-child .btn {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.75rem !important;
+  }
+
   .category-picker-modal {
     width: 94%;
     padding: 1rem;
