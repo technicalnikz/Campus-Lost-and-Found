@@ -1947,9 +1947,9 @@ button {
   background: var(--card-bg) !important;
   border: 1px solid var(--border) !important;
   border-radius: 12px !important;
-  width: min(90vw, 34rem) !important;
+  width: min(86vw, 31rem) !important;
   max-height: min(90dvh, 48rem) !important;
-  padding: clamp(.8rem, 2.5vw, 1.2rem) !important;
+  padding: clamp(.65rem, 2vw, 1rem) !important;
   box-shadow: 0 12px 32px rgba(0, 0, 0, .45) !important;
 }
 
@@ -1975,19 +1975,19 @@ button {
   border: 1px solid #cbd5e1 !important;
   border-radius: 8px !important;
   box-shadow: none !important;
-  padding: clamp(.7rem, 2.5vw, 1rem) !important;
-  margin-bottom: 1rem !important;
+  padding: clamp(.55rem, 2vw, .85rem) !important;
+  margin-bottom: .8rem !important;
 }
 
 #qrPrintArea img#qrCodeImage {
-  width: min(124px, 38vw) !important;
+  width: min(108px, 34vw) !important;
   height: auto !important;
   aspect-ratio: 1;
 }
 
 .qr-feature-details > div {
   border-radius: 8px !important;
-  padding: .7rem !important;
+  padding: .58rem !important;
   line-height: 1.45;
 }
 
@@ -1999,13 +1999,13 @@ button {
 
 .qr-actions .btn {
   flex: 1 1 10rem;
-  min-height: 38px;
+  min-height: 35px;
   white-space: normal;
 }
 
 @media (max-width: 480px) {
   .qr-modal-card {
-    width: calc(100vw - 1rem) !important;
+    width: calc(100vw - 2rem) !important;
   }
 
   .qr-modal-header {
@@ -2013,7 +2013,7 @@ button {
   }
 
   .qr-feature-details {
-    font-size: .74rem !important;
+    font-size: .7rem !important;
   }
 
   .qr-actions .btn {
