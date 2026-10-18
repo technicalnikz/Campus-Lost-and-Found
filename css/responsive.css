@@ -2125,13 +2125,13 @@ button {
 
 @media (min-width: 360px) and (max-width: 480px) {
   .card-actions .btn-qr {
-    flex: 0 0 64px;
+    flex: 0 0 78px;
     white-space: nowrap;
   }
 
   .card-actions .btn-qr + .btn-outline {
-    flex: 0 0 70px;
-    max-width: 70px;
+    flex: 0 0 88px;
+    max-width: 88px;
     white-space: normal;
     line-height: 1.05;
   }
