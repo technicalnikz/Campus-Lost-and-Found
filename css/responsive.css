@@ -1475,8 +1475,8 @@ input[type='submit'] {
     align-items: stretch;
     justify-content: flex-start;
     gap: .35rem !important;
-    width: 75vw !important;
-    max-width: 20rem;
+    width: 68vw !important;
+    max-width: 18rem;
     height: 100vh;
     height: 100dvh;
     max-height: none;
