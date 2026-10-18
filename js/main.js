@@ -18,16 +18,13 @@ function installDashboardBackGuard() {
 
     dashboardBackPrompted = false;
     restoreDashboardEntry();
-    fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
-      .then(response => {
-        if (!response.ok) throw new Error('Logout request failed.');
-        ['adminToken', 'currentUser', 'userRole'].forEach(key => {
-          localStorage.removeItem(key);
-          sessionStorage.removeItem(key);
-        });
-        window.location.replace('/login');
-      })
-      .catch(() => { dashboardBackPrompted = false; });
+    const logoutModal = document.getElementById('adminLogoutModal')
+      || document.getElementById('logoutConfirmModal');
+    if (!logoutModal) {
+      console.error('The sign-out confirmation modal is unavailable.');
+      return;
+    }
+    logoutModal.classList.add('open');
   });
 }
 
@@ -468,6 +465,15 @@ document.addEventListener('DOMContentLoaded', () => {
   initButtonSelects();
 });
 document.addEventListener('click', event => {
+  const itemsLink = event.target.closest('.navbar .nav-links a[href="#items"]');
+  const itemsSection = document.getElementById('items');
+  if (itemsLink && itemsSection) {
+    event.preventDefault();
+    dashboardBackPrompted = false;
+    window.history.replaceState(window.history.state, '', itemsLink.hash);
+    itemsSection.scrollIntoView();
+  }
+
   if (event.target.closest('.theme-toggle')) {
     if (event.target.closest('.theme-toggle').dataset.themeBound === 'true') return;
     toggleTheme();

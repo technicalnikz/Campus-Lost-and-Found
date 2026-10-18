@@ -1,3 +1,7 @@
+body.auth-checking {
+  padding-top: 0;
+}
+
 body.auth-checking > .navbar,
 body.auth-checking > .auth-container,
 body.auth-checking > .site-footer {

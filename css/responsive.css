@@ -1297,6 +1297,10 @@ input[type='submit'] {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --navbar-height: 56px;
+  }
+
   body.mobile-drawer-open {
     overflow: hidden;
   }
