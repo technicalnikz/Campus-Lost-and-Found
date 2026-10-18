@@ -2123,6 +2123,20 @@ button {
   .qr-actions .btn { font-size: .62rem; }
 }
 
+@media (min-width: 360px) and (max-width: 480px) {
+  .card-actions .btn-qr {
+    flex: 0 0 64px;
+    white-space: nowrap;
+  }
+
+  .card-actions .btn-qr + .btn-outline {
+    flex: 0 0 70px;
+    max-width: 70px;
+    white-space: normal;
+    line-height: 1.05;
+  }
+}
+
 /* Keep the QR modal compact on phone-sized viewports with limited height. */
 @media (max-width: 480px) and (min-height: 600px) and (max-height: 760px) {
   .qr-modal-card {
