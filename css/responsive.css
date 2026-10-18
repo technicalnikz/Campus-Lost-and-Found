@@ -2046,6 +2046,10 @@ button {
     width: 100%;
   }
 
+  .filter-chips:has(.chip-my-vault[style*="display: none"]) {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
   .filter-chips .chip {
     display: block;
     width: 100%;
