@@ -1992,14 +1992,18 @@ button {
 }
 
 .qr-actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: stretch !important;
   border-top: 1px solid var(--border);
   padding-top: 1rem;
 }
 
 .qr-actions .btn {
-  flex: 1 1 10rem;
+  min-width: 0;
   min-height: 35px;
+  padding: .35rem .25rem !important;
+  font-size: .7rem;
   white-space: normal;
 }
 
@@ -2016,9 +2020,8 @@ button {
     font-size: .7rem !important;
   }
 
-  .qr-actions .btn {
-    flex-basis: 100%;
-  }
+  .qr-actions { gap: .35rem; }
+  .qr-actions .btn { font-size: .62rem; }
 }
 
 /* Responsive dashboard layout and item cards. */
