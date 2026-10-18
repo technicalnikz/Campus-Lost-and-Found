@@ -2023,3 +2023,120 @@ button {
   .qr-actions { gap: .35rem; }
   .qr-actions .btn { font-size: .62rem; }
 }
+
+@media (max-width: 639px) {
+  .filter-row {
+    align-items: stretch;
+  }
+
+  .projects-section {
+    padding-inline: .75rem !important;
+  }
+
+  .filter-chips {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: none !important;
+    grid-auto-flow: row !important;
+    gap: .5rem;
+    width: 100%;
+  }
+
+  .filter-chips .chip {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: .5rem .5rem;
+    border-radius: .5rem;
+    font-size: .75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    box-sizing: border-box;
+  }
+
+  .filter-chips .chip-my-vault {
+    grid-column: auto !important;
+  }
+
+  .hero-stats .stat-box {
+    padding: .75rem;
+  }
+
+  .hero-stats .stat-lbl {
+    font-size: .75rem;
+    line-height: 1.25;
+  }
+
+  #adminPanel > .page-header,
+  #adminPanel .page-section {
+    width: calc(100% - 1.5rem);
+    padding-inline: 0;
+  }
+
+  #adminPanel .admin-search-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #adminPanel .admin-search-row > * {
+    min-width: 0;
+  }
+
+  #adminPanel .admin-search-row #exportBtn {
+    grid-column: 1 / -1;
+  }
+
+  #adminPanel .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #adminPanel .admin-stats .stat-card {
+    min-width: 0;
+    padding: .75rem;
+    box-sizing: border-box;
+  }
+
+  #adminPanel .admin-stats .stat-number {
+    font-size: 1.5rem;
+  }
+
+  #adminPanel .admin-stats .stat-label {
+    font-size: .75rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  #adminPanel .admin-stats .action-needed-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 640px) {
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .filter-chips .chip {
+    padding: .5rem;
+    border-radius: .5rem;
+    font-size: .875rem;
+  }
+
+  .hero-stats .stat-box {
+    padding: 1rem;
+  }
+
+  .hero-stats .stat-lbl {
+    font-size: .875rem;
+  }
+
+  #adminPanel .admin-stats .stat-card {
+    padding: 1rem;
+  }
+
+  #adminPanel .admin-stats .stat-label {
+    font-size: .875rem;
+  }
+}
