@@ -1941,3 +1941,81 @@ button {
     overflow-y: auto;
   }
 }
+
+/* Standard form-like presentation for the generated QR result. */
+.qr-modal-card {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  width: min(92vw, 38rem) !important;
+  max-height: min(90dvh, 48rem) !important;
+  padding: clamp(1rem, 3vw, 1.5rem) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .45) !important;
+}
+
+.qr-modal-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start !important;
+}
+
+.qr-modal-header h2 {
+  font-size: clamp(1.05rem, 3vw, 1.3rem) !important;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.qr-modal-header p {
+  max-width: 42rem;
+  line-height: 1.45;
+}
+
+#qrPrintArea {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  padding: clamp(.9rem, 3vw, 1.25rem) !important;
+}
+
+#qrPrintArea img#qrCodeImage {
+  width: min(140px, 42vw) !important;
+  height: auto !important;
+  aspect-ratio: 1;
+}
+
+.qr-feature-details > div {
+  border-radius: 8px !important;
+  padding: .85rem !important;
+  line-height: 1.45;
+}
+
+.qr-actions {
+  justify-content: stretch !important;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.qr-actions .btn {
+  flex: 1 1 10rem;
+  min-height: 42px;
+  white-space: normal;
+}
+
+@media (max-width: 480px) {
+  .qr-modal-card {
+    width: calc(100vw - 1rem) !important;
+  }
+
+  .qr-modal-header {
+    gap: .5rem;
+  }
+
+  .qr-feature-details {
+    font-size: .78rem !important;
+  }
+
+  .qr-actions .btn {
+    flex-basis: 100%;
+  }
+}
