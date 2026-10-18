@@ -1,0 +1,71 @@
+* Unmerged path css/responsive.css
+diff --git a/index.html b/index.html
+index 13dc279..90578e8 100644
+--- a/index.html
++++ b/index.html
+@@ -281,10 +281,10 @@
+ 
+   <!-- DIGITAL "FOUND" QR CODE STICKERS (PREVENTIVE ADD-ON FEATURE) -->
+   <div class="slip-overlay" id="qrModal" onclick="if(event.target===this) closeQrModal()">
+-    <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; max-width: 520px; width: 92%; padding: 1.75rem; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
++    <div class="qr-modal-card" style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; max-width: 520px; width: 92%; padding: 1.75rem; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
+       
+       <!-- Feature Header -->
+-      <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.9rem; margin-bottom: 1.1rem;">
++      <div class="qr-modal-header" style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.9rem; margin-bottom: 1.1rem;">
+         <div>
+           <span style="font-size: 0.7rem; font-weight: 800; background: rgba(59,130,246,0.15); color: var(--blue-main); padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;">Optional Add-on Feature</span>
+           <h2 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0.4rem 0 0.2rem;">Digital &ldquo;Found&rdquo; QR Code Stickers</h2>
+@@ -313,7 +313,7 @@
+       </div>
+ 
+       <!-- Feature Details (How it works & Why it's useful) -->
+-      <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.25rem; font-size: 0.8rem;">
++      <div class="qr-feature-details" style="display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.25rem; font-size: 0.8rem;">
+         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.75rem;">
+           <strong style="color: var(--blue-main); display: block; margin-bottom: 0.25rem;">📌 How it works:</strong>
+           <span style="color: var(--text-muted); line-height: 1.45;">Students generate a unique, anonymous QR code sticker from the system to paste onto their laptops, tumblers, or binder folders. If someone finds the item, scanning the QR code opens an anonymous messaging screen that sends a notification straight to the owner's account without revealing their personal phone number or social media.</span>
+@@ -340,7 +340,7 @@
+       </div>
+ 
+       <!-- Action Buttons -->
+-      <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end; flex-wrap: wrap;">
++      <div class="qr-actions no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end; flex-wrap: wrap;">
+         <button class="btn btn-outline" style="padding: 0.45rem 1rem;" onclick="closeQrModal()">Close</button>
+         <button class="btn btn-outline inline-flex items-center justify-center gap-2" id="demoToggleBtn" style="padding: 0.45rem 1rem; border-color: rgba(59,130,246,0.4); color: var(--blue-light);" onclick="toggleAnonymousDemo(true)"><span class="shrink-0" aria-hidden="true">💬</span><span class="flex items-center">Test Finder Screen</span></button>
+         <button class="btn btn-primary" style="padding: 0.45rem 1.25rem;" onclick="printQrSticker()">🖨️ Print Sticker</button>
+diff --git a/public/index.html b/public/index.html
+index a6f995d..5eaf16f 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -279,10 +279,10 @@
+ 
+   <!-- DIGITAL "FOUND" QR CODE STICKERS (PREVENTIVE ADD-ON FEATURE) -->
+   <div class="slip-overlay" id="qrModal" onclick="if(event.target===this) closeQrModal()">
+-    <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; max-width: 520px; width: 92%; padding: 1.75rem; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
++    <div class="qr-modal-card" style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; max-width: 520px; width: 92%; padding: 1.75rem; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
+       
+       <!-- Feature Header -->
+-      <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.9rem; margin-bottom: 1.1rem;">
++      <div class="qr-modal-header" style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.9rem; margin-bottom: 1.1rem;">
+         <div>
+           <span style="font-size: 0.7rem; font-weight: 800; background: rgba(59,130,246,0.15); color: var(--blue-main); padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em;">Optional Add-on Feature</span>
+           <h2 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0.4rem 0 0.2rem;">Digital &ldquo;Found&rdquo; QR Code Stickers</h2>
+@@ -311,7 +311,7 @@
+       </div>
+ 
+       <!-- Feature Details (How it works & Why it's useful) -->
+-      <div style="display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.25rem; font-size: 0.8rem;">
++      <div class="qr-feature-details" style="display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.25rem; font-size: 0.8rem;">
+         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.75rem;">
+           <strong style="color: var(--blue-main); display: block; margin-bottom: 0.25rem;">📌 How it works:</strong>
+           <span style="color: var(--text-muted); line-height: 1.45;">Students generate a unique, anonymous QR code sticker from the system to paste onto their laptops, tumblers, or binder folders. If someone finds the item, scanning the QR code opens an anonymous messaging screen that sends a notification straight to the owner's account without revealing their personal phone number or social media.</span>
+@@ -338,7 +338,7 @@
+       </div>
+ 
+       <!-- Action Buttons -->
+-      <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end; flex-wrap: wrap;">
++      <div class="qr-actions no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end; flex-wrap: wrap;">
+         <button class="btn btn-outline" style="padding: 0.45rem 1rem;" onclick="closeQrModal()">Close</button>
+         <button class="btn btn-outline inline-flex items-center justify-center gap-2" id="demoToggleBtn" style="padding: 0.45rem 1rem; border-color: rgba(59,130,246,0.4); color: var(--blue-light);" onclick="toggleAnonymousDemo(true)"><span class="shrink-0" aria-hidden="true">💬</span><span class="flex items-center">Test Finder Screen</span></button>
+         <button class="btn btn-primary" style="padding: 0.45rem 1.25rem;" onclick="printQrSticker()">🖨️ Print Sticker</button>
