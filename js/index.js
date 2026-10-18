@@ -327,8 +327,8 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
               </div>
 
               <div class="card-actions" style="margin-top: 1rem;">
-                ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-qr" onclick="openQrStickerModal(${item.id})">🏷️ QR Sticker</button>` : ''}
-                ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-outline" style="border-color: rgba(34,197,94,0.4); color: #86efac;" onclick="openAnonymousFinderModal('${escapeHtml(item.refCode)}')">📱 Test Finder Screen</button>` : ''}
+                ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-qr" onclick="openQrStickerModal(${item.id})">QR Sticker</button>` : ''}
+                ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-outline" style="border-color: rgba(34,197,94,0.4); color: #86efac;" onclick="openAnonymousFinderModal('${escapeHtml(item.refCode)}')">Test Finder Screen</button>` : ''}
                 ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Unregister</button>` : ''}
               </div>
             </div>
