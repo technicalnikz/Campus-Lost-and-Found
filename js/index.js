@@ -323,7 +323,7 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
               <div class="card-meta-line">
                 <span><strong>Primary Building:</strong> ${escapeHtml(item.location)}</span>
                 <span><strong>Registered:</strong> ${escapeHtml(item.date || 'Recently')}</span>
-                ${item.instructions ? `<span><strong>Finder Instructions:</strong> ${escapeHtml(item.instructions)}</span>` : ''}
+              ${cleanFinderInstructions(item.instructions) ? `<span><strong>Finder Instructions:</strong> ${escapeHtml(cleanFinderInstructions(item.instructions))}</span>` : ''}
               </div>
 
               <div class="card-actions" style="margin-top: 1rem;">
@@ -984,6 +984,12 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
       if (hours < 24) return `${hours}h ago`;
       if (days < 30)  return `${days}d ago`;
       return new Date(isoStr).toLocaleDateString();
+    }
+
+    function cleanFinderInstructions(value) {
+      return String(value || '')
+        .replace(/\s*If found, please (notify owner via QR or )?leave with CSPC SASO \/ Campus Security(?: Desk)?\.?/gi, '')
+        .trim();
     }
 
     function escapeHtml(str) {

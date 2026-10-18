@@ -218,7 +218,7 @@ let currentUser = null;
               <div class="card-meta-line">
                 <span><strong>Primary Building:</strong> ${escapeHtml(item.location)}</span>
                 <span><strong>Registered:</strong> ${formatTimestamp(item.createdAt || item.date)}</span>
-                ${item.instructions ? `<span><strong>Finder Instructions:</strong> ${escapeHtml(item.instructions)}</span>` : ''}
+                ${cleanFinderInstructions(item.instructions) ? `<span><strong>Finder Instructions:</strong> ${escapeHtml(cleanFinderInstructions(item.instructions))}</span>` : ''}
               </div>
 
               <div class="card-actions" style="margin-top: 1rem;">
@@ -1023,6 +1023,12 @@ let currentUser = null;
 
     function toggleClaim(id) {
       openClaimModal(id);
+    }
+
+    function cleanFinderInstructions(value) {
+      return String(value || '')
+        .replace(/\s*If found, please (notify owner via QR or )?leave with CSPC SASO \/ Campus Security(?: Desk)?\.?/gi, '')
+        .trim();
     }
 
     function escapeHtml(str) {
