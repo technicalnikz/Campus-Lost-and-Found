@@ -8,7 +8,15 @@ function installDashboardBackGuard() {
 
   const restoreDashboardEntry = () => window.history.pushState({ dashboardBackGuard: true }, '', window.location.href);
   restoreDashboardEntry();
+  restoreDashboardEntry();
   window.addEventListener('popstate', () => {
+    const logoutModal = document.getElementById('adminLogoutModal')
+      || document.getElementById('logoutConfirmModal');
+    if (logoutModal?.classList.contains('open')) {
+      restoreDashboardEntry();
+      return;
+    }
+
     if (!dashboardBackPrompted) {
       dashboardBackPrompted = true;
       window.alert('Press back again to exit/sign out');
@@ -18,8 +26,6 @@ function installDashboardBackGuard() {
 
     dashboardBackPrompted = false;
     restoreDashboardEntry();
-    const logoutModal = document.getElementById('adminLogoutModal')
-      || document.getElementById('logoutConfirmModal');
     if (!logoutModal) {
       console.error('The sign-out confirmation modal is unavailable.');
       return;
