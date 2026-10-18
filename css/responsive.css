@@ -2003,6 +2003,12 @@ button {
   box-shadow: 0 12px 32px rgba(0, 0, 0, .45) !important;
 }
 
+/* The finder simulation is not part of the QR sticker modal. */
+.qr-modal-card #anonymousDemoBox,
+.qr-modal-card #demoToggleBtn {
+  display: none !important;
+}
+
 .qr-modal-header {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) auto;
