@@ -2076,6 +2076,19 @@ button {
 }
 
 @media (max-width: 480px) {
+  .card-actions {
+    flex-wrap: nowrap !important;
+    gap: .3rem !important;
+  }
+
+  .card-actions .btn-sm {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: .3rem .35rem !important;
+    font-size: .64rem;
+    text-align: center;
+  }
+
   .qr-modal-card {
     width: calc(100vw - 1rem) !important;
   }
