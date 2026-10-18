@@ -2213,3 +2213,103 @@ button {
   white-space: nowrap;
   box-sizing: border-box;
 }
+
+[data-theme='light'] .hero-name {
+  background: none;
+  color: #020617;
+  -webkit-text-fill-color: #020617;
+}
+
+[data-theme='light'] .hero-greeting {
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+[data-theme='light'] .nav-logo {
+  color: #1e3a8a;
+}
+
+[data-theme='light'] .btn-primary {
+  background: #1e3a8a;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, .16);
+}
+
+[data-theme='light'] .btn-primary:hover {
+  background: #172554;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, .2);
+}
+
+[data-theme='light'] #items .filter-chips .chip {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+[data-theme='light'] #items .filter-chips .chip:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #1e3a8a;
+}
+
+[data-theme='light'] #items .filter-chips .chip-my-vault:not(.active) {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+[data-theme='light'] #items .filter-chips .chip-my-vault:not(.active):hover {
+  background: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e3a8a !important;
+}
+
+[data-theme='light'] #items .filter-chips .chip.active,
+[data-theme='light'] #items .filter-chips .chip-my-vault.active {
+  background: #1e3a8a !important;
+  border-color: #1e3a8a !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+[data-theme='light'] #items .filter-chips .chip:focus-visible {
+  outline: 2px solid #1e3a8a;
+  outline-offset: 2px;
+}
+
+[data-theme='light'] #items .search-box input,
+[data-theme='light'] #items .location-filter-select,
+[data-theme='light'] #report .input-field input,
+[data-theme='light'] #report .input-field select,
+[data-theme='light'] #report .input-field textarea,
+[data-theme='light'] #report .category-picker {
+  background-color: #ffffff;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-theme='light'] #items .search-box input:focus,
+[data-theme='light'] #items .location-filter-select:focus,
+[data-theme='light'] #report .input-field input:focus,
+[data-theme='light'] #report .input-field select:focus,
+[data-theme='light'] #report .input-field textarea:focus,
+[data-theme='light'] #report .category-picker:focus-visible {
+  border-color: #1e3a8a !important;
+  box-shadow: 0 0 0 2px rgba(30, 58, 138, .2) !important;
+  outline: none;
+}
+
+[data-theme='light'] #items .location-filter-select {
+  background-image: linear-gradient(45deg, transparent 50%, #1e3a8a 50%), linear-gradient(135deg, #1e3a8a 50%, transparent 50%);
+}
+
+[data-theme='light'] #items .item-card-category-ref .project-type {
+  padding: .12rem .35rem;
+  border: 1px solid #bfdbfe;
+  border-radius: .375rem;
+  background: #eff6ff;
+  color: #1e3a8a !important;
+  font-weight: 700;
+}
