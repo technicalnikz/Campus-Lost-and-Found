@@ -468,6 +468,15 @@ document.addEventListener('DOMContentLoaded', () => {
   initButtonSelects();
 });
 document.addEventListener('click', event => {
+  const itemsLink = event.target.closest('.navbar .nav-links a[href="#items"]');
+  const itemsSection = document.getElementById('items');
+  if (itemsLink && itemsSection) {
+    event.preventDefault();
+    dashboardBackPrompted = false;
+    window.history.replaceState(window.history.state, '', itemsLink.hash);
+    itemsSection.scrollIntoView();
+  }
+
   if (event.target.closest('.theme-toggle')) {
     if (event.target.closest('.theme-toggle').dataset.themeBound === 'true') return;
     toggleTheme();
