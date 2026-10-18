@@ -1883,12 +1883,58 @@ button {
     overflow: hidden;
   }
 
-  .admin-table-card,
+  .admin-table-card {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
   .admin-table-wrap,
   .admin-items-table-wrap {
     max-width: 100%;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 767px) {
+  .admin-table-scroll {
+    width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    border-radius: .75rem;
+  }
+
+  #adminItemsTable,
+  #adminUsersTable {
+    width: 100%;
+    min-width: 750px;
+  }
+
+  #adminItemsTable {
+    table-layout: auto;
+  }
+
+  #adminItemsTable th,
+  #adminItemsTable td,
+  #adminUsersTable th,
+  #adminUsersTable td {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  #adminItemsTable th,
+  #adminItemsTable td {
+    overflow: visible;
+  }
+
+  #adminItemsTable .item-title-cell,
+  #adminItemsTable .location-cell,
+  #adminItemsTable .reporter-cell,
+  #adminItemsTable .status-cell .badge,
+  #adminItemsTable .actions-cell .action-btn {
+    white-space: nowrap;
+    overflow-wrap: normal;
   }
 }
 

@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css" />
-  <link rel="stylesheet" href="/css/admin.css" />
-  <link rel="stylesheet" href="/css/responsive.css?v=20261018-16" />
+  <link rel="stylesheet" href="/css/admin.css?v=20261018-2" />
+  <link rel="stylesheet" href="/css/responsive.css?v=20261018-17" />
   <script src="/js/main.js?v=20261017-5"></script>
 </head>
 <body>
@@ -106,7 +106,7 @@
           <button class="btn btn-outline" id="exportSelectedBtn" disabled>Export Selected</button>
         </div>
         <div class="admin-table-card">
-          <div class="admin-table-wrap admin-items-table-wrap">
+          <div class="admin-table-wrap admin-items-table-wrap admin-table-scroll">
           <table id="adminItemsTable">
             <colgroup>
               <col style="width:5%" />
@@ -180,7 +180,7 @@
             <div class="user-form-actions"><button class="btn btn-outline" id="cancelCreateUserBtn" type="button">Cancel</button><button class="btn btn-primary" type="submit">Create User</button></div>
           </form>
         </div>
-        <div class="admin-table-card"><div class="admin-table-wrap overflow-x-auto"><table id="adminUsersTable"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Created</th><th>Actions</th></tr></thead><tbody id="adminUsersBody"></tbody></table></div></div>
+        <div class="admin-table-card"><div class="admin-table-wrap admin-table-scroll"><table id="adminUsersTable"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Created</th><th>Actions</th></tr></thead><tbody id="adminUsersBody"></tbody></table></div></div>
         <div id="adminUsersEmptyState" class="empty-state" hidden><h3>No users found</h3></div>
       </div>
 
