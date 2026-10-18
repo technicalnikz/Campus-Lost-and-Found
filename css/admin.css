@@ -41,7 +41,7 @@
     .user-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
     .user-form-grid label { display: flex; flex-direction: column; gap: .35rem; color: var(--text-muted); font-size: .75rem; font-weight: 700; }
     .user-form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: .6rem; }
-    #adminUsersTable { width: 100%; min-width: 760px; }
+    #adminUsersTable { width: 100%; min-width: 0; }
     #adminUsersTable th, #adminUsersTable td { padding: .75rem .8rem; text-align: left; }
     .tab-count { display:inline-grid; min-width:1.25rem; height:1.25rem; place-items:center; margin-left:.25rem; padding:0 .25rem; border-radius:99px; background:rgba(239,68,68,.18); color:#f87171; font-size:.68rem; }
 
@@ -154,8 +154,8 @@
 
     /* ── Table ── */
     .admin-table-card { width: 100%; overflow: hidden; border: 1px solid var(--border); border-radius: 14px; }
-    .admin-table-wrap { overflow-y: hidden; }
-    .admin-items-table-wrap { width: 100%; overflow: hidden; }
+    .admin-table-wrap { overflow: visible; }
+    .admin-items-table-wrap { width: 100%; overflow: visible; }
     table {
       width: 100%;
       border-collapse: collapse;
