@@ -2078,14 +2078,14 @@ button {
 @media (max-width: 480px) {
   .card-actions {
     flex-wrap: nowrap !important;
-    gap: .3rem !important;
+    gap: .2rem !important;
     justify-content: center;
   }
 
   .card-actions .btn-sm {
     flex: 1 1 0;
     min-width: 0;
-    padding: .24rem .25rem !important;
+    padding: .2rem .2rem !important;
     font-size: .58rem;
     line-height: 1.05;
     text-align: center;
@@ -2126,7 +2126,7 @@ button {
 
 @media (min-width: 360px) and (max-width: 480px) {
   .card-actions .btn-qr {
-    flex: 0 0 78px;
+    flex: 0 0 68px;
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
@@ -2135,8 +2135,8 @@ button {
   }
 
   .card-actions .btn-qr + .btn-outline {
-    flex: 0 0 88px;
-    max-width: 88px;
+    flex: 0 0 78px;
+    max-width: 78px;
     white-space: normal;
     line-height: 1.05;
   }
