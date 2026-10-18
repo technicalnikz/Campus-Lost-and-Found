@@ -880,8 +880,8 @@ h2 {
   }
 }
 
-/* Keep the potential-match badge inside mobile photo boxes. */
-@media (max-width: 768px) {
+/* Keep the potential-match badge inside narrow mobile photo boxes. */
+@media (min-width: 360px) and (max-width: 440px) {
   .btn-match-qr.potential-match-badge {
     left: 0.5rem;
     right: 0.5rem;
