@@ -2248,6 +2248,10 @@ button {
     margin-bottom: .6rem !important;
   }
 
+  #registerBelongingModal #regInstructions {
+    height: 72px !important;
+  }
+
   #registerBelongingModal form button {
     padding: .35rem .65rem !important;
     font-size: .68rem !important;
