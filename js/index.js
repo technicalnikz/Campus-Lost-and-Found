@@ -306,11 +306,11 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
           return `
             <div class="project-card" id="item-card-${item.id}" style="border-color: rgba(59, 130, 246, 0.4); background: rgba(30, 41, 59, 0.35);">
               <div class="project-card-header">
-                <div style="flex: 1;">
+                <div class="item-card-header-content">
                   <div class="item-card-meta-row">
                     <div class="item-card-category-ref">
-                      <span class="project-type" style="color: #93c5fd;">${escapeHtml(item.category)}</span>
-                      <span class="ref-code" style="margin-left: 0.4rem; color: #60a5fa;">${escapeHtml(item.refCode || '')}</span>
+                      <span class="project-type" title="${escapeHtml(item.category)}" style="color: #93c5fd;">${escapeHtml(item.category)}</span>
+                      <span class="ref-code" title="${escapeHtml(item.refCode || '')}" style="color: #60a5fa;">${escapeHtml(item.refCode || '')}</span>
                     </div>
                     <span class="item-badge badge-registered">🔒 Registered Belonging</span>
                   </div>
@@ -368,11 +368,11 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
         return `
           <div class="project-card" id="item-card-${item.id}">
             <div class="project-card-header">
-              <div style="flex: 1;">
+              <div class="item-card-header-content">
                 <div class="item-card-meta-row">
                   <div class="item-card-category-ref">
-                    <span class="project-type">${escapeHtml(item.category)}</span>
-                    <span class="ref-code" style="margin-left: 0.4rem;">${escapeHtml(item.refCode || '')}</span>
+                    <span class="project-type" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
+                    <span class="ref-code" title="${escapeHtml(item.refCode || '')}">${escapeHtml(item.refCode || '')}</span>
                   </div>
                   ${badgeHtml}
                 </div>

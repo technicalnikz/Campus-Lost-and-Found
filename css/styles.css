@@ -11,19 +11,20 @@
   --border:         rgba(59, 130, 246, 0.18);
   --card-bg:        rgba(255, 255, 255, 0.04);
   --label-color:    #93c5fd;
+  --navbar-height:  64px;
 }
 [data-theme='light'] {
   --blue-light:     #1d4ed8;
-  --blue-main:      #2563eb;
-  --blue-dark:      #1e40af;
+  --blue-main:      #1e3a8a;
+  --blue-dark:      #172554;
   --blue-text:      #1e3a8a;
   --bg-dark:        #f8fafc;
   --bg-dark2:       #e2e8f0;
   --text-main:      #0f172a;
   --text-muted:     #475569;
-  --border:         rgba(37, 99, 235, 0.18);
+  --border:         rgba(30, 58, 138, 0.18);
   --card-bg:        #ffffff;
-  --label-color:    #1e3a8a;
+  --label-color:    #334155;
 }
 
 * {
@@ -35,11 +36,13 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: var(--navbar-height);
 }
 
 body {
   background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark2) 100%);
   min-height: 100vh;
+  padding-top: var(--navbar-height);
   padding-bottom: 104px;
   color: var(--text-main);
   overflow-x: hidden;
@@ -69,8 +72,10 @@ body::after {
 
 /* ── NAVBAR ── */
 .navbar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  right: 0;
+  left: 0;
   z-index: 1000;
   background: rgba(24, 24, 27, 0.90);
   backdrop-filter: blur(14px);
