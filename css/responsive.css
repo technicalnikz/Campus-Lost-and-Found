@@ -2079,6 +2079,7 @@ button {
   .card-actions {
     flex-wrap: nowrap !important;
     gap: .3rem !important;
+    justify-content: center;
   }
 
   .card-actions .btn-sm {
@@ -2127,6 +2128,10 @@ button {
   .card-actions .btn-qr {
     flex: 0 0 78px;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
   .card-actions .btn-qr + .btn-outline {
