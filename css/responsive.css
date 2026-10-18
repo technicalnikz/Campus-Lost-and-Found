@@ -2213,3 +2213,27 @@ button {
   white-space: nowrap;
   box-sizing: border-box;
 }
+
+#report .report-type-selection {
+  margin-bottom: .75rem !important;
+}
+
+#report .report-type-selection > label,
+#report .input-field > label {
+  margin-bottom: .1rem;
+}
+
+#report .report-type-selection .type-switcher {
+  margin-top: 0;
+  gap: .5rem;
+}
+
+@media (max-width: 768px) {
+  #report .report-type-selection {
+    margin-bottom: .25rem !important;
+  }
+
+  #report .input-field > label {
+    margin-bottom: 0;
+  }
+}
