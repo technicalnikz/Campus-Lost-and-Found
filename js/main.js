@@ -18,16 +18,13 @@ function installDashboardBackGuard() {
 
     dashboardBackPrompted = false;
     restoreDashboardEntry();
-    fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
-      .then(response => {
-        if (!response.ok) throw new Error('Logout request failed.');
-        ['adminToken', 'currentUser', 'userRole'].forEach(key => {
-          localStorage.removeItem(key);
-          sessionStorage.removeItem(key);
-        });
-        window.location.replace('/login');
-      })
-      .catch(() => { dashboardBackPrompted = false; });
+    const logoutModal = document.getElementById('adminLogoutModal')
+      || document.getElementById('logoutConfirmModal');
+    if (!logoutModal) {
+      console.error('The sign-out confirmation modal is unavailable.');
+      return;
+    }
+    logoutModal.classList.add('open');
   });
 }
 
