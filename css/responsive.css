@@ -2039,10 +2039,10 @@ button {
 
   .filter-chips {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    grid-template-rows: none !important;
-    grid-auto-flow: row !important;
-    gap: .5rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(2rem, auto) !important;
+    grid-auto-flow: column !important;
+    gap: .25rem;
     width: 100%;
   }
 
@@ -2050,18 +2050,25 @@ button {
     display: block;
     width: 100%;
     min-width: 0;
-    padding: .5rem .5rem;
+    min-height: 2rem;
+    padding: .35rem .1rem;
     border-radius: .5rem;
-    font-size: .75rem;
+    font-size: clamp(.4375rem, 2.3vw, .625rem);
     font-weight: 600;
     line-height: 1.25;
     text-align: center;
-    white-space: normal;
+    white-space: nowrap;
     box-sizing: border-box;
   }
 
   .filter-chips .chip-my-vault {
     grid-column: auto !important;
+    letter-spacing: -.04em;
+  }
+
+  .filter-chips .my-belongings-icon,
+  .filter-chips .my-belongings-count {
+    display: none;
   }
 
   .hero-stats .stat-box {
@@ -2113,6 +2120,12 @@ button {
 
   #adminPanel .admin-stats .action-needed-card {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 340px) {
+  .filter-chips .chip-my-vault {
+    font-size: .4rem !important;
   }
 }
 
