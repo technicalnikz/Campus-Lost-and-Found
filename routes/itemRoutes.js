@@ -13,6 +13,7 @@ const {
   sendClaimStatusEmail,
   sendClaimRequestEmail,
   sendFinderNotificationEmail,
+  sendMatchFinderNotificationEmail,
   sendBroadcastEmail
 } = require('../services/email');
 const postgresStore = require('../services/postgresStore');
@@ -574,7 +575,7 @@ router.get('/qr-lookup/:refCode', (req, res) => {
       category: item.category,
       type: item.type,
       location: item.location,
-      instructions: item.instructions || 'If found, please send a message or return to CSPC SASO / Campus Security Desk.',
+      instructions: item.instructions || '',
       isRegisteredBelonging: item.type === 'registered'
     }
   });
@@ -643,6 +644,77 @@ router.post('/anonymous-notify', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to deliver notification.' });
+  }
+});
+
+// POST /api/items/match-reference-notify - Anonymous alert for a scanned match QR.
+router.post('/match-reference-notify', async (req, res) => {
+  try {
+    const { token, message, locationFound, finderContact } = req.body;
+    if (!token || !message) {
+      return res.status(400).json({ success: false, message: 'Match reference and message are required.' });
+    }
+    if (String(message).length > 1000 || String(locationFound || '').length > 150 || String(finderContact || '').length > 150) {
+      return res.status(400).json({ success: false, message: 'Finder message fields exceed the allowed length.' });
+    }
+
+    const reference = parseMatchReferenceToken(token);
+    if (!reference || reference.expiresAt < Date.now()) {
+      return res.status(410).json({ success: false, message: 'This match reference has expired or is invalid.' });
+    }
+
+    const items = getItems();
+    const lost = items.find(item => String(item.id) === String(reference.lostId));
+    const found = items.find(item => String(item.id) === String(reference.foundId));
+    if (!lost || !found || lost.type !== 'lost' || found.type !== 'found') {
+      return res.status(404).json({ success: false, message: 'The matched reports are no longer available.' });
+    }
+    if (!findMatches(lost, items).some(match => String(match.id) === String(found.id))) {
+      return res.status(403).json({ success: false, message: 'This item pair is no longer an available match.' });
+    }
+
+    const owner = getStudentReporter(lost, readJsonArray(USERS_FILE));
+    if (!owner) {
+      return res.status(404).json({ success: false, message: 'The lost-item owner account could not be found.' });
+    }
+
+    const notification = {
+      id: `notif-${crypto.randomUUID()}`,
+      notificationType: 'finder',
+      itemTitle: lost.title,
+      refCode: lost.refCode,
+      matchItemId: found.id,
+      matchItemTitle: found.title,
+      matchRefCode: found.refCode,
+      message: sanitizeString(message),
+      locationFound: sanitizeString(locationFound || 'Campus area'),
+      finderContact: sanitizeString(finderContact || 'Anonymous Student / Finder'),
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+
+    lost.notifications = [notification, ...(Array.isArray(lost.notifications) ? lost.notifications : [])].slice(0, 100);
+    saveItems(items);
+
+    let emailSent = false;
+    try {
+      await sendMatchFinderNotificationEmail(owner, lost, notification);
+      emailSent = true;
+    } catch (error) {
+      console.error(`Match finder alert email could not be sent to ${owner.email}:`, error.message);
+    }
+
+    return res.json({
+      success: true,
+      emailSent,
+      message: emailSent
+        ? 'Alert saved to the owner\'s inbox and sent by email.'
+        : 'Alert saved to the owner\'s inbox, but email delivery is unavailable.',
+      notification
+    });
+  } catch (error) {
+    console.error('Match finder alert failed:', error.message);
+    return res.status(500).json({ success: false, message: 'Failed to deliver the match alert.' });
   }
 });
 
@@ -1252,7 +1324,7 @@ router.post('/register-belonging', requireAuth, (req, res) => {
       type: 'registered', // Preventive personal belonging
       location: sanitizeString(location || 'Campus-wide'),
       locationDetails: sanitizeString(identifiers || ''),
-      instructions: sanitizeString(instructions || 'If found, please notify owner via QR or leave with CSPC SASO / Campus Security.'),
+      instructions: sanitizeString(instructions || ''),
       contact: `${user.fullName} (${user.studentId || user.email})`,
       desc: identifiers ? `Valuable belonging: ${sanitizeString(identifiers)}` : 'Valuable personal belonging registered in student vault.',
       verification: identifiers || 'Registered by verified CSPC account',

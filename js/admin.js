@@ -9,6 +9,7 @@ let deleteTargetId = null;
     let actionConfirmResolver = null;
     let cachedServerItems = [];
     const selectedItemIds = new Set();
+    let visibleAdminItems = [];
     let adminSort = { key: 'date', direction: 'desc' };
     const adminItemsPerPage = 10;
     let adminCurrentPage = 1;
@@ -67,7 +68,6 @@ let deleteTargetId = null;
           document.getElementById('tabItems').style.display = activeTab === 'items' ? 'block' : 'none';
           document.getElementById('tabClaims').style.display = activeTab === 'claims' ? 'block' : 'none';
           document.getElementById('tabUsers').style.display = activeTab === 'users' ? 'block' : 'none';
-          if (activeTab === 'claims') renderPendingClaims();
           if (activeTab === 'users') renderAdminUsers();
         });
       });
@@ -85,7 +85,6 @@ let deleteTargetId = null;
       document.getElementById('bulkArchiveBtn').addEventListener('click', () => runBulkAction('archive'));
       document.getElementById('bulkDeleteBtn').addEventListener('click', () => runBulkAction('delete'));
       document.getElementById('exportSelectedBtn').addEventListener('click', () => exportCSV([...selectedItemIds]));
-      document.getElementById('refreshClaimsBtn').addEventListener('click', refreshAdminClaims);
       document.getElementById('sendBroadcastBtn').addEventListener('click', sendBroadcast);
       document.getElementById('cancelActionConfirm').addEventListener('click', closeActionConfirm);
       document.getElementById('actionConfirmModal').addEventListener('click', event => { if (event.target.id === 'actionConfirmModal') closeActionConfirm(); });
@@ -238,6 +237,10 @@ let deleteTargetId = null;
         if (nextSignature !== adminItemsSignature) {
           adminItemsSignature = nextSignature;
           adminItems = nextItems;
+          const existingItemIds = new Set(adminItems.map(item => String(item.id)));
+          selectedItemIds.forEach(id => {
+            if (!existingItemIds.has(id)) selectedItemIds.delete(id);
+          });
           renderAdminPanel(adminItems);
         }
       } finally {
@@ -254,10 +257,8 @@ let deleteTargetId = null;
         if (nextSignature === adminClaimsSignature) return;
         adminClaimsSignature = nextSignature;
         claimRequests = data.claims;
-        document.getElementById('pendingClaimsTabCount').textContent = claimRequests.filter(claim => claim.status === 'pending').length;
         renderAdminPanel(adminItems);
         renderItemsTable();
-        renderPendingClaims();
       } catch (error) {
         // Keep the last claim snapshot when the API is temporarily unavailable.
       }
@@ -273,38 +274,18 @@ let deleteTargetId = null;
       const staleActive = items.filter(i => i.status !== 'claimed' && new Date(i.createdAt || i.date).getTime() < threshold).length;
       const pending = pendingClaims.length + staleActive;
       document.getElementById('adminStats').innerHTML = `
-        <div class="stat-card"><div class="stat-number">${items.length}</div><div class="stat-label">Total Items</div></div>
-        <div class="stat-card"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
-        <div class="stat-card"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
-        <div class="stat-card"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
-        <div class="stat-card"><div class="stat-number">${staleActive}</div><div class="stat-label">Unresolved</div></div>
-        <div class="stat-card"><div class="stat-number">${pendingClaims.length}</div><div class="stat-label">Pending Claims</div></div>
-        <div class="stat-card action-needed-card"><div class="stat-number">${pending}</div><div class="stat-label">Action Needed</div></div>
+        <div class="stat-card stat-card--total"><div class="stat-number">${items.length}</div><div class="stat-label">Total Items</div></div>
+        <div class="stat-card stat-card--lost"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
+        <div class="stat-card stat-card--found"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
+        <div class="stat-card stat-card--claimed"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
+        <div class="stat-card stat-card--unresolved"><div class="stat-number">${staleActive}</div><div class="stat-label">Unresolved</div></div>
+        <div class="stat-card stat-card--pending"><div class="stat-number">${pendingClaims.length}</div><div class="stat-label">Pending Claims</div></div>
+        <div class="stat-card stat-card--action-needed action-needed-card"><div class="stat-number">${pending}</div><div class="stat-label">Action Needed</div></div>
       `;
 
       renderAdminInsights(items);
 
       renderItemsTable();
-      renderPendingClaims();
-    }
-
-    function renderPendingClaims() {
-      const container = document.getElementById('pendingClaimsList');
-      if (!container) return;
-      const pending = claimRequests.filter(claim => claim.status === 'pending');
-      if (!pending.length) {
-        container.innerHTML = '<div class="empty-state"><h3>No pending claims</h3><p>New student claim requests will appear here.</p></div>';
-        return;
-      }
-      container.innerHTML = pending.map(claim => {
-        const item = adminItems.find(entry => String(entry.id) === String(claim.itemId));
-        return `<article class="pending-claim-card">
-          <div><span class="claim-status-pending">PENDING REVIEW</span><h3>${escHtml(item?.title || claim.itemTitle || 'Unknown item')}</h3><p>${escHtml(item?.refCode || claim.itemRefCode || '')}</p></div>
-          <div class="pending-claim-details"><strong>${escHtml(claim.claimantName || 'Unknown student')}</strong><span>Student ID: ${escHtml(claim.claimantStudentId || 'Not provided')}</span><span>${escHtml(claim.claimantDepartment || 'Department not provided')} · ${escHtml(claim.claimantCourseYear || 'Course not provided')}</span><span>Submitted ${formatDate(claim.createdAt)}</span></div>
-          <div class="pending-claim-proof"><strong>Ownership proof</strong><p>${escHtml(claim.proof || 'No proof submitted.')}</p></div>
-          <button class="action-btn action-btn-claim" onclick="openClaimReview('${escHtml(claim.id)}')">Review Claim</button>
-        </article>`;
-      }).join('');
     }
 
     function renderAdminInsights(items) {
@@ -370,11 +351,13 @@ let deleteTargetId = null;
       adminCurrentPage = totalPages ? Math.min(adminCurrentPage, totalPages) : 1;
       const startIndex = (adminCurrentPage - 1) * adminItemsPerPage;
       const pageItems = items.slice(startIndex, startIndex + adminItemsPerPage);
+      visibleAdminItems = pageItems;
       renderItemsPagination(totalItems, totalPages, startIndex);
 
       if (totalItems === 0) {
         tbody.innerHTML = '';
         empty.style.display = 'block';
+        updateBulkToolbar();
         return;
       }
       empty.style.display = 'none';
@@ -399,15 +382,15 @@ let deleteTargetId = null;
         const rowNumber = startIndex + idx + 1;
         return `
         <tr>
-          <td title="${rowNumber}"><input class="item-select" type="checkbox" data-item-id="${escHtml(item.id)}" ${selectedItemIds.has(String(item.id)) ? 'checked' : ''} aria-label="Select ${escHtml(item.title)}" /> ${rowNumber}</td>
-          <td class="td-title" title="${escHtml(item.title)}">
+          <td title="${rowNumber}"><span class="table-select-cell"><input class="admin-checkbox item-select" type="checkbox" data-item-id="${escHtml(item.id)}" ${selectedItemIds.has(String(item.id)) ? 'checked' : ''} aria-label="Select ${escHtml(item.title)}" /><span>${rowNumber}</span></span></td>
+          <td class="td-title item-title-cell" title="${escHtml(item.title)}">
             <a href="item-detail.html?id=${encodeURIComponent(item.id)}" target="_blank" title="${escHtml(item.title)}">${escHtml(item.title)}</a>
           </td>
           <td title="${escHtml(item.type)}"><span class="badge ${item.type === 'lost' ? 'badge-lost' : 'badge-found'}">${escHtml(item.type)}</span></td>
           <td title="${escHtml(item.category)}">${escHtml(item.category)}</td>
-          <td title="${escHtml(item.location)}"><span class="admin-cell-truncate">${escHtml(item.location)}</span></td>
-          <td title="${escHtml(reporterValues.join(' · ') || '—')}">${reporterValues.length
-            ? reporterValues.map((value, index) => `<span class="admin-cell-truncate${index ? ' reporter-contact' : ''}">${escHtml(value)}</span>`).join('')
+          <td class="location-cell" title="${escHtml(item.location)}">${escHtml(item.location)}</td>
+          <td class="reporter-cell" title="${escHtml(reporterValues.join(' · ') || '—')}">${reporterValues.length
+            ? reporterValues.map((value, index) => `<span class="admin-cell-wrap${index ? ' reporter-contact' : ''}">${escHtml(value)}</span>`).join('')
             : '—'}</td>
           <td title="${escHtml(date)}">${date}</td>
           <td class="status-cell" title="${pendingClaim ? 'Pending Verification' : latestClaim?.status === 'rejected' && !item.claimed ? 'Rejected · Available' : escHtml(item.status)}">${itemStatus}</td>
@@ -676,8 +659,9 @@ let deleteTargetId = null;
     }
 
     function toggleSelectAllVisible(event) {
-      getFilteredAdminItems().slice((adminCurrentPage - 1) * adminItemsPerPage, adminCurrentPage * adminItemsPerPage).forEach(item => {
-        if (event.target.checked) selectedItemIds.add(String(item.id)); else selectedItemIds.delete(String(item.id));
+      visibleAdminItems.forEach(item => {
+        if (event.currentTarget.checked) selectedItemIds.add(String(item.id));
+        else selectedItemIds.delete(String(item.id));
       });
       renderItemsTable();
     }
@@ -686,6 +670,10 @@ let deleteTargetId = null;
       const count = selectedItemIds.size;
       document.getElementById('selectedItemsCount').textContent = `${count} selected`;
       ['bulkClaimBtn', 'bulkArchiveBtn', 'bulkDeleteBtn', 'exportSelectedBtn'].forEach(id => { document.getElementById(id).disabled = count === 0; });
+      const selectAll = document.getElementById('selectAllItems');
+      const selectedVisibleCount = visibleAdminItems.filter(item => selectedItemIds.has(String(item.id))).length;
+      selectAll.checked = visibleAdminItems.length > 0 && selectedVisibleCount === visibleAdminItems.length;
+      selectAll.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleAdminItems.length;
     }
 
     function openActionConfirm(title, message) {

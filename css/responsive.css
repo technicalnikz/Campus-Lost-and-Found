@@ -989,6 +989,60 @@ input[type='submit'] {
 }
 
 @media (min-width: 320px) and (max-width: 440px) {
+  #anonymousFinderModal .modal-card {
+    width: calc(100% - 1rem) !important;
+    max-height: calc(100vh - 1rem) !important;
+    padding: 1rem !important;
+    border-radius: 14px !important;
+    box-sizing: border-box;
+  }
+
+  #anonymousFinderModal .modal-card > div:first-child {
+    padding-bottom: 0.55rem !important;
+    margin-bottom: 0.7rem !important;
+  }
+
+  #anonymousFinderModal .modal-card > div:first-child img {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  #anonymousFinderModal .modal-item-preview {
+    padding: 0.55rem !important;
+    margin-bottom: 0.7rem !important;
+  }
+
+  #anonymousFinderModal .modal-green-notice {
+    padding: 0.55rem !important;
+    margin-bottom: 0.75rem !important;
+    font-size: 0.7rem !important;
+    line-height: 1.35 !important;
+  }
+
+  #anonymousFinderModal .input-field {
+    margin-bottom: 0.6rem !important;
+  }
+
+  #anonymousFinderModal .input-field input,
+  #anonymousFinderModal .input-field textarea {
+    padding: 0.45rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  #anonymousFinderModal .input-field textarea {
+    min-height: 4.2rem;
+    height: 4.2rem;
+  }
+
+  #anonymousFinderModal form > div:last-child {
+    gap: 0.5rem !important;
+  }
+
+  #anonymousFinderModal form > div:last-child .btn {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.75rem !important;
+  }
+
   .category-picker-modal {
     width: 94%;
     padding: 1rem;
@@ -1748,4 +1802,224 @@ input[type='submit'] {
     border-radius: 50% !important;
     box-sizing: border-box !important;
   }
+}
+
+/* Final viewport safeguards. These rules keep nested flex/grid content from
+   establishing a wider intrinsic size than the viewport. */
+html {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body,
+main,
+section,
+header,
+footer,
+.navbar-container,
+.site-footer .footer-container,
+.simple-card,
+.auth-card,
+.detail-card,
+.page-section,
+.page-header {
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+.form-row > *,
+.type-switcher > *,
+.filter-row > *,
+.filter-chips > *,
+.hotspots-row > *,
+.hero-section > *,
+.site-footer .footer-left,
+.site-footer .footer-right {
+  min-width: 0;
+}
+
+.input-field input,
+.input-field select,
+.input-field textarea,
+.form-control,
+.search-box input,
+.form-group input,
+.form-group select {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .nav-actions .theme-toggle,
+  .nav-actions .notif-bell-btn,
+  .nav-actions .menu-toggle {
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    flex: 0 0 32px !important;
+  }
+
+  .simple-card,
+  .auth-card,
+  .detail-card,
+  .page-section {
+    overflow: hidden;
+  }
+
+  .admin-table-card,
+  .admin-table-wrap,
+  .admin-items-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar-container,
+  .hero-section,
+  .tools-section,
+  .projects-section,
+  .page-section,
+  .page-header {
+    padding-left: .65rem !important;
+    padding-right: .65rem !important;
+  }
+
+  .hero-name {
+    font-size: clamp(2rem, 14vw, 2.75rem) !important;
+  }
+
+  .filter-chips {
+    grid-template-columns: 1fr !important;
+  }
+
+  .filter-chips .chip,
+  .chip-my-vault {
+    grid-column: auto !important;
+    width: 100%;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .navbar-container {
+    min-height: 52px;
+  }
+
+  .hero-section {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .hero-seal {
+    width: 96px;
+    height: 96px;
+  }
+
+  .hero-avatar .hero-seal img {
+    width: 72px;
+    height: 72px;
+  }
+
+  .modal,
+  .slip-overlay > div,
+  [role='dialog'] {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+  }
+}
+
+/* Standard form-like presentation for the generated QR result. */
+.qr-modal-card {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  width: min(86vw, 31rem) !important;
+  max-height: min(90dvh, 48rem) !important;
+  padding: clamp(.65rem, 2vw, 1rem) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .45) !important;
+}
+
+.qr-modal-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start !important;
+}
+
+.qr-modal-header h2 {
+  font-size: clamp(1.05rem, 3vw, 1.3rem) !important;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.qr-modal-header p {
+  max-width: 42rem;
+  line-height: 1.45;
+}
+
+#qrPrintArea {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  padding: clamp(.55rem, 2vw, .85rem) !important;
+  margin-bottom: .8rem !important;
+}
+
+#qrPrintArea img#qrCodeImage {
+  width: min(108px, 34vw) !important;
+  height: auto !important;
+  aspect-ratio: 1;
+}
+
+.qr-feature-details > div {
+  border-radius: 8px !important;
+  padding: .58rem !important;
+  line-height: 1.45;
+}
+
+.qr-actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch !important;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.qr-actions .btn {
+  min-width: 0;
+  min-height: 35px;
+  padding: .35rem .25rem !important;
+  font-size: .7rem;
+  white-space: normal;
+}
+
+@media (max-width: 480px) {
+  .qr-modal-card {
+    width: calc(100vw - 2rem) !important;
+  }
+
+  .qr-modal-header {
+    gap: .5rem;
+  }
+
+  .qr-feature-details {
+    font-size: .7rem !important;
+  }
+
+  .qr-actions { gap: .35rem; }
+  .qr-actions .btn { font-size: .62rem; }
 }

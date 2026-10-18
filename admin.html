@@ -67,7 +67,7 @@
       <!-- Tabs -->
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="items">All Items</button>
-        <button class="admin-tab" data-tab="claims">Pending Claims <span class="tab-count" id="pendingClaimsTabCount">0</span></button>
+        <button class="admin-tab" data-tab="claims">Broadcast Message</button>
         <button class="admin-tab" data-tab="users">Users</button>
       </div>
 
@@ -98,7 +98,7 @@
           <button class="btn btn-primary" id="exportBtn" style="font-size:.8rem;padding:.55rem 1rem;">Export CSV</button>
         </div>
         <div class="bulk-toolbar" id="bulkToolbar" aria-live="polite">
-          <label><input type="checkbox" id="selectAllItems" /> Select all visible</label>
+          <label><input class="admin-checkbox" type="checkbox" id="selectAllItems" /> Select all visible</label>
           <span id="selectedItemsCount">0 selected</span>
           <button class="action-btn action-btn-claim" id="bulkClaimBtn" disabled>Mark Claimed</button>
           <button class="action-btn action-btn-outline" id="bulkArchiveBtn" disabled>Archive Selected</button>
@@ -106,22 +106,22 @@
           <button class="btn btn-outline" id="exportSelectedBtn" disabled>Export Selected</button>
         </div>
         <div class="admin-table-card">
-          <div class="admin-table-wrap overflow-x-auto">
+          <div class="admin-table-wrap admin-items-table-wrap">
           <table id="adminItemsTable">
             <colgroup>
               <col style="width:5%" />
-              <col style="width:13%" />
-              <col style="width:8%" />
-              <col style="width:10%" />
-              <col style="width:15%" />
+              <col style="width:11%" />
+              <col style="width:7%" />
               <col style="width:12%" />
+              <col style="width:21%" />
+              <col style="width:18%" />
+              <col style="width:9%" />
               <col style="width:8%" />
-              <col style="width:14%" />
-              <col style="width:15%" />
+              <col style="width:9%" />
             </colgroup>
             <thead>
               <tr>
-                <th title="Row number"># / ID</th>
+                <th title="Row number"><span class="table-select-cell"># / ID</span></th>
                 <th>Item</th>
                 <th>Type</th>
                 <th><button class="sort-button" data-sort="category">Category</button></th>
@@ -147,11 +147,6 @@
 
       <!-- PENDING CLAIMS TAB -->
       <div id="tabClaims" style="display:none;">
-        <div class="claims-tab-intro">
-          <div><h2>Pending Claims</h2><p>Review ownership proof before approving a physical handover.</p></div>
-          <button class="btn btn-outline" id="refreshClaimsBtn">Refresh Claims</button>
-        </div>
-        <div id="pendingClaimsList" class="pending-claims-list"></div>
         <div class="broadcast-card">
           <h3>Broadcast Message</h3>
           <p>Send an announcement to registered students by email.</p>
