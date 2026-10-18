@@ -880,6 +880,20 @@ h2 {
   }
 }
 
+/* Keep the potential-match badge inside narrow mobile photo boxes. */
+@media (min-width: 360px) and (max-width: 440px) {
+  .btn-match-qr.potential-match-badge {
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+    max-width: calc(100% - 1rem);
+    justify-content: center;
+    box-sizing: border-box;
+    padding-inline: 0.45rem;
+    gap: 0.25rem;
+  }
+}
+
 
 .project-card {
   background: var(--card-bg);
