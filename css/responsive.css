@@ -2090,6 +2090,11 @@ button {
     text-align: center;
   }
 
+  .card-actions .btn-qr {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
   .qr-modal-card {
     width: calc(100vw - 1rem) !important;
   }
