@@ -1803,3 +1803,141 @@ input[type='submit'] {
     box-sizing: border-box !important;
   }
 }
+
+/* Final viewport safeguards. These rules keep nested flex/grid content from
+   establishing a wider intrinsic size than the viewport. */
+html {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body,
+main,
+section,
+header,
+footer,
+.navbar-container,
+.site-footer .footer-container,
+.simple-card,
+.auth-card,
+.detail-card,
+.page-section,
+.page-header {
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+.form-row > *,
+.type-switcher > *,
+.filter-row > *,
+.filter-chips > *,
+.hotspots-row > *,
+.hero-section > *,
+.site-footer .footer-left,
+.site-footer .footer-right {
+  min-width: 0;
+}
+
+.input-field input,
+.input-field select,
+.input-field textarea,
+.form-control,
+.search-box input,
+.form-group input,
+.form-group select {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .nav-actions .theme-toggle,
+  .nav-actions .notif-bell-btn,
+  .nav-actions .menu-toggle {
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    flex: 0 0 32px !important;
+  }
+
+  .simple-card,
+  .auth-card,
+  .detail-card,
+  .page-section {
+    overflow: hidden;
+  }
+
+  .admin-table-card,
+  .admin-table-wrap,
+  .admin-items-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar-container,
+  .hero-section,
+  .tools-section,
+  .projects-section,
+  .page-section,
+  .page-header {
+    padding-left: .65rem !important;
+    padding-right: .65rem !important;
+  }
+
+  .hero-name {
+    font-size: clamp(2rem, 14vw, 2.75rem) !important;
+  }
+
+  .filter-chips {
+    grid-template-columns: 1fr !important;
+  }
+
+  .filter-chips .chip,
+  .chip-my-vault {
+    grid-column: auto !important;
+    width: 100%;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .navbar-container {
+    min-height: 52px;
+  }
+
+  .hero-section {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .hero-seal {
+    width: 96px;
+    height: 96px;
+  }
+
+  .hero-avatar .hero-seal img {
+    width: 72px;
+    height: 72px;
+  }
+
+  .modal,
+  .slip-overlay > div,
+  [role='dialog'] {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+  }
+}
