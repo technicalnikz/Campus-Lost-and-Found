@@ -2157,3 +2157,55 @@ button {
     font-size: .875rem;
   }
 }
+
+#items .projects-grid .project-card-header,
+#items .projects-grid .item-card-header-content {
+  min-width: 0;
+  width: 100%;
+}
+
+#items .projects-grid .item-card-meta-row {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: .5rem !important;
+  width: 100%;
+  min-width: 0;
+  position: static !important;
+}
+
+#items .projects-grid .item-card-category-ref {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: .08rem !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+#items .projects-grid .item-card-category-ref .project-type,
+#items .projects-grid .item-card-category-ref .ref-code {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-left: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  overflow-wrap: normal;
+}
+
+#items .projects-grid .item-badge {
+  position: static !important;
+  inset: auto !important;
+  flex: 0 0 auto !important;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
