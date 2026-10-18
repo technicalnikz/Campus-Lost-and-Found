@@ -2084,8 +2084,9 @@ button {
   .card-actions .btn-sm {
     flex: 1 1 0;
     min-width: 0;
-    padding: .3rem .35rem !important;
-    font-size: .64rem;
+    padding: .24rem .25rem !important;
+    font-size: .58rem;
+    line-height: 1.05;
     text-align: center;
   }
 
