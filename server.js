@@ -65,18 +65,11 @@ function createApp() {
   app.get(['/browse.html', '/item-detail.html'], (req, res) => res.redirect(302, '/#items'));
   app.get('/report-lost.html', (req, res) => res.redirect(302, '/?report=lost#itemForm'));
   app.get('/report-found.html', (req, res) => res.redirect(302, '/?report=found#itemForm'));
-  // Keep all homepage entry points on the canonical, current homepage.
-  // public/index.html is a legacy duplicate and can otherwise make browsers
-  // appear to be serving an old layout.
-  const sendCurrentHomepage = (req, res) => {
-    res.set('Cache-Control', 'no-store, max-age=0');
-    res.sendFile(path.join(__dirname, 'index.html'));
-  };
   app.get('/found', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
   app.get('/match-reference', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
   app.get('/', (req, res) => {
     if (req.session?.user?.role === 'admin') return res.redirect(302, '/admin.html');
-    sendCurrentHomepage(req, res);
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
   app.get('/login', (req, res) => {
     const user = req.session?.user;
