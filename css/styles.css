@@ -2443,6 +2443,17 @@ select::placeholder,
 .belonging-menu button:focus-visible { background: rgba(59,130,246,.12); }
 .belonging-menu button.danger { color: #f87171; }
 
+[data-theme='light'] .belonging-menu {
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .18);
+}
+[data-theme='light'] .belonging-menu button {
+  color: #0f172a;
+}
+[data-theme='light'] .belonging-menu button.danger {
+  color: #b91c1c;
+}
+
 @media (max-width: 560px) {
   .registered-card-header {
     display: grid;
