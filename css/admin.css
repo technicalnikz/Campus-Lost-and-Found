@@ -488,6 +488,7 @@
       .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .admin-stats .action-needed-card { grid-column: 1 / -1; }
       .admin-tab { padding: .3rem .65rem; border-radius: 6px; font-size: .72rem; }
+      .admin-tab[data-tab='claims'] { white-space: normal; line-height: 1.05; }
       .admin-search-row .form-control { padding: .3rem .65rem; border-radius: 6px; font-size: .72rem; }
       .bulk-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:.5rem; }
       .bulk-toolbar label { margin-right:0; min-width:0; }
