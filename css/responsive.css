@@ -147,6 +147,22 @@ input[type='submit'] {
     min-width: 0;
   }
 
+  #report .report-item-form {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+
+  #report .report-item-form > .input-field,
+  #report .report-item-form > .form-row,
+  #report .report-item-form > div:last-child {
+    margin-block: 0 !important;
+  }
+
+  #report .report-item-form .report-type-selection {
+    margin-bottom: 0 !important;
+  }
+
   .nav-logo-full,
   .nav-logo-short {
     overflow: visible;
