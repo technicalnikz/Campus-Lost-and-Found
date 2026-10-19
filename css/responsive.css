@@ -1491,7 +1491,7 @@ input[type='submit'] {
     align-items: stretch;
     justify-content: flex-start;
     gap: .1rem !important;
-    width: 68vw !important;
+    width: 50vw !important;
     max-width: 18rem;
     height: 100vh;
     height: 100dvh;
