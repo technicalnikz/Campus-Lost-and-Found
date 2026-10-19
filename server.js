@@ -105,11 +105,21 @@ function createApp() {
 
 async function startServer() {
   const PORT = process.env.PORT || 3000;
-  if (process.env.NODE_ENV === 'production' || postgresStore.isConfigured()) {
-    await postgresStore.initialize();
+  const app = createApp();
+  const server = app.listen(PORT, '0.0.0.0', () => console.log(`Server running at: http://localhost:${PORT}`));
+
+  // Bind the port before remote database setup so managed hosts can detect
+  // the application within their startup timeout.
+  try {
+    if (process.env.NODE_ENV === 'production' || postgresStore.isConfigured()) {
+      await postgresStore.initialize();
+    }
+    await authRoutes.ensureDefaultAdminAccount();
+  } catch (error) {
+    server.close(() => {});
+    throw error;
   }
-  await authRoutes.ensureDefaultAdminAccount();
-  createApp().listen(PORT, '0.0.0.0', () => console.log(`Server running at: http://localhost:${PORT}`));
+  return server;
 }
 
 if (process.env.NODE_ENV !== 'test') {
