@@ -1751,10 +1751,10 @@ input[type='submit'] {
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 46px;
-    padding: .7rem 1rem;
+    min-height: 34px;
+    padding: .3rem .75rem;
     border: 1px solid rgba(239, 68, 68, .35);
-    border-radius: 11px;
+    border-radius: 10px;
     background: rgba(239, 68, 68, .1);
     color: #fca5a5;
     font: inherit;
