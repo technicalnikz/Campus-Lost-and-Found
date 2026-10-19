@@ -1178,10 +1178,14 @@ input[type='submit'] {
   .type-switcher .type-option {
     flex: 1 1 0;
     min-width: 0;
+    align-items: center;
+    justify-content: center;
     padding: .6rem .45rem;
     font-size: .68rem;
+    line-height: 1.2;
     text-align: center;
   }
+
 
   #items .projects-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
