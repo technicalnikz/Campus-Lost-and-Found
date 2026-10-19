@@ -1763,11 +1763,6 @@ input[type='submit'] {
     cursor: pointer;
   }
 
-  .mobile-drawer-logout::before {
-    content: '\21aa';
-    margin-right: .5rem;
-  }
-
   .mobile-drawer-signin {
     border-color: var(--blue-main);
     background: var(--blue-main);
