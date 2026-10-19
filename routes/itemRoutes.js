@@ -808,6 +808,8 @@ router.get('/my-notifications', requireAuth, (req, res) => {
     notifications.push({
       ...claim.notification,
       notificationType: 'claim',
+      claimId: claim.id,
+      itemId: claim.itemId,
       itemTitle: claim.itemTitle,
       refCode: claim.itemRefCode
     });
@@ -968,6 +970,48 @@ router.get('/:id/photo', async (req, res) => {
 });
 
 // PATCH /api/items/notifications/:notifId/read - Mark notification as read
+router.delete('/notifications', requireAuth, (req, res) => {
+  const notificationIds = req.body?.notificationIds;
+  if (!Array.isArray(notificationIds) || notificationIds.length < 1 || notificationIds.length > 1000
+    || notificationIds.some(reference => !reference || typeof reference !== 'object'
+      || !['item', 'claim'].includes(reference.kind)
+      || typeof reference.recordId !== 'string' || !reference.recordId.trim() || reference.recordId.length > 200
+      || typeof reference.id !== 'string' || !reference.id.trim() || reference.id.length > 200)) {
+    return res.status(400).json({ success: false, message: 'Select between 1 and 1000 valid notifications.' });
+  }
+
+  const identities = new Set(notificationIds.map(reference => `${reference.kind}:${reference.recordId}:${reference.id}`));
+  const userId = String(req.session.user.id);
+  const items = getItems();
+  const claims = getClaims();
+  let deletedCount = 0;
+
+  items.forEach(item => {
+    if (String(item.reportedBy) !== userId || !Array.isArray(item.notifications)) return;
+    const ownedNotifications = item.notifications.filter(notification =>
+      identities.has(`item:${item.id}:${notification.id}`)
+    );
+    deletedCount += ownedNotifications.length;
+    item.notifications = item.notifications.filter(notification =>
+      !identities.has(`item:${item.id}:${notification.id}`)
+    );
+  });
+
+  claims.forEach(claim => {
+    if (String(claim.claimantId) !== userId || !claim.notification
+      || !identities.has(`claim:${claim.id}:${claim.notification.id}`)) return;
+    claim.notification = null;
+    deletedCount += 1;
+  });
+
+  if (deletedCount) {
+    saveItems(items);
+    saveClaims(claims);
+  }
+
+  res.json({ success: true, deletedCount });
+});
+
 router.patch('/notifications/:notifId/read', requireAuth, (req, res) => {
   const items = getItems();
   const userId = req.session.user.id;

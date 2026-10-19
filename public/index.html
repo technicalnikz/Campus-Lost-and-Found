@@ -625,6 +625,14 @@
         <button type="button" class="notifications-modal-close" onclick="closeNotificationsModal()" aria-label="Close notifications">&times;</button>
       </div>
 
+      <div id="notificationSelectionToolbar" class="notification-selection-toolbar" hidden>
+        <label class="notification-select-all">
+          <input id="selectAllNotifications" type="checkbox" onchange="selectAllNotifications(this.checked)">
+          <span>Select all</span>
+        </label>
+        <span id="selectedNotificationCount" aria-live="polite">0 selected</span>
+        <button id="deleteSelectedNotifications" type="button" class="btn-delete-notifications" onclick="deleteSelectedNotifications()" disabled>Delete selected</button>
+      </div>
       <div id="notificationsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
         <!-- Filled dynamically -->
       </div>
@@ -1498,16 +1506,28 @@
         const res = await fetch('/api/items/my-notifications');
         const data = await res.json();
         if (!data.success) {
+          document.getElementById('notificationSelectionToolbar').hidden = true;
           list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Could not load notifications.</p>';
           return;
         }
         if (!data.notifications.length) {
+          document.getElementById('notificationSelectionToolbar').hidden = true;
           list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">No account notifications yet.</p>';
           return;
         }
 
+        document.getElementById('notificationSelectionToolbar').hidden = false;
+        document.getElementById('selectAllNotifications').checked = false;
         list.innerHTML = data.notifications.map(n => `
-          <div class="notif-item${n.read ? '' : ' unread'}" data-id="${n.id}">
+          <div class="notif-item${n.read ? '' : ' unread'}" data-id="${escapeHtml(String(n.id))}">
+            <label class="notification-select-control">
+              <input class="notification-select" type="checkbox" value="${escapeHtml(JSON.stringify({
+                kind: n.notificationType === 'claim' ? 'claim' : 'item',
+                recordId: String(n.notificationType === 'claim' ? n.claimId : n.itemId),
+                id: String(n.id)
+              }))}" onchange="updateNotificationSelection()">
+              <span>Select notification</span>
+            </label>
             <div class="notif-header">
               <strong>🏷️ ${n.itemTitle || n.refCode}</strong>
               <span class="notif-time">${new Date(n.timestamp).toLocaleString()}</span>
@@ -1528,6 +1548,7 @@
             ${!n.read ? `<button class="btn-mark-read" onclick="markNotifRead('${n.id}', this)">Mark as read</button>` : ''}
           </div>
         `).join('');
+        updateNotificationSelection();
 
         // Update badge
         const badge = document.getElementById('notifCountBadge');
@@ -1537,7 +1558,49 @@
           badge.style.display = unread > 0 ? 'inline-flex' : 'none';
         }
       } catch (err) {
+        document.getElementById('notificationSelectionToolbar').hidden = true;
         list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Failed to load notifications.</p>';
+      }
+    }
+
+    function selectAllNotifications(checked) {
+      document.querySelectorAll('#notificationsList .notification-select').forEach(input => {
+        input.checked = checked;
+      });
+      updateNotificationSelection();
+    }
+
+    function updateNotificationSelection() {
+      const checkboxes = [...document.querySelectorAll('#notificationsList .notification-select')];
+      const selectedCount = checkboxes.filter(input => input.checked).length;
+      const selectAll = document.getElementById('selectAllNotifications');
+      selectAll.checked = checkboxes.length > 0 && selectedCount === checkboxes.length;
+      selectAll.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+      document.getElementById('selectedNotificationCount').textContent = `${selectedCount} selected`;
+      document.getElementById('deleteSelectedNotifications').disabled = selectedCount === 0;
+    }
+
+    async function deleteSelectedNotifications() {
+      const notificationIds = [...document.querySelectorAll('#notificationsList .notification-select:checked')]
+        .map(input => JSON.parse(input.value));
+      if (!notificationIds.length || !window.confirm(`Delete ${notificationIds.length} selected notification${notificationIds.length === 1 ? '' : 's'}?`)) return;
+
+      const button = document.getElementById('deleteSelectedNotifications');
+      button.disabled = true;
+      try {
+        const res = await fetch('/api/items/notifications', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notificationIds })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || 'Could not delete notifications.');
+        showToast(`${data.deletedCount} notification${data.deletedCount === 1 ? '' : 's'} deleted.`);
+        await loadNotificationsIntoModal();
+        await loadMyNotifications();
+      } catch (err) {
+        button.disabled = false;
+        showToast(err.message || 'Could not delete notifications.', 'error');
       }
     }
 

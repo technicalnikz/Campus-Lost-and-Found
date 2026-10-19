@@ -427,14 +427,19 @@ test('finder QR alerts appear in the owner inbox and are emailed to the owner', 
   const studentCookie = await login('student@my.cspc.edu.ph', studentPassword);
   const smtp = await startSmtpCaptureServer();
   const submissionKey = 'finder-alert-duplicate-test-01';
+  const claimsPath = path.join(dataDir, 'claims.json');
+  const originalClaims = fs.existsSync(claimsPath) ? fs.readFileSync(claimsPath) : null;
   let notificationId;
   t.after(() => {
-    if (!notificationId) return;
-    const itemsPath = path.join(dataDir, 'items.json');
-    const items = JSON.parse(fs.readFileSync(itemsPath, 'utf8'));
-    const item = items.find(entry => entry.refCode === 'CSPC-REG-QR-0012');
-    if (item) item.notifications = item.notifications.filter(notification => notification.id !== notificationId);
-    fs.writeFileSync(itemsPath, JSON.stringify(items));
+    if (notificationId) {
+      const itemsPath = path.join(dataDir, 'items.json');
+      const items = JSON.parse(fs.readFileSync(itemsPath, 'utf8'));
+      const item = items.find(entry => entry.refCode === 'CSPC-REG-QR-0012');
+      if (item) item.notifications = item.notifications.filter(notification => notification.id !== notificationId);
+      fs.writeFileSync(itemsPath, JSON.stringify(items));
+    }
+    if (originalClaims === null) fs.rmSync(claimsPath, { force: true });
+    else fs.writeFileSync(claimsPath, originalClaims);
   });
   const mailEnvironment = Object.fromEntries(
     smtpEnvironmentKeys.map(key => [key, process.env[key]])
@@ -508,6 +513,21 @@ test('finder QR alerts appear in the owner inbox and are emailed to the owner', 
   });
   assert.equal(changedPayloadResponse.status, 409);
 
+  const claimNotificationId = 'claim-notif-test';
+  fs.writeFileSync(path.join(dataDir, 'claims.json'), JSON.stringify([{
+    id: 'claim-test',
+    itemId: 11,
+    claimantId: 'student-test',
+    itemTitle: 'Found umbrella',
+    itemRefCode: 'CSPC-LF-2026-011',
+    notification: {
+      id: claimNotificationId,
+      timestamp: new Date().toISOString(),
+      read: false,
+      message: 'Your claim was rejected.'
+    }
+  }]));
+
   const inboxResponse = await fetch(`${baseUrl}/api/items/my-notifications`, {
     headers: { Cookie: studentCookie }
   });
@@ -519,7 +539,40 @@ test('finder QR alerts appear in the owner inbox and are emailed to the owner', 
   assert.equal(finderAlert.locationFound, 'Library entrance');
   assert.equal(Object.hasOwn(finderAlert, 'submissionKey'), false);
   assert.equal(notifications.filter(notification => notification.id === result.notification.id).length, 1);
-  assert.equal(unreadCount, 1);
+  assert.equal(notifications.some(notification => notification.id === claimNotificationId), true);
+  assert.equal(unreadCount, 2);
+
+  const notificationReferences = [
+    { kind: 'item', recordId: '12', id: result.notification.id },
+    { kind: 'claim', recordId: 'claim-test', id: claimNotificationId }
+  ];
+  const otherStudentCookie = await login('match.student@my.cspc.edu.ph', studentPassword);
+  const otherStudentDelete = await fetch(`${baseUrl}/api/items/notifications`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', Cookie: otherStudentCookie },
+    body: JSON.stringify({ notificationIds: notificationReferences })
+  });
+  assert.equal(otherStudentDelete.status, 200);
+  assert.equal((await otherStudentDelete.json()).deletedCount, 0);
+
+  const ownerDelete = await fetch(`${baseUrl}/api/items/notifications`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', Cookie: studentCookie },
+    body: JSON.stringify({ notificationIds: notificationReferences })
+  });
+  assert.equal(ownerDelete.status, 200);
+  assert.equal((await ownerDelete.json()).deletedCount, 2);
+
+  const updatedInbox = await fetch(`${baseUrl}/api/items/my-notifications`, {
+    headers: { Cookie: studentCookie }
+  });
+  const updatedNotifications = await updatedInbox.json();
+  assert.equal(updatedNotifications.notifications.some(notification => notification.id === result.notification.id), false);
+  assert.equal(updatedNotifications.notifications.some(notification => notification.id === claimNotificationId), false);
+  assert.equal(updatedNotifications.unreadCount, 0);
+  const savedClaims = JSON.parse(fs.readFileSync(path.join(dataDir, 'claims.json'), 'utf8'));
+  assert.equal(savedClaims.length, 1);
+  assert.equal(savedClaims[0].notification, null);
 });
 
 test('finder QR landing URL serves the app for the anonymous finder screen', async () => {
