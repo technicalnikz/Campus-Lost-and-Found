@@ -2392,4 +2392,13 @@ select::placeholder,
 
 @media (max-width: 560px) {
   .belonging-menu-button { right: .35rem; }
+  .belonging-menu {
+    min-width: 148px;
+    top: 0;
+    right: calc(100% + .25rem);
+  }
+  .belonging-menu button {
+    padding: .42rem .55rem;
+    font-size: .74rem;
+  }
 }
