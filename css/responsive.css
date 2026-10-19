@@ -1490,7 +1490,7 @@ input[type='submit'] {
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    gap: .2rem !important;
+    gap: .1rem !important;
     width: 68vw !important;
     max-width: 18rem;
     height: 100vh;
@@ -1683,9 +1683,9 @@ input[type='submit'] {
     align-items: center;
     gap: .8rem;
     width: 100%;
-    min-height: 40px;
+    min-height: 34px;
     height: auto !important;
-    padding: .45rem .75rem;
+    padding: .3rem .75rem;
     border-radius: 10px;
     color: var(--text-main);
     font-size: .82rem !important;
@@ -1719,10 +1719,10 @@ input[type='submit'] {
     align-items: center;
     justify-content: flex-start;
     width: 100%;
-    min-height: 40px !important;
+    min-height: 34px !important;
     height: auto !important;
     margin: .1rem 0 0;
-    padding: .45rem .75rem !important;
+    padding: .3rem .75rem !important;
     border-radius: 10px !important;
     background: rgba(59, 130, 246, .09) !important;
     font-size: .82rem !important;
