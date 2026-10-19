@@ -2447,7 +2447,7 @@ select::placeholder,
   }
   .belonging-menu button {
     min-height: 25px;
-    padding: .2rem .45rem;
+    padding: .2rem .65rem;
     font-size: .68rem;
   }
 }
