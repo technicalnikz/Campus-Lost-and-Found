@@ -405,6 +405,9 @@
       color: var(--text-muted);
       pointer-events: none;
     }
+    @media (min-width: 561px) {
+      .admin-search-row #adminSearch { height: 35px; }
+    }
 
     /* ── Confirm Delete Modal ── */
     .del-modal-backdrop {
