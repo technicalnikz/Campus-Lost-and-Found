@@ -2433,9 +2433,9 @@ select::placeholder,
     color: #94a3b8;
   }
   .belonging-menu {
-    width: 88px;
-    max-width: 88px;
-    min-width: 88px;
+    width: 124px;
+    max-width: 124px;
+    min-width: 124px;
     top: 0;
     right: calc(100% + .4rem);
     overflow: hidden;
