@@ -2389,3 +2389,22 @@ select::placeholder,
 .belonging-menu button:hover,
 .belonging-menu button:focus-visible { background: rgba(59,130,246,.12); }
 .belonging-menu button.danger { color: #f87171; }
+
+@media (max-width: 560px) {
+  .belonging-menu-button {
+    top: .25rem;
+    right: .35rem;
+    color: #facc15;
+  }
+  .belonging-menu {
+    width: min(148px, calc(100% - 2.5rem));
+    min-width: 0;
+    top: 0;
+    right: 2rem;
+    overflow: hidden;
+  }
+  .belonging-menu button {
+    padding: .42rem .55rem;
+    font-size: .74rem;
+  }
+}
