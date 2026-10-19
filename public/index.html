@@ -910,17 +910,17 @@
         // Special render for personal preventive registered belongings
         if (item.type === 'registered') {
           return `
-            <div class="project-card" id="item-card-${item.id}" style="border-color: rgba(59,130,246,0.45); background: rgba(59,130,246,0.04);">
+            <div class="project-card registered-belonging-card" id="item-card-${item.id}">
               <div class="project-card-header registered-card-header" style="position: relative;">
                 <div class="item-card-header-content registered-card-header-content">
                   <div class="item-card-meta-row registered-card-meta-row">
                     <div class="item-card-category-ref">
-                      <span class="project-type" title="${escapeHtml(item.category)}" style="color: #93c5fd;">${escapeHtml(item.category)}</span>
-                      <span class="ref-code" title="${escapeHtml(item.refCode || '')}" style="color: #60a5fa;">${escapeHtml(item.refCode || '')}</span>
+                      <span class="project-type registered-belonging-category" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
+                      <span class="ref-code registered-belonging-ref" title="${escapeHtml(item.refCode || '')}">${escapeHtml(item.refCode || '')}</span>
                     </div>
                     <span class="item-badge badge-registered">🔒 Registered Belonging</span>
                   </div>
-                  <h3 style="margin-top: 0.35rem; color: #ffffff;">${escapeHtml(item.title)}</h3>
+                  <h3 class="registered-belonging-title" style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
                 </div>
                 <div class="belonging-menu-wrap">
                   <button type="button" class="belonging-menu-button" aria-label="More options for ${escapeHtml(item.title)}" aria-haspopup="menu" aria-expanded="false" onclick="toggleBelongingMenu(event, '${escapeHtml(item.id)}')">&#8942;</button>
@@ -931,7 +931,7 @@
                 </div>
               </div>
 
-              <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.22); border-radius: 8px; padding: 0.6rem 0.75rem; margin: 0.5rem 0; font-size: 0.74rem; color: #bfdbfe; line-height: 1.4;">
+              <div class="registered-belonging-protection">
                 🛡️ <strong>Preventive Protection Active:</strong> Paste QR sticker onto this item. If someone scans it, an anonymous notification goes straight to your account.
               </div>
 

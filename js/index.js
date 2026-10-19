@@ -304,21 +304,21 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
         // Special rendering for registered belongings in vault
         if (item.type === 'registered') {
           return `
-            <div class="project-card" id="item-card-${item.id}" style="border-color: rgba(59, 130, 246, 0.4); background: rgba(30, 41, 59, 0.35);">
+            <div class="project-card registered-belonging-card" id="item-card-${item.id}">
               <div class="project-card-header">
                 <div class="item-card-header-content">
                   <div class="item-card-meta-row">
                     <div class="item-card-category-ref">
-                      <span class="project-type" title="${escapeHtml(item.category)}" style="color: #93c5fd;">${escapeHtml(item.category)}</span>
-                      <span class="ref-code" title="${escapeHtml(item.refCode || '')}" style="color: #60a5fa;">${escapeHtml(item.refCode || '')}</span>
+                      <span class="project-type registered-belonging-category" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
+                      <span class="ref-code registered-belonging-ref" title="${escapeHtml(item.refCode || '')}">${escapeHtml(item.refCode || '')}</span>
                     </div>
                     <span class="item-badge badge-registered">🔒 Registered Belonging</span>
                   </div>
-                  <h3 style="margin-top: 0.35rem; color: #ffffff;">${escapeHtml(item.title)}</h3>
+                  <h3 class="registered-belonging-title" style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
                 </div>
               </div>
 
-              <p class="item-card-description" style="margin-top: 0.25rem; color: #cbd5e1;">${escapeHtml(item.desc)}</p>
+              <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
 
               <div class="card-meta-line">
                 <span><strong>Primary Building:</strong> ${escapeHtml(item.location)}</span>

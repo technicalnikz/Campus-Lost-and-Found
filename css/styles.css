@@ -950,6 +950,34 @@ h2 {
   flex: 1;
 }
 
+.registered-belonging-card {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.registered-belonging-category {
+  color: var(--blue-light);
+}
+
+.registered-belonging-ref {
+  color: var(--blue-main);
+}
+
+.registered-belonging-title {
+  color: var(--text-main);
+}
+
+.registered-belonging-protection {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  margin: 0.5rem 0;
+  color: var(--blue-light);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
 .project-tags {
   display: flex;
   flex-wrap: wrap;
@@ -1502,6 +1530,18 @@ select option {
   border-color: rgba(37, 99, 235, 0.18);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   color: #0f172a;
+}
+
+[data-theme='light'] .registered-belonging-card {
+  background: #ffffff;
+}
+
+[data-theme='light'] .registered-belonging-protection {
+  color: #1e3a8a;
+}
+
+[data-theme='light'] .badge-registered {
+  color: #1d4ed8;
 }
 
 [data-theme='light'] .project-title,
