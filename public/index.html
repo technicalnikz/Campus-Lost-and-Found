@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="stylesheet" href="/css/home.css" />
-  <link rel="stylesheet" href="/css/responsive.css?v=20261019-1" />
+  <link rel="stylesheet" href="/css/responsive.css?v=20261019-2" />
   <script src="/js/main.js?v=20261017-5"></script>
 </head>
 <body>
@@ -886,6 +886,7 @@
     function renderItemsGrid(items) {
       const grid = document.getElementById('itemsGrid');
       const pagination = document.getElementById('itemsPagination');
+      grid.classList.toggle('registered-belongings-grid', currentFilter === 'registered');
 
       if (!items || items.length === 0) {
         pagination.innerHTML = '';

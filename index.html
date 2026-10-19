@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="stylesheet" href="/css/index.css" />
-  <link rel="stylesheet" href="/css/responsive.css?v=20261019-1" />
+  <link rel="stylesheet" href="/css/responsive.css?v=20261019-2" />
   <script src="/js/main.js?v=20261017-5"></script>
 </head>
 <body>
@@ -849,6 +849,7 @@
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
       const grid = document.getElementById('itemsGrid');
       const pagination = document.getElementById('itemsPagination');
+      grid.classList.toggle('registered-belongings-grid', currentFilter === 'registered');
 
       // Update counters
       const total = items.filter(i => i.type !== 'registered').length;

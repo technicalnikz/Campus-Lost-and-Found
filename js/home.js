@@ -161,6 +161,7 @@ let currentUser = null;
     function renderItemsGrid(items) {
       const grid = document.getElementById('itemsGrid');
       const pagination = document.getElementById('itemsPagination');
+      grid.classList.toggle('registered-belongings-grid', currentFilter === 'registered');
 
       if (!items || items.length === 0) {
         pagination.innerHTML = '';

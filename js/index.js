@@ -243,6 +243,7 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
       const grid = document.getElementById('itemsGrid');
       const pagination = document.getElementById('itemsPagination');
+      grid.classList.toggle('registered-belongings-grid', currentFilter === 'registered');
 
       // Update counters
       const total = items.filter(i => i.type !== 'registered').length;
@@ -316,6 +317,10 @@ const STORAGE_KEY = 'cspc_simple_lostfound_v2';
                   </div>
                   <h3 class="registered-belonging-title" style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
                 </div>
+              </div>
+
+              <div class="registered-belonging-protection">
+                🛡️ <strong>Preventive Protection Active:</strong> Paste QR sticker onto this item. If someone scans it, an anonymous notification goes straight to your account.
               </div>
 
               <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
