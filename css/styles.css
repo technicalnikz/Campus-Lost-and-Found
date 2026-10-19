@@ -2370,7 +2370,8 @@ select::placeholder,
   padding: .35rem;
   border: 1px solid var(--border);
   border-radius: 9px;
-  background: var(--card-bg, #1f2937);
+  background: #1f2937;
+  backdrop-filter: blur(8px);
   box-shadow: 0 12px 28px rgba(0,0,0,.35);
 }
 .belonging-menu.open { display: grid; gap: .15rem; }
