@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="stylesheet" href="/css/home.css" />
-  <link rel="stylesheet" href="/css/responsive.css?v=20261019-1" />
+  <link rel="stylesheet" href="/css/responsive.css?v=20261019-2" />
   <script src="/js/main.js?v=20261017-5"></script>
 </head>
 <body>
@@ -587,6 +587,7 @@
       <form id="anonymousFinderForm" onsubmit="handleAnonymousFinderSubmit(event)">
         <input type="hidden" id="finderRefCodeInput" />
         <input type="hidden" id="finderMatchTokenInput" />
+        <input type="hidden" id="finderSubmissionKeyInput" />
         <div class="input-field" style="margin-bottom: 0.85rem;">
           <label for="finderLocationInput">Where is the item right now? <span class="required">*</span></label>
           <input type="text" id="finderLocationInput" placeholder="e.g. Left with Ms. Santos at Library 2nd floor desk" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
@@ -624,6 +625,14 @@
         <button type="button" class="notifications-modal-close" onclick="closeNotificationsModal()" aria-label="Close notifications">&times;</button>
       </div>
 
+      <div id="notificationSelectionToolbar" class="notification-selection-toolbar" hidden>
+        <label class="notification-select-all">
+          <input id="selectAllNotifications" type="checkbox" onchange="selectAllNotifications(this.checked)">
+          <span>Select all</span>
+        </label>
+        <span id="selectedNotificationCount" aria-live="polite">0 selected</span>
+        <button id="deleteSelectedNotifications" type="button" class="btn-delete-notifications" onclick="deleteSelectedNotifications()" disabled>Delete selected</button>
+      </div>
       <div id="notificationsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
         <!-- Filled dynamically -->
       </div>
@@ -877,6 +886,7 @@
     function renderItemsGrid(items) {
       const grid = document.getElementById('itemsGrid');
       const pagination = document.getElementById('itemsPagination');
+      grid.classList.toggle('registered-belongings-grid', currentFilter === 'registered');
 
       if (!items || items.length === 0) {
         pagination.innerHTML = '';
@@ -910,17 +920,17 @@
         // Special render for personal preventive registered belongings
         if (item.type === 'registered') {
           return `
-            <div class="project-card" id="item-card-${item.id}" style="border-color: rgba(59,130,246,0.45); background: rgba(59,130,246,0.04);">
+            <div class="project-card registered-belonging-card" id="item-card-${item.id}">
               <div class="project-card-header registered-card-header" style="position: relative;">
                 <div class="item-card-header-content registered-card-header-content">
                   <div class="item-card-meta-row registered-card-meta-row">
                     <div class="item-card-category-ref">
-                      <span class="project-type" title="${escapeHtml(item.category)}" style="color: #93c5fd;">${escapeHtml(item.category)}</span>
-                      <span class="ref-code" title="${escapeHtml(item.refCode || '')}" style="color: #60a5fa;">${escapeHtml(item.refCode || '')}</span>
+                      <span class="project-type registered-belonging-category" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
+                      <span class="ref-code registered-belonging-ref" title="${escapeHtml(item.refCode || '')}">${escapeHtml(item.refCode || '')}</span>
                     </div>
                     <span class="item-badge badge-registered">🔒 Registered Belonging</span>
                   </div>
-                  <h3 style="margin-top: 0.35rem; color: #ffffff;">${escapeHtml(item.title)}</h3>
+                  <h3 class="registered-belonging-title" style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
                 </div>
                 <div class="belonging-menu-wrap">
                   <button type="button" class="belonging-menu-button" aria-label="More options for ${escapeHtml(item.title)}" aria-haspopup="menu" aria-expanded="false" onclick="toggleBelongingMenu(event, '${escapeHtml(item.id)}')">&#8942;</button>
@@ -931,7 +941,7 @@
                 </div>
               </div>
 
-              <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.22); border-radius: 8px; padding: 0.6rem 0.75rem; margin: 0.5rem 0; font-size: 0.74rem; color: #bfdbfe; line-height: 1.4;">
+              <div class="registered-belonging-protection">
                 🛡️ <strong>Preventive Protection Active:</strong> Paste QR sticker onto this item. If someone scans it, an anonymous notification goes straight to your account.
               </div>
 
@@ -1317,9 +1327,16 @@
       instructionsElement.style.display = instructions ? '' : 'none';
       document.getElementById('finderRefCodeInput').value = safeItem.refCode || '';
       document.getElementById('finderMatchTokenInput').value = matchToken || '';
+      document.getElementById('finderSubmissionKeyInput').value =
+        window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       document.getElementById('finderMessageInput').value = '';
       document.getElementById('finderLocationInput').value = '';
       document.getElementById('finderContactInput').value = '';
+      const form = document.getElementById('anonymousFinderForm');
+      form.querySelectorAll('input:not([type="hidden"]), textarea').forEach(field => { field.disabled = false; });
+      const sendButton = document.getElementById('finderSendBtn');
+      sendButton.disabled = false;
+      sendButton.textContent = '🚀 Send Alert to Owner';
       document.getElementById('anonymousFinderModal').classList.add('open');
     }
 
@@ -1349,12 +1366,17 @@
       const message       = document.getElementById('finderMessageInput').value.trim();
       const locationFound = document.getElementById('finderLocationInput').value.trim();
       const finderContact = document.getElementById('finderContactInput').value.trim();
+      const submissionKey = document.getElementById('finderSubmissionKeyInput').value;
+      const sendButton = document.getElementById('finderSendBtn');
 
+      if (sendButton.disabled) return;
       if (!message) {
         showToast('Please describe where and how you found the item.', 'error');
         return;
       }
 
+      sendButton.disabled = true;
+      sendButton.textContent = 'Sending Alert...';
       try {
         const endpoint = matchToken ? '/api/items/match-reference-notify' : '/api/items/anonymous-notify';
         const body = matchToken
@@ -1362,18 +1384,25 @@
           : { refCode, message, locationFound, finderContact };
         const res = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submissionKey },
           body: JSON.stringify(body)
         });
         const data = await res.json();
         if (data.success) {
           showToast(data.message || 'Finder alert submitted.');
           loadMyNotifications();
-          closeAnonymousFinderModal();
+          sendButton.textContent = 'Alert Sent';
+          document.getElementById('anonymousFinderForm')
+            .querySelectorAll('input:not([type="hidden"]), textarea')
+            .forEach(field => { field.disabled = true; });
         } else {
+          sendButton.disabled = false;
+          sendButton.textContent = '🚀 Send Alert to Owner';
           showToast(data.message || 'Failed to send notification.', 'error');
         }
       } catch (err) {
+        sendButton.disabled = false;
+        sendButton.textContent = '🚀 Send Alert to Owner';
         showToast('Server error. Please try again.', 'error');
       }
     }
@@ -1478,16 +1507,28 @@
         const res = await fetch('/api/items/my-notifications');
         const data = await res.json();
         if (!data.success) {
+          document.getElementById('notificationSelectionToolbar').hidden = true;
           list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Could not load notifications.</p>';
           return;
         }
         if (!data.notifications.length) {
+          document.getElementById('notificationSelectionToolbar').hidden = true;
           list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">No account notifications yet.</p>';
           return;
         }
 
+        document.getElementById('notificationSelectionToolbar').hidden = false;
+        document.getElementById('selectAllNotifications').checked = false;
         list.innerHTML = data.notifications.map(n => `
-          <div class="notif-item${n.read ? '' : ' unread'}" data-id="${n.id}">
+          <div class="notif-item${n.read ? '' : ' unread'}" data-id="${escapeHtml(String(n.id))}">
+            <label class="notification-select-control">
+              <input class="notification-select" type="checkbox" value="${escapeHtml(JSON.stringify({
+                kind: n.notificationType === 'claim' ? 'claim' : 'item',
+                recordId: String(n.notificationType === 'claim' ? n.claimId : n.itemId),
+                id: String(n.id)
+              }))}" onchange="updateNotificationSelection()">
+              <span>Select notification</span>
+            </label>
             <div class="notif-header">
               <strong>🏷️ ${n.itemTitle || n.refCode}</strong>
               <span class="notif-time">${new Date(n.timestamp).toLocaleString()}</span>
@@ -1508,6 +1549,7 @@
             ${!n.read ? `<button class="btn-mark-read" onclick="markNotifRead('${n.id}', this)">Mark as read</button>` : ''}
           </div>
         `).join('');
+        updateNotificationSelection();
 
         // Update badge
         const badge = document.getElementById('notifCountBadge');
@@ -1517,7 +1559,49 @@
           badge.style.display = unread > 0 ? 'inline-flex' : 'none';
         }
       } catch (err) {
+        document.getElementById('notificationSelectionToolbar').hidden = true;
         list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Failed to load notifications.</p>';
+      }
+    }
+
+    function selectAllNotifications(checked) {
+      document.querySelectorAll('#notificationsList .notification-select').forEach(input => {
+        input.checked = checked;
+      });
+      updateNotificationSelection();
+    }
+
+    function updateNotificationSelection() {
+      const checkboxes = [...document.querySelectorAll('#notificationsList .notification-select')];
+      const selectedCount = checkboxes.filter(input => input.checked).length;
+      const selectAll = document.getElementById('selectAllNotifications');
+      selectAll.checked = checkboxes.length > 0 && selectedCount === checkboxes.length;
+      selectAll.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
+      document.getElementById('selectedNotificationCount').textContent = `${selectedCount} selected`;
+      document.getElementById('deleteSelectedNotifications').disabled = selectedCount === 0;
+    }
+
+    async function deleteSelectedNotifications() {
+      const notificationIds = [...document.querySelectorAll('#notificationsList .notification-select:checked')]
+        .map(input => JSON.parse(input.value));
+      if (!notificationIds.length || !window.confirm(`Delete ${notificationIds.length} selected notification${notificationIds.length === 1 ? '' : 's'}?`)) return;
+
+      const button = document.getElementById('deleteSelectedNotifications');
+      button.disabled = true;
+      try {
+        const res = await fetch('/api/items/notifications', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notificationIds })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || 'Could not delete notifications.');
+        showToast(`${data.deletedCount} notification${data.deletedCount === 1 ? '' : 's'} deleted.`);
+        await loadNotificationsIntoModal();
+        await loadMyNotifications();
+      } catch (err) {
+        button.disabled = false;
+        showToast(err.message || 'Could not delete notifications.', 'error');
       }
     }
 

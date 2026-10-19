@@ -2461,3 +2461,50 @@ button {
   white-space: nowrap;
   box-sizing: border-box;
 }
+
+#itemsGrid.registered-belongings-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .75rem !important;
+  width: 100%;
+}
+
+#itemsGrid.registered-belongings-grid > .registered-belonging-card {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 1rem;
+}
+
+#itemsGrid.registered-belongings-grid .registered-belonging-protection {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#itemsGrid.registered-belongings-grid .card-actions {
+  display: flex;
+  flex-wrap: wrap !important;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: .5rem;
+}
+
+#itemsGrid.registered-belongings-grid .card-actions .btn-sm {
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  #itemsGrid.registered-belongings-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  #itemsGrid.registered-belongings-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}

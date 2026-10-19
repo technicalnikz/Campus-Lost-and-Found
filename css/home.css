@@ -423,6 +423,47 @@
       font-size: 0.85rem;
       color: #ffffff;
     }
+    .notification-selection-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+    .notification-selection-toolbar[hidden] {
+      display: none;
+    }
+    .notification-select-all,
+    .notification-select-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+    }
+    .notification-select-control {
+      margin-bottom: 0.55rem;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+    }
+    .notification-select-all input,
+    .notification-select-control input {
+      accent-color: var(--blue-main);
+    }
+    .btn-delete-notifications {
+      margin-left: auto;
+      padding: 0.35rem 0.65rem;
+      border: 1px solid rgba(248, 113, 113, 0.45);
+      border-radius: 6px;
+      background: rgba(248, 113, 113, 0.1);
+      color: #fca5a5;
+      font: inherit;
+      cursor: pointer;
+    }
+    .btn-delete-notifications:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
     .notif-time {
       font-size: 0.7rem;
       color: var(--text-muted);

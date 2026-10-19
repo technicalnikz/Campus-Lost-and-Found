@@ -161,6 +161,7 @@ let currentUser = null;
     function renderItemsGrid(items) {
       const grid = document.getElementById('itemsGrid');
       const pagination = document.getElementById('itemsPagination');
+      grid.classList.toggle('registered-belongings-grid', currentFilter === 'registered');
 
       if (!items || items.length === 0) {
         pagination.innerHTML = '';
@@ -195,21 +196,21 @@ let currentUser = null;
         if (item.type === 'registered') {
           const canManageRegistered = currentUser?.role === 'admin' || item.reportedBy === currentUser?.id;
           return `
-            <div class="project-card" id="item-card-${item.id}" style="border-color: rgba(59,130,246,0.45); background: rgba(59,130,246,0.04);">
+            <div class="project-card registered-belonging-card" id="item-card-${item.id}">
               <div class="project-card-header">
                 <div class="item-card-header-content">
                   <div class="item-card-meta-row">
                     <div class="item-card-category-ref">
-                      <span class="project-type" title="${escapeHtml(item.category)}" style="color: #93c5fd;">${escapeHtml(item.category)}</span>
-                      <span class="ref-code" title="${escapeHtml(item.refCode || '')}" style="color: #60a5fa;">${escapeHtml(item.refCode || '')}</span>
+                      <span class="project-type registered-belonging-category" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
+                      <span class="ref-code registered-belonging-ref" title="${escapeHtml(item.refCode || '')}">${escapeHtml(item.refCode || '')}</span>
                     </div>
                     <span class="item-badge badge-registered">🔒 Registered Belonging</span>
                   </div>
-                  <h3 style="margin-top: 0.35rem; color: #ffffff;">${escapeHtml(item.title)}</h3>
+                  <h3 class="registered-belonging-title" style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
                 </div>
               </div>
 
-              <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.22); border-radius: 8px; padding: 0.6rem 0.75rem; margin: 0.5rem 0; font-size: 0.74rem; color: #bfdbfe; line-height: 1.4;">
+              <div class="registered-belonging-protection">
                 🛡️ <strong>Preventive Protection Active:</strong> Paste QR sticker onto this item. If someone scans it, an anonymous notification goes straight to your account.
               </div>
 
@@ -536,9 +537,16 @@ let currentUser = null;
           .trim();
         instructionsElement.style.display = instructionsElement.textContent ? '' : 'none';
         document.getElementById('finderRefCodeInput').value = item.refCode;
+        document.getElementById('finderSubmissionKeyInput').value =
+          window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         document.getElementById('finderMessageInput').value = '';
         document.getElementById('finderLocationInput').value = '';
         document.getElementById('finderContactInput').value = '';
+        const form = document.getElementById('anonymousFinderForm');
+        form.querySelectorAll('input:not([type="hidden"]), textarea').forEach(field => { field.disabled = false; });
+        const sendButton = document.getElementById('finderSendBtn');
+        sendButton.disabled = false;
+        sendButton.textContent = '🚀 Send Alert to Owner';
         document.getElementById('anonymousFinderModal').classList.add('open');
       } catch (err) {
         showToast('Failed to load item info.', 'error');
@@ -555,26 +563,38 @@ let currentUser = null;
       const message       = document.getElementById('finderMessageInput').value.trim();
       const locationFound = document.getElementById('finderLocationInput').value.trim();
       const finderContact = document.getElementById('finderContactInput').value.trim();
+      const submissionKey = document.getElementById('finderSubmissionKeyInput').value;
+      const sendButton = document.getElementById('finderSendBtn');
 
+      if (sendButton.disabled) return;
       if (!message) {
         showToast('Please describe where and how you found the item.', 'error');
         return;
       }
 
+      sendButton.disabled = true;
+      sendButton.textContent = 'Sending Alert...';
       try {
         const res = await fetch('/api/items/anonymous-notify', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submissionKey },
           body: JSON.stringify({ refCode, message, locationFound, finderContact })
         });
         const data = await res.json();
         if (data.success) {
           showToast('📲 Anonymous alert delivered to the owner\'s account!');
-          closeAnonymousFinderModal();
+          sendButton.textContent = 'Alert Sent';
+          document.getElementById('anonymousFinderForm')
+            .querySelectorAll('input:not([type="hidden"]), textarea')
+            .forEach(field => { field.disabled = true; });
         } else {
+          sendButton.disabled = false;
+          sendButton.textContent = '🚀 Send Alert to Owner';
           showToast(data.message || 'Failed to send notification.', 'error');
         }
       } catch (err) {
+        sendButton.disabled = false;
+        sendButton.textContent = '🚀 Send Alert to Owner';
         showToast('Server error. Please try again.', 'error');
       }
     }
