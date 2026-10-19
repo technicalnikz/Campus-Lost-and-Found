@@ -1764,6 +1764,14 @@ input[type='submit'] {
   }
 
   .mobile-drawer-signin {
+    display: none;
+  }
+
+  .mobile-drawer-footer:has(> .mobile-drawer-signin:only-child) {
+    display: none;
+  }
+
+  .mobile-drawer-signin {
     border-color: var(--blue-main);
     background: var(--blue-main);
     color: #ffffff;
