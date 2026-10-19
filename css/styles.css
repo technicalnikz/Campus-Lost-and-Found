@@ -2346,11 +2346,11 @@ select::placeholder,
   position: absolute;
   top: -.35rem;
   right: -.35rem;
-  width: 2rem;
+  width: 1.5rem;
   height: 2rem;
-  border: 1px solid rgba(148,163,184,.3);
-  border-radius: 7px;
-  background: var(--card-bg, #1f2937);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--text-muted);
   font-size: 1.35rem;
   line-height: 1;
@@ -2358,7 +2358,7 @@ select::placeholder,
   z-index: 3;
 }
 .belonging-menu-button:hover,
-.belonging-menu-button:focus-visible { color: var(--text-main); border-color: var(--blue-main); }
+.belonging-menu-button:focus-visible { color: var(--text-main); }
 .belonging-menu-wrap { position: relative; flex: 0 0 auto; }
 .belonging-menu {
   position: absolute;
