@@ -2420,15 +2420,16 @@ select::placeholder,
     color: #94a3b8;
   }
   .belonging-menu {
-    width: min(148px, calc(100vw - 1.5rem));
-    min-width: 120px;
+    width: 88px;
+    max-width: 88px;
+    min-width: 88px;
     top: 0;
     right: calc(100% + .4rem);
     overflow: hidden;
   }
   .belonging-menu button {
-    min-height: 40px;
-    padding: .45rem .6rem;
-    font-size: .74rem;
+    min-height: 38px;
+    padding: .35rem .45rem;
+    font-size: .68rem;
   }
 }
