@@ -2391,10 +2391,33 @@ select::placeholder,
 .belonging-menu button.danger { color: #f87171; }
 
 @media (max-width: 560px) {
+  .registered-card-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1.5rem;
+    align-items: start;
+    gap: .35rem;
+  }
+  .registered-card-header-content { min-width: 0; }
+  .registered-card-meta-row {
+    align-items: flex-start !important;
+    gap: .5rem !important;
+    margin-bottom: .45rem !important;
+  }
+  .registered-card-meta-row .item-card-category-ref {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .1rem;
+  }
+  .registered-card-meta-row .item-badge {
+    align-self: flex-start;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .belonging-menu-button {
     top: .25rem;
     right: .35rem;
-    color: #facc15;
+    color: #94a3b8;
   }
   .belonging-menu {
     width: min(148px, calc(100% - 2.5rem));
