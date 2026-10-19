@@ -536,9 +536,16 @@ let currentUser = null;
           .trim();
         instructionsElement.style.display = instructionsElement.textContent ? '' : 'none';
         document.getElementById('finderRefCodeInput').value = item.refCode;
+        document.getElementById('finderSubmissionKeyInput').value =
+          window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         document.getElementById('finderMessageInput').value = '';
         document.getElementById('finderLocationInput').value = '';
         document.getElementById('finderContactInput').value = '';
+        const form = document.getElementById('anonymousFinderForm');
+        form.querySelectorAll('input:not([type="hidden"]), textarea').forEach(field => { field.disabled = false; });
+        const sendButton = document.getElementById('finderSendBtn');
+        sendButton.disabled = false;
+        sendButton.textContent = '🚀 Send Alert to Owner';
         document.getElementById('anonymousFinderModal').classList.add('open');
       } catch (err) {
         showToast('Failed to load item info.', 'error');
@@ -555,26 +562,38 @@ let currentUser = null;
       const message       = document.getElementById('finderMessageInput').value.trim();
       const locationFound = document.getElementById('finderLocationInput').value.trim();
       const finderContact = document.getElementById('finderContactInput').value.trim();
+      const submissionKey = document.getElementById('finderSubmissionKeyInput').value;
+      const sendButton = document.getElementById('finderSendBtn');
 
+      if (sendButton.disabled) return;
       if (!message) {
         showToast('Please describe where and how you found the item.', 'error');
         return;
       }
 
+      sendButton.disabled = true;
+      sendButton.textContent = 'Sending Alert...';
       try {
         const res = await fetch('/api/items/anonymous-notify', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submissionKey },
           body: JSON.stringify({ refCode, message, locationFound, finderContact })
         });
         const data = await res.json();
         if (data.success) {
           showToast('📲 Anonymous alert delivered to the owner\'s account!');
-          closeAnonymousFinderModal();
+          sendButton.textContent = 'Alert Sent';
+          document.getElementById('anonymousFinderForm')
+            .querySelectorAll('input:not([type="hidden"]), textarea')
+            .forEach(field => { field.disabled = true; });
         } else {
+          sendButton.disabled = false;
+          sendButton.textContent = '🚀 Send Alert to Owner';
           showToast(data.message || 'Failed to send notification.', 'error');
         }
       } catch (err) {
+        sendButton.disabled = false;
+        sendButton.textContent = '🚀 Send Alert to Owner';
         showToast('Server error. Please try again.', 'error');
       }
     }

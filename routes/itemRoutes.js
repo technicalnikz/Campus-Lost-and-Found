@@ -19,6 +19,30 @@ const {
 const postgresStore = require('../services/postgresStore');
 const supabaseStorage = require('../services/supabaseStorage');
 
+function finderSubmissionFingerprint(target, message, locationFound, finderContact) {
+  return crypto.createHash('sha256').update(JSON.stringify({
+    target,
+    message,
+    locationFound,
+    finderContact
+  })).digest('hex');
+}
+
+function findFinderSubmission(items, submissionKey) {
+  if (!submissionKey) return null;
+  for (const item of items) {
+    const notification = (Array.isArray(item.notifications) ? item.notifications : [])
+      .find(entry => entry.submissionKey === submissionKey);
+    if (notification) return notification;
+  }
+  return null;
+}
+
+function publicFinderNotification(notification) {
+  const { submissionKey, submissionFingerprint, ...result } = notification;
+  return result;
+}
+
 // res.sendFile requires an absolute path. DATA_DIR is commonly configured as
 // a relative value (for example, DATA_DIR=./data) on hosted deployments.
 const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(__dirname, '..', 'data'));
@@ -585,8 +609,12 @@ router.get('/qr-lookup/:refCode', (req, res) => {
 router.post('/anonymous-notify', async (req, res) => {
   try {
     const { refCode, message, locationFound, finderContact } = req.body;
+    const submissionKey = req.get('Idempotency-Key')?.trim();
     if (!refCode || !message) {
       return res.status(400).json({ success: false, message: 'Reference code and message are required.' });
+    }
+    if (submissionKey && !/^[A-Za-z0-9_-]{16,128}$/.test(submissionKey)) {
+      return res.status(400).json({ success: false, message: 'Invalid finder alert submission key.' });
     }
     if (String(message).length > 1000 || String(locationFound || '').length > 150 || String(finderContact || '').length > 150) {
       return res.status(400).json({ success: false, message: 'Finder message fields exceed the allowed length.' });
@@ -594,6 +622,22 @@ router.post('/anonymous-notify', async (req, res) => {
 
     const items = getItems();
     const searchRef = refCode.toUpperCase().trim();
+    const submissionFingerprint = finderSubmissionFingerprint(
+      searchRef, message, locationFound || '', finderContact || ''
+    );
+    const previousSubmission = findFinderSubmission(items, submissionKey);
+    if (previousSubmission) {
+      if (previousSubmission.submissionFingerprint !== submissionFingerprint) {
+        return res.status(409).json({ success: false, message: 'This finder alert key was already used for a different alert.' });
+      }
+      return res.json({
+        success: true,
+        duplicate: true,
+        message: 'This alert was already sent to the owner.',
+        notification: publicFinderNotification(previousSubmission)
+      });
+    }
+
     const itemIndex = items.findIndex(i => i.refCode && i.refCode.toUpperCase().trim() === searchRef);
 
     if (itemIndex === -1) {
@@ -614,7 +658,8 @@ router.post('/anonymous-notify', async (req, res) => {
       locationFound: sanitizeString(locationFound || 'Campus area'),
       finderContact: sanitizeString(finderContact || 'Anonymous Student / Finder'),
       timestamp: new Date().toISOString(),
-      read: false
+      read: false,
+      ...(submissionKey ? { submissionKey, submissionFingerprint } : {})
     };
 
     item.notifications.unshift(newNotification);
@@ -640,7 +685,7 @@ router.post('/anonymous-notify', async (req, res) => {
         : 'Finder alert saved to the owner\'s inbox, but email delivery is unavailable.',
       emailSent,
       itemTitle: item.title,
-      notification: newNotification
+      notification: publicFinderNotification(newNotification)
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to deliver notification.' });
@@ -651,8 +696,12 @@ router.post('/anonymous-notify', async (req, res) => {
 router.post('/match-reference-notify', async (req, res) => {
   try {
     const { token, message, locationFound, finderContact } = req.body;
+    const submissionKey = req.get('Idempotency-Key')?.trim();
     if (!token || !message) {
       return res.status(400).json({ success: false, message: 'Match reference and message are required.' });
+    }
+    if (submissionKey && !/^[A-Za-z0-9_-]{16,128}$/.test(submissionKey)) {
+      return res.status(400).json({ success: false, message: 'Invalid finder alert submission key.' });
     }
     if (String(message).length > 1000 || String(locationFound || '').length > 150 || String(finderContact || '').length > 150) {
       return res.status(400).json({ success: false, message: 'Finder message fields exceed the allowed length.' });
@@ -664,6 +713,22 @@ router.post('/match-reference-notify', async (req, res) => {
     }
 
     const items = getItems();
+    const submissionFingerprint = finderSubmissionFingerprint(
+      token, message, locationFound || '', finderContact || ''
+    );
+    const previousSubmission = findFinderSubmission(items, submissionKey);
+    if (previousSubmission) {
+      if (previousSubmission.submissionFingerprint !== submissionFingerprint) {
+        return res.status(409).json({ success: false, message: 'This finder alert key was already used for a different alert.' });
+      }
+      return res.json({
+        success: true,
+        duplicate: true,
+        message: 'This alert was already sent to the owner.',
+        notification: publicFinderNotification(previousSubmission)
+      });
+    }
+
     const lost = items.find(item => String(item.id) === String(reference.lostId));
     const found = items.find(item => String(item.id) === String(reference.foundId));
     if (!lost || !found || lost.type !== 'lost' || found.type !== 'found') {
@@ -690,7 +755,8 @@ router.post('/match-reference-notify', async (req, res) => {
       locationFound: sanitizeString(locationFound || 'Campus area'),
       finderContact: sanitizeString(finderContact || 'Anonymous Student / Finder'),
       timestamp: new Date().toISOString(),
-      read: false
+      read: false,
+      ...(submissionKey ? { submissionKey, submissionFingerprint } : {})
     };
 
     lost.notifications = [notification, ...(Array.isArray(lost.notifications) ? lost.notifications : [])].slice(0, 100);
@@ -710,7 +776,7 @@ router.post('/match-reference-notify', async (req, res) => {
       message: emailSent
         ? 'Alert saved to the owner\'s inbox and sent by email.'
         : 'Alert saved to the owner\'s inbox, but email delivery is unavailable.',
-      notification
+      notification: publicFinderNotification(notification)
     });
   } catch (error) {
     console.error('Match finder alert failed:', error.message);
@@ -729,7 +795,7 @@ router.get('/my-notifications', requireAuth, (req, res) => {
     if (i.notifications && Array.isArray(i.notifications)) {
       i.notifications.forEach(n => {
         notifications.push({
-          ...n,
+          ...publicFinderNotification(n),
           itemId: i.id,
           itemTitle: i.title,
           refCode: i.refCode

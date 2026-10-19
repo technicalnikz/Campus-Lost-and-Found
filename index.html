@@ -562,6 +562,7 @@
 
       <form id="anonymousFinderForm" onsubmit="handleAnonymousFinderSubmit(event)">
         <input type="hidden" id="finderRefCodeInput" />
+        <input type="hidden" id="finderSubmissionKeyInput" />
         <div class="input-field" style="margin-bottom: 0.85rem;">
           <label for="finderLocationInput">Where is the item right now? <span class="required">*</span></label>
           <input type="text" id="finderLocationInput" placeholder="e.g. Left with Ms. Santos at Library 2nd floor desk" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
@@ -1177,9 +1178,16 @@
       instructionsElement.textContent = instructions;
       instructionsElement.style.display = instructions ? '' : 'none';
       document.getElementById('finderRefCodeInput').value = safeItem.refCode || '';
+      document.getElementById('finderSubmissionKeyInput').value =
+        window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       document.getElementById('finderMessageInput').value = '';
       document.getElementById('finderLocationInput').value = '';
       document.getElementById('finderContactInput').value = '';
+      const form = document.getElementById('anonymousFinderForm');
+      form.querySelectorAll('input:not([type="hidden"]), textarea').forEach(field => { field.disabled = false; });
+      const sendButton = document.getElementById('finderSendBtn');
+      sendButton.disabled = false;
+      sendButton.textContent = '🚀 Send Alert to Owner';
       document.getElementById('anonymousFinderModal').classList.add('open');
     }
 
@@ -1204,12 +1212,16 @@
       const message       = document.getElementById('finderMessageInput').value.trim();
       const locationFound = document.getElementById('finderLocationInput').value.trim();
       const finderContact = document.getElementById('finderContactInput').value.trim();
+      const sendButton = document.getElementById('finderSendBtn');
 
+      if (sendButton.disabled) return;
       if (!message) {
         showToast('Please describe where and how you found the item.', 'error');
         return;
       }
 
+      sendButton.disabled = true;
+      sendButton.textContent = 'Sending Alert...';
       const items = getItems();
       const item = items.find(i => i.refCode && i.refCode.toUpperCase() === refCode.toUpperCase());
       if (item) {
@@ -1226,10 +1238,18 @@
         });
         saveItems(items);
         updateNotifBadge();
+        sendButton.textContent = 'Alert Sent';
+        document.getElementById('anonymousFinderForm')
+          .querySelectorAll('input:not([type="hidden"]), textarea')
+          .forEach(field => { field.disabled = true; });
+      } else {
+        sendButton.disabled = false;
+        sendButton.textContent = '🚀 Send Alert to Owner';
+        showToast('Item not found. The alert was not sent.', 'error');
+        return;
       }
 
       showToast('📲 Anonymous alert delivered to the owner\'s account!');
-      closeAnonymousFinderModal();
     }
 
     // ── Match QR Modal ────────────────────────────────────────────────────────

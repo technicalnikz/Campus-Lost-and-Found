@@ -426,6 +426,7 @@ test('registered belongings are private except through QR reference lookup', asy
 test('finder QR alerts appear in the owner inbox and are emailed to the owner', async t => {
   const studentCookie = await login('student@my.cspc.edu.ph', studentPassword);
   const smtp = await startSmtpCaptureServer();
+  const submissionKey = 'finder-alert-duplicate-test-01';
   let notificationId;
   t.after(() => {
     if (!notificationId) return;
@@ -450,7 +451,7 @@ test('finder QR alerts appear in the owner inbox and are emailed to the owner', 
   try {
     response = await fetch(`${baseUrl}/api/items/anonymous-notify`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submissionKey },
       body: JSON.stringify({
         refCode: 'CSPC-REG-QR-0012',
         message: 'I found it by the library entrance.',
@@ -470,6 +471,7 @@ test('finder QR alerts appear in the owner inbox and are emailed to the owner', 
   const result = await response.json();
   assert.equal(result.emailSent, true);
   assert.equal(result.notification.read, false);
+  assert.equal(Object.hasOwn(result.notification, 'submissionKey'), false);
   notificationId = result.notification.id;
   assert.equal(smtp.messages.length, 1);
   assert.match(smtp.messages[0].recipient, /owner@example\.edu/i);
@@ -477,6 +479,34 @@ test('finder QR alerts appear in the owner inbox and are emailed to the owner', 
   assert.match(emailContent, /Finder alert for your registered item: Registered laptop/i);
   assert.match(emailContent, /Library entrance/);
   assert.match(emailContent, /I found it by the library entrance\./);
+
+  const duplicateResponse = await fetch(`${baseUrl}/api/items/anonymous-notify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submissionKey },
+    body: JSON.stringify({
+      refCode: 'CSPC-REG-QR-0012',
+      message: 'I found it by the library entrance.',
+      locationFound: 'Library entrance',
+      finderContact: 'finder@example.edu'
+    })
+  });
+  assert.equal(duplicateResponse.status, 200);
+  const duplicate = await duplicateResponse.json();
+  assert.equal(duplicate.duplicate, true);
+  assert.equal(duplicate.notification.id, result.notification.id);
+  assert.equal(smtp.messages.length, 1, 'a retry must not send a second email');
+
+  const changedPayloadResponse = await fetch(`${baseUrl}/api/items/anonymous-notify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submissionKey },
+    body: JSON.stringify({
+      refCode: 'CSPC-REG-QR-0012',
+      message: 'A different alert using the same key.',
+      locationFound: 'Library entrance',
+      finderContact: 'finder@example.edu'
+    })
+  });
+  assert.equal(changedPayloadResponse.status, 409);
 
   const inboxResponse = await fetch(`${baseUrl}/api/items/my-notifications`, {
     headers: { Cookie: studentCookie }
@@ -487,6 +517,8 @@ test('finder QR alerts appear in the owner inbox and are emailed to the owner', 
   assert.ok(finderAlert);
   assert.equal(finderAlert.message, 'I found it by the library entrance.');
   assert.equal(finderAlert.locationFound, 'Library entrance');
+  assert.equal(Object.hasOwn(finderAlert, 'submissionKey'), false);
+  assert.equal(notifications.filter(notification => notification.id === result.notification.id).length, 1);
   assert.equal(unreadCount, 1);
 });
 
