@@ -390,10 +390,10 @@
     .admin-search-row .form-control {
       width: 100%;
       max-width: none;
-      height: 30px;
-      padding: .5rem .25rem;
+      height: 20px;
+      padding: 0 .25rem;
       border-radius: .5rem;
-      font-size: .8rem;
+      font-size: 8px;
     }
     .admin-search-wrap { position: relative; min-width: 0; }
     .admin-search-row #exportBtn { width: 100%; }
@@ -492,7 +492,7 @@
       .admin-stats .action-needed-card { grid-column: 1 / -1; }
       .admin-tab { padding: .3rem .65rem; border-radius: 6px; font-size: .72rem; }
       .admin-tab[data-tab='claims'] { white-space: normal; line-height: 1.05; }
-      .admin-search-row .form-control { height: auto; padding: .3rem .65rem; border-radius: 6px; font-size: .72rem; }
+      .admin-search-row .form-control { height: 20px; padding: 0 .65rem; border-radius: 6px; font-size: 8px; }
       .bulk-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:.5rem; }
       .bulk-toolbar label { margin-right:0; min-width:0; }
       .bulk-toolbar #selectedItemsCount { text-align:right; }
