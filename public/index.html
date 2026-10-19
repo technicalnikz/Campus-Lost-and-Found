@@ -1215,6 +1215,7 @@
     function closeBelongingMenus() {
       document.querySelectorAll('.belonging-menu.open').forEach(menu => {
         menu.classList.remove('open');
+        menu.parentElement?.classList.remove('menu-open');
         menu.previousElementSibling?.setAttribute('aria-expanded', 'false');
       });
     }
@@ -1227,6 +1228,7 @@
       closeBelongingMenus();
       if (!wasOpen) {
         menu.classList.add('open');
+        menu.parentElement?.classList.add('menu-open');
         menu.previousElementSibling?.setAttribute('aria-expanded', 'true');
       }
     }

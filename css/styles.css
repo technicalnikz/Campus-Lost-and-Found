@@ -2359,6 +2359,11 @@ select::placeholder,
 }
 .belonging-menu-button:hover,
 .belonging-menu-button:focus-visible { color: var(--text-main); }
+.belonging-menu-wrap.menu-open .belonging-menu-button {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
 .belonging-menu-wrap { position: relative; flex: 0 0 auto; }
 .belonging-menu {
   position: absolute;
