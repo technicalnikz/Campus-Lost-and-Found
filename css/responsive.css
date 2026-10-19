@@ -1729,14 +1729,7 @@ input[type='submit'] {
   }
 
   .nav-links .nav-register-mobile::before {
-    content: '+';
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.25rem;
-    margin-right: .8rem;
-    color: var(--blue-light);
-    font-size: 1.15rem;
+    display: none;
   }
 
   .nav-links .mobile-menu-logout {
