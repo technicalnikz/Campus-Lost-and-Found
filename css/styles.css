@@ -2377,6 +2377,9 @@ select::placeholder,
 .belonging-menu.open { display: grid; gap: .15rem; }
 .belonging-menu button {
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
   padding: .35rem .45rem;
   border: 0;
   border-radius: 6px;
@@ -2385,6 +2388,16 @@ select::placeholder,
   text-align: left;
   font-size: .68rem;
   cursor: pointer;
+}
+.belonging-menu-icon {
+  width: .8rem;
+  height: .8rem;
+  flex: 0 0 .8rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .belonging-menu button:hover,
 .belonging-menu button:focus-visible { background: rgba(59,130,246,.12); }
