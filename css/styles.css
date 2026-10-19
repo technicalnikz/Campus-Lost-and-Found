@@ -2343,10 +2343,10 @@ select::placeholder,
     }
 [data-theme='dark'] .belonging-menu-button,
 .belonging-menu-button {
-  position: relative;
-  top: auto;
-  right: auto;
-  width: 100%;
+  position: absolute;
+  top: -.35rem;
+  right: -.35rem;
+  width: 1.5rem;
   height: 2rem;
   border: 0;
   border-radius: 0;
@@ -2359,19 +2359,16 @@ select::placeholder,
 }
 .belonging-menu-button:hover,
 .belonging-menu-button:focus-visible { color: var(--text-main); }
-.belonging-menu-wrap {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 1.5rem;
-  height: 2rem;
-  flex: 0 0 1.5rem;
+.belonging-menu-wrap.menu-open .belonging-menu-button {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
+.belonging-menu-wrap { position: relative; flex: 0 0 auto; }
 .belonging-menu {
   position: absolute;
-  top: calc(100% + .35rem);
-  right: 0;
-  left: auto;
+  top: 0;
+  right: calc(100% + .4rem);
   z-index: 20;
   display: none;
   min-width: 112px;
@@ -2436,17 +2433,16 @@ select::placeholder,
     text-overflow: ellipsis;
   }
   .belonging-menu-button {
-    top: auto;
-    right: auto;
+    top: .25rem;
+    right: .35rem;
     color: #94a3b8;
   }
   .belonging-menu {
     width: 124px;
     max-width: 124px;
     min-width: 124px;
-    top: calc(100% + .35rem);
-    right: 0;
-    left: auto;
+    top: 0;
+    right: calc(100% + .4rem);
     overflow: hidden;
   }
   .belonging-menu button {
