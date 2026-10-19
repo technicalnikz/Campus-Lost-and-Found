@@ -2424,7 +2424,8 @@ select::placeholder,
     max-width: 88px;
     min-width: 88px;
     top: 0;
-    right: calc(100% + .4rem);
+    left: calc(100% + .4rem);
+    right: auto;
     overflow: hidden;
   }
   .belonging-menu button {
