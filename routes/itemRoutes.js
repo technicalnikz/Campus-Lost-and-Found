@@ -1283,13 +1283,42 @@ router.patch('/:id/claim', requireAuth, async (req, res) => {
   });
 });
 
-// DELETE /api/items/:id - Remove item (Admin or original reporter)
-router.delete('/:id', requireRole('admin'), async (req, res) => {
+// PATCH /api/items/:id/registered - Update a student's registered belonging.
+router.patch('/:id/registered', requireAuth, (req, res) => {
+  const items = getItems();
+  const item = items.find(entry => String(entry.id) === String(req.params.id));
+  if (!item || item.type !== 'registered') return res.status(404).json({ success: false, message: 'Registered belonging not found.' });
+  const isOwner = String(item.reportedBy) === String(req.session.user.id);
+  if (req.session.user.role !== 'admin' && !isOwner) return res.status(403).json({ success: false, message: 'You can only edit your own registered belongings.' });
+
+  const { title, category, location, identifiers, instructions } = req.body;
+  const cleanTitle = sanitizeString(title || '');
+  const cleanCategory = sanitizeString(category || '');
+  if (cleanTitle.length < 3 || cleanTitle.length > 100 || !cleanCategory) {
+    return res.status(400).json({ success: false, message: 'A valid title and category are required.' });
+  }
+  item.title = cleanTitle;
+  item.category = cleanCategory;
+  item.location = sanitizeString(location || 'Campus-wide');
+  item.locationDetails = sanitizeString(identifiers || '');
+  item.verification = item.locationDetails || 'Registered by verified CSPC account';
+  item.desc = item.locationDetails ? `Valuable belonging: ${item.locationDetails}` : 'Valuable personal belonging registered in student vault.';
+  item.instructions = sanitizeString(instructions || '');
+  item.updatedAt = new Date().toISOString();
+  saveItems(items);
+  res.json({ success: true, message: 'Belonging details updated.', item });
+});
+
+// DELETE /api/items/:id - Remove item (owner of a registered belonging or admin)
+router.delete('/:id', requireAuth, async (req, res) => {
   let items = getItems();
   const item = items.find(i => String(i.id) === String(req.params.id));
   if (!item) {
     return res.status(404).json({ success: false, message: 'Item not found.' });
   }
+  const canDelete = req.session.user.role === 'admin'
+    || (item.type === 'registered' && String(item.reportedBy) === String(req.session.user.id));
+  if (!canDelete) return res.status(403).json({ success: false, message: 'You do not have permission to delete this item.' });
 
   items = items.filter(i => String(i.id) !== String(req.params.id));
   saveItems(items);

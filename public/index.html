@@ -454,8 +454,8 @@
       <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
         <div>
           <span class="modal-badge-pill" style="font-size: 0.68rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">Preventive Student Vault</span>
-          <h2 class="modal-title" style="font-size: 1.25rem; font-weight: 800; margin: 0.4rem 0 0.2rem;">Register Valuable Belonging</h2>
-          <p class="modal-subtitle" style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Register your laptop, tumbler, or binder before it gets lost to generate an anonymous recovery QR sticker.</p>
+          <h2 class="modal-title" id="registerModalTitle" style="font-size: 1.25rem; font-weight: 800; margin: 0.4rem 0 0.2rem;">Register Valuable Belonging</h2>
+          <p class="modal-subtitle" id="registerModalSubtitle" style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Register your laptop, tumbler, or binder before it gets lost to generate an anonymous recovery QR sticker.</p>
         </div>
         <button onclick="closeRegisterBelongingModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
       </div>
@@ -911,7 +911,7 @@
         if (item.type === 'registered') {
           return `
             <div class="project-card" id="item-card-${item.id}" style="border-color: rgba(59,130,246,0.45); background: rgba(59,130,246,0.04);">
-              <div class="project-card-header">
+              <div class="project-card-header" style="position: relative;">
                 <div class="item-card-header-content">
                   <div class="item-card-meta-row">
                     <div class="item-card-category-ref">
@@ -921,6 +921,13 @@
                     <span class="item-badge badge-registered">🔒 Registered Belonging</span>
                   </div>
                   <h3 style="margin-top: 0.35rem; color: #ffffff;">${escapeHtml(item.title)}</h3>
+                </div>
+                <div class="belonging-menu-wrap">
+                  <button type="button" class="belonging-menu-button" aria-label="More options for ${escapeHtml(item.title)}" aria-haspopup="menu" aria-expanded="false" onclick="toggleBelongingMenu(event, '${escapeHtml(item.id)}')">&#8942;</button>
+                  <div class="belonging-menu" id="belonging-menu-${escapeHtml(item.id)}" role="menu">
+                    <button type="button" role="menuitem" onclick="editRegisteredBelonging(event, '${escapeHtml(item.id)}')">Edit Details</button>
+                    <button type="button" role="menuitem" class="danger" onclick="deleteRegisteredBelonging(event, '${escapeHtml(item.id)}')">Delete Item</button>
+                  </div>
                 </div>
               </div>
 
@@ -939,7 +946,6 @@
               <div class="card-actions" style="margin-top: 1rem;">
                 <button class="btn-sm btn-qr" onclick="openQrStickerModal(${item.id})">QR Sticker</button>
                 <button class="btn-sm btn-outline" style="border-color: rgba(34,197,94,0.4); color: #86efac;" onclick="openAnonymousFinderModal('${escapeHtml(item.refCode)}')">Test Finder Screen</button>
-                ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Unregister</button>` : ''}
               </div>
             </div>
           `;
@@ -1158,11 +1164,17 @@
       }
     }
 
+    let editingBelongingId = null;
+
     function closeRegisterBelongingModal() {
       document.getElementById('registerBelongingModal').classList.remove('open');
       const form = document.getElementById('registerBelongingForm');
       if (form) form.reset();
       resetCategoryPicker('regCategory');
+      editingBelongingId = null;
+      document.getElementById('registerModalTitle').textContent = 'Register Valuable Belonging';
+      document.getElementById('registerModalSubtitle').textContent = 'Register your laptop, tumbler, or binder before it gets lost to generate an anonymous recovery QR sticker.';
+      document.getElementById('regSubmitBtn').textContent = 'Register & Generate QR Sticker';
     }
 
     let activeCategoryField = '';
@@ -1200,6 +1212,51 @@
       document.getElementById('authRequiredModal').classList.remove('open');
     }
 
+    function closeBelongingMenus() {
+      document.querySelectorAll('.belonging-menu.open').forEach(menu => {
+        menu.classList.remove('open');
+        menu.previousElementSibling?.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    function toggleBelongingMenu(event, id) {
+      event.stopPropagation();
+      const menu = document.getElementById(`belonging-menu-${id}`);
+      if (!menu) return;
+      const wasOpen = menu.classList.contains('open');
+      closeBelongingMenus();
+      if (!wasOpen) {
+        menu.classList.add('open');
+        menu.previousElementSibling?.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function editRegisteredBelonging(event, id) {
+      event.stopPropagation();
+      closeBelongingMenus();
+      const item = loadedItems.find(entry => String(entry.id) === String(id));
+      if (!item) return showToast('Belonging details are unavailable. Please refresh and try again.', true);
+      editingBelongingId = item.id;
+      document.getElementById('regTitle').value = item.title || '';
+      document.getElementById('regCategory').value = item.category || '';
+      const categoryPicker = document.getElementById('regCategoryPicker');
+      categoryPicker.textContent = item.category || 'Select category...';
+      categoryPicker.classList.toggle('selected', Boolean(item.category));
+      document.getElementById('regLocation').value = item.location || 'Campus-wide';
+      document.getElementById('regIdentifiers').value = item.locationDetails || item.verification || '';
+      document.getElementById('regInstructions').value = item.instructions || '';
+      document.getElementById('registerModalTitle').textContent = 'Edit Registered Belonging';
+      document.getElementById('registerModalSubtitle').textContent = 'Update the details for this registered belonging.';
+      document.getElementById('regSubmitBtn').textContent = 'Save Changes';
+      document.getElementById('registerBelongingModal').classList.add('open');
+    }
+
+    function deleteRegisteredBelonging(event, id) {
+      event.stopPropagation();
+      closeBelongingMenus();
+      openDeleteModal(id);
+    }
+
     async function handleRegisterBelongingSubmit(e) {
       e.preventDefault();
       const title        = document.getElementById('regTitle').value.trim();
@@ -1214,8 +1271,9 @@
       }
 
       try {
-        const res = await fetch('/api/items/register-belonging', {
-          method: 'POST',
+        const isEditing = Boolean(editingBelongingId);
+        const res = await fetch(isEditing ? `/api/items/${encodeURIComponent(editingBelongingId)}/registered` : '/api/items/register-belonging', {
+          method: isEditing ? 'PATCH' : 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title, category, location, identifiers, instructions })
         });
@@ -1228,8 +1286,10 @@
         closeRegisterBelongingModal();
         showToast('✅ Belonging registered! Your QR sticker is ready.');
 
+        if (isEditing) showToast('Belonging details updated.');
+
         // Open QR sticker modal for the newly registered item
-        openQrStickerModal(data.item.id);
+        if (!isEditing) openQrStickerModal(data.item.id);
 
         // Refresh belonging count chip
         fetchMyBelongingsCount();
@@ -1898,6 +1958,7 @@
       const links = document.getElementById('navLinks');
       const toggle = document.getElementById('menuToggle');
       document.addEventListener('click', (e) => {
+        if (!e.target.closest('.belonging-menu-wrap')) closeBelongingMenus();
         if (links && toggle && !links.contains(e.target) && !toggle.contains(e.target)) {
           links.classList.remove('open');
           document.querySelector('.navbar')?.classList.remove('mobile-drawer-active');

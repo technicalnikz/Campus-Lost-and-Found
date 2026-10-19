@@ -2341,3 +2341,50 @@ select::placeholder,
       color: #0f172a;
       box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     }
+[data-theme='dark'] .belonging-menu-button,
+.belonging-menu-button {
+  position: absolute;
+  top: -.35rem;
+  right: -.35rem;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(148,163,184,.3);
+  border-radius: 7px;
+  background: var(--card-bg, #1f2937);
+  color: var(--text-muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 3;
+}
+.belonging-menu-button:hover,
+.belonging-menu-button:focus-visible { color: var(--text-main); border-color: var(--blue-main); }
+.belonging-menu-wrap { position: relative; flex: 0 0 auto; }
+.belonging-menu {
+  position: absolute;
+  top: 2rem;
+  right: 0;
+  z-index: 20;
+  display: none;
+  min-width: 150px;
+  padding: .35rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--card-bg, #1f2937);
+  box-shadow: 0 12px 28px rgba(0,0,0,.35);
+}
+.belonging-menu.open { display: grid; gap: .15rem; }
+.belonging-menu button {
+  width: 100%;
+  padding: .5rem .65rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-main);
+  text-align: left;
+  font-size: .76rem;
+  cursor: pointer;
+}
+.belonging-menu button:hover,
+.belonging-menu button:focus-visible { background: rgba(59,130,246,.12); }
+.belonging-menu button.danger { color: #f87171; }
