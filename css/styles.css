@@ -2428,7 +2428,7 @@ select::placeholder,
     overflow: hidden;
   }
   .belonging-menu button {
-    min-height: 30px;
+    min-height: 25px;
     padding: .2rem .45rem;
     font-size: .68rem;
   }
