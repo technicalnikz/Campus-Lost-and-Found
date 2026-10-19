@@ -15,6 +15,8 @@ let deleteTargetId = null;
     let adminCurrentPage = 1;
     let adminUsers = [];
     let deleteUserTargetId = null;
+    let studentBelongings = [];
+    let studentBelongingsSignature = null;
 
     async function adminFetch(url, options = {}) {
       const response = await fetch(url, { ...options, credentials: 'same-origin' });
@@ -45,10 +47,12 @@ let deleteTargetId = null;
       initNav();
       if (!await requireAdminSession()) return;
       refreshAdminItems();
+      refreshStudentBelongings();
       refreshAdminClaims();
       refreshAdminUsers();
       window.setInterval(() => {
         refreshAdminItems();
+        refreshStudentBelongings();
         refreshAdminClaims();
       }, 5000);
 
@@ -66,6 +70,7 @@ let deleteTargetId = null;
           document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           document.getElementById('tabItems').style.display = activeTab === 'items' ? 'block' : 'none';
+          document.getElementById('tabBelongings').style.display = activeTab === 'belongings' ? 'block' : 'none';
           document.getElementById('tabClaims').style.display = activeTab === 'claims' ? 'block' : 'none';
           document.getElementById('tabUsers').style.display = activeTab === 'users' ? 'block' : 'none';
           if (activeTab === 'users') renderAdminUsers();
@@ -244,6 +249,39 @@ let deleteTargetId = null;
       } finally {
         adminRefreshInProgress = false;
       }
+    }
+
+    async function refreshStudentBelongings() {
+      try {
+        const response = await adminFetch('/api/items?type=registered', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!data.success || !Array.isArray(data.items)) return;
+        const nextSignature = JSON.stringify(data.items);
+        if (nextSignature === studentBelongingsSignature) return;
+        studentBelongingsSignature = nextSignature;
+        studentBelongings = data.items.map(normalizeAdminItem);
+        renderStudentBelongings();
+      } catch (error) {
+        // Keep the last snapshot when the API is temporarily unavailable.
+      }
+    }
+
+    function renderStudentBelongings() {
+      const body = document.getElementById('adminBelongingsBody');
+      const empty = document.getElementById('adminBelongingsEmptyState');
+      if (!body || !empty) return;
+      empty.hidden = studentBelongings.length > 0;
+      body.innerHTML = studentBelongings.map(item => `
+        <tr>
+          <td class="td-title">${escHtml(item.title || 'Untitled belonging')}</td>
+          <td>${escHtml(item.ownerName || item.reporterName || item.contact || 'Unknown student')}</td>
+          <td>${escHtml(item.category || '—')}</td>
+          <td>${escHtml(item.location || '—')}</td>
+          <td>${escHtml(item.refCode || '—')}</td>
+          <td>${escHtml(formatDate(item.createdAt || item.date))}</td>
+          <td class="actions-cell"><button class="action-btn action-btn-delete" onclick="openDeleteModal('${escHtml(item.id)}','${escHtml(item.title || 'this belonging')}','${escHtml(item.ownerName || 'the registered student')}')">Delete</button></td>
+        </tr>`).join('');
     }
 
     async function refreshAdminClaims() {
@@ -530,6 +568,7 @@ let deleteTargetId = null;
 
         closeDeleteModal();
         await refreshAdminItems();
+        await refreshStudentBelongings();
         showToast('Item permanently deleted.');
       } catch (error) {
         showToast(error.message || 'Unable to delete item. Please try again.', 'error');

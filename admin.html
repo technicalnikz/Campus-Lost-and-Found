@@ -67,6 +67,7 @@
       <!-- Tabs -->
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="items">All Items</button>
+        <button class="admin-tab" data-tab="belongings">Students' Belongings</button>
         <button class="admin-tab" data-tab="claims">Broadcast Message</button>
         <button class="admin-tab" data-tab="users">Users</button>
       </div>
@@ -142,6 +143,22 @@
         <div id="adminEmptyState" style="display:none;" class="empty-state">
           <h3>No items found</h3>
         </div>
+      </div>
+
+      <!-- STUDENTS' BELONGINGS TAB -->
+      <div id="tabBelongings" style="display:none;">
+        <div class="claims-tab-intro">
+          <div><h2>Students' Belongings</h2><p>View belongings registered by students for QR-based recovery.</p></div>
+        </div>
+        <div class="admin-table-card">
+          <div class="admin-table-wrap admin-table-scroll">
+            <table id="adminBelongingsTable">
+              <thead><tr><th>Belonging</th><th>Student</th><th>Category</th><th>Location</th><th>QR Reference</th><th>Registered</th><th>Actions</th></tr></thead>
+              <tbody id="adminBelongingsBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="adminBelongingsEmptyState" class="empty-state" hidden><h3>No registered belongings found</h3></div>
       </div>
 
       <!-- PENDING CLAIMS TAB -->
