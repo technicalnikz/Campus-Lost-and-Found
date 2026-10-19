@@ -79,8 +79,6 @@ let deleteTargetId = null;
         if (e.target === document.getElementById('deleteModal')) closeDeleteModal();
       });
 
-      // Export CSV
-      document.getElementById('exportBtn').addEventListener('click', exportCSV);
       document.getElementById('bulkClaimBtn').addEventListener('click', () => runBulkAction('claim'));
       document.getElementById('bulkArchiveBtn').addEventListener('click', () => runBulkAction('archive'));
       document.getElementById('bulkDeleteBtn').addEventListener('click', () => runBulkAction('delete'));
