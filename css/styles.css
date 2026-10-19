@@ -2428,8 +2428,8 @@ select::placeholder,
     overflow: hidden;
   }
   .belonging-menu button {
-    min-height: 38px;
-    padding: .35rem .45rem;
+    min-height: 30px;
+    padding: .2rem .45rem;
     font-size: .68rem;
   }
 }
