@@ -1578,7 +1578,7 @@ input[type='submit'] {
     height: auto !important;
     padding: 0;
     color: var(--blue-main);
-    font-size: .95rem !important;
+    font-size: .85rem !important;
     font-weight: 800;
     letter-spacing: -.01em;
     line-height: 1.2 !important;
@@ -1639,14 +1639,14 @@ input[type='submit'] {
   .mobile-drawer-account-details strong {
     overflow: hidden;
     color: var(--text-main);
-    font-size: .95rem;
+    font-size: .85rem;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .mobile-drawer-account-details > span {
     color: var(--text-muted);
-    font-size: .75rem;
+    font-size: .68rem;
   }
 
   .mobile-drawer-account-details .mobile-drawer-role-badge {
@@ -1656,7 +1656,7 @@ input[type='submit'] {
     border-radius: 999px;
     background: rgba(59, 130, 246, .18);
     color: var(--blue-light);
-    font-size: .62rem;
+    font-size: .58rem;
     font-weight: 800;
     letter-spacing: .04em;
     text-transform: uppercase;
@@ -1672,7 +1672,7 @@ input[type='submit'] {
     padding: .65rem .75rem;
     border-radius: 10px;
     color: var(--text-main);
-    font-size: .9rem !important;
+    font-size: .82rem !important;
     letter-spacing: 0;
     line-height: 1.25 !important;
     text-decoration: none;
@@ -1709,7 +1709,7 @@ input[type='submit'] {
     padding: .65rem .75rem !important;
     border-radius: 10px !important;
     background: rgba(59, 130, 246, .09) !important;
-    font-size: .9rem !important;
+    font-size: .82rem !important;
   }
 
   .nav-links .nav-register-mobile::before {
@@ -1749,7 +1749,7 @@ input[type='submit'] {
     background: rgba(239, 68, 68, .1);
     color: #fca5a5;
     font: inherit;
-    font-size: .9rem;
+    font-size: .82rem;
     font-weight: 700;
     cursor: pointer;
   }
