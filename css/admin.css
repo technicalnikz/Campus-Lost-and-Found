@@ -394,6 +394,7 @@
       padding: .5rem .25rem;
       border-radius: .5rem;
       font-size: .8rem;
+      line-height: 1;
     }
     .admin-search-wrap { position: relative; min-width: 0; }
     .admin-search-row #exportBtn { width: 100%; }
