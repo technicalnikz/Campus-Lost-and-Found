@@ -1704,8 +1704,8 @@ input[type='submit'] {
     font-size: 1rem;
   }
 
-  .nav-links a[data-mobile-icon='items']::before { content: '\25a6'; }
-  .nav-links a[data-mobile-icon='report']::before { content: '\279a'; }
+  .nav-links a[data-mobile-icon='items']::before { content: '\25a3'; }
+  .nav-links a[data-mobile-icon='report']::before { content: '\270e'; }
   .nav-links a[data-mobile-icon='dashboard']::before { content: '\2302'; }
 
   .nav-links a:hover,
