@@ -2362,8 +2362,8 @@ select::placeholder,
 .belonging-menu-wrap { position: relative; flex: 0 0 auto; }
 .belonging-menu {
   position: absolute;
-  top: 2rem;
-  right: 0;
+  top: 0;
+  right: calc(100% + .4rem);
   z-index: 20;
   display: none;
   min-width: 150px;
