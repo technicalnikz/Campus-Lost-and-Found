@@ -2388,7 +2388,12 @@ select::placeholder,
 }
 .belonging-menu button:hover,
 .belonging-menu button:focus-visible { background: rgba(59,130,246,.12); }
-.belonging-menu button.danger { color: #f87171; }
+.belonging-menu button.danger { color: #fb7185; }
+.belonging-menu button.danger:hover,
+.belonging-menu button.danger:focus-visible {
+  background: rgba(239, 68, 68, .16);
+  color: #fda4af;
+}
 
 @media (max-width: 560px) {
   .belonging-menu-button {
@@ -2397,14 +2402,25 @@ select::placeholder,
     color: #facc15;
   }
   .belonging-menu {
-    width: min(148px, calc(100% - 2.5rem));
+    width: 148px;
+    max-width: calc(100vw - 2rem);
     min-width: 0;
     top: 0;
     right: 2rem;
     overflow: hidden;
   }
   .belonging-menu button {
-    padding: .42rem .55rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: .5rem .65rem;
     font-size: .74rem;
+  }
+}
+
+@media (max-width: 399px) {
+  .belonging-menu {
+    width: min(148px, calc(100vw - 1.5rem));
+    right: 1.75rem;
   }
 }
