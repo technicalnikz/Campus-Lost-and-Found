@@ -481,6 +481,15 @@ document.addEventListener('click', event => {
     itemsSection.scrollIntoView();
   }
 
+  const reportLink = event.target.closest('.navbar .nav-links a[href="#report"]');
+  const reportSection = document.getElementById('report');
+  if (reportLink && reportSection) {
+    event.preventDefault();
+    dashboardBackPrompted = false;
+    window.history.replaceState(window.history.state, '', reportLink.hash);
+    reportSection.scrollIntoView();
+  }
+
   if (event.target.closest('.theme-toggle')) {
     if (event.target.closest('.theme-toggle').dataset.themeBound === 'true') return;
     toggleTheme();
