@@ -107,8 +107,7 @@
   padding: 1.25rem;
 }
 
-.about-card-icon,
-.benefit-icon {
+.about-card-icon {
   display: inline-flex;
   width: 2.65rem;
   height: 2.65rem;
@@ -146,12 +145,32 @@
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1.1rem 1.2rem;
+  padding: 1.25rem;
+  border-radius: 16px;
 }
 
 .benefit-icon {
-  flex: 0 0 2.65rem;
-  margin-bottom: 0;
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(71, 85, 105, .6);
+  border-radius: 12px;
+  background: rgba(30, 41, 59, .8);
+  color: var(--text-main);
+}
+
+.benefit-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .account-note {
@@ -167,6 +186,11 @@
 
 .account-note strong {
   color: var(--text-main);
+}
+
+[data-theme='light'] .benefit-icon {
+  border-color: var(--border);
+  background: var(--card-bg);
 }
 
 .guidance-list {

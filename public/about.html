@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css" />
-  <link rel="stylesheet" href="/css/about.css?v=20261020-2" />
+  <link rel="stylesheet" href="/css/about.css?v=20261020-5" />
   <link rel="stylesheet" href="/css/responsive.css?v=20261020-2" />
   <script src="/js/main.js?v=20261017-5"></script>
 </head>
@@ -24,12 +24,15 @@
         <a href="/#items">Items</a>
         <a href="/#report">Report Item</a>
         <a href="/about.html" class="nav-active" aria-current="page">About</a>
+        <a href="/?action=register-belonging" class="btn btn-outline nav-btn-action nav-register-btn nav-register-mobile">Register Belonging</a>
       </div>
       <div class="nav-actions">
         <button type="button" class="theme-toggle" title="Toggle Theme" aria-label="Toggle theme">
           <span class="theme-toggle-icon">🌙</span>
         </button>
-        <a href="/login" class="btn btn-primary nav-signin-btn about-navbar-signin">Sign In</a>
+        <div id="userNavSlot" class="user-nav-slot">
+          <a href="/login" class="btn btn-primary nav-signin-btn about-navbar-signin">Sign In</a>
+        </div>
         <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation menu" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
@@ -53,17 +56,14 @@
       </div>
       <div class="about-card-grid">
         <article class="about-card">
-          <span class="about-card-icon" aria-hidden="true">🔎</span>
           <h3>1. Search the listings</h3>
           <p>Browse lost and found items. Search by words and narrow results by item type, category, location, or status.</p>
         </article>
         <article class="about-card">
-          <span class="about-card-icon" aria-hidden="true">📝</span>
           <h3>2. Report an item</h3>
           <p>Choose whether you lost or found something. Add its name, category, campus location, description, and your contact details. Photos are optional and must be JPG, PNG, GIF, or WebP files no larger than 5 MB.</p>
         </article>
         <article class="about-card">
-          <span class="about-card-icon" aria-hidden="true">🤝</span>
           <h3>3. Verify and return it</h3>
           <p>If a found listing may match your lost-item report, sign in to submit ownership details. Campus administrators review claim requests.</p>
         </article>
@@ -78,21 +78,37 @@
       </div>
       <div class="account-benefits">
         <article class="benefit-row">
-          <span class="benefit-icon" aria-hidden="true">🔐</span>
+          <span class="benefit-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              <circle cx="12" cy="16" r="1"></circle>
+            </svg>
+          </span>
           <div>
             <h3>A private belongings vault</h3>
             <p>Register items you own and keep their records in your account. These belongings are not shown in the public item listings.</p>
           </div>
         </article>
         <article class="benefit-row">
-          <span class="benefit-icon" aria-hidden="true">🏷️</span>
+          <span class="benefit-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"></path>
+              <path d="M14 14h3v3h-3zM20 14v.01M14 20v.01M17 20h4v-4"></path>
+            </svg>
+          </span>
           <div>
             <h3>A QR recovery sticker</h3>
             <p>Each registered belonging can have a QR sticker. If someone finds it and scans the code, they can send you a message through Back2You.</p>
           </div>
         </article>
         <article class="benefit-row">
-          <span class="benefit-icon" aria-hidden="true">🔔</span>
+          <span class="benefit-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+              <path d="M10 21h4"></path>
+            </svg>
+          </span>
           <div>
             <h3>Account alerts</h3>
             <p>Messages from people who scan your item's QR code appear in your account notifications, so they can reach you without seeing your phone number or email address.</p>
@@ -108,7 +124,7 @@
         <h2 id="guidance-title">Important limits and safe-use tips</h2>
       </div>
       <ul class="guidance-list">
-        <li><strong>Hand in found property.</strong> Please take found items to the Student Affairs Office or a nearby campus security guard. An online report helps the owner find the listing; it does not replace handing over the item.</li>
+        <li><strong>Report found items in Back2You.</strong> Add the campus location, clear item details, and your contact information. This creates an online listing; ownership still needs to be verified through the claim-review process.</li>
         <li><strong>Keep one ownership clue private.</strong> Describe an item clearly, but do not publish every identifying detail. Keep a unique mark or detail to help verify the real owner.</li>
         <li><strong>Claims need an account and a matching report.</strong> A claim request is available to the account that reported the matching lost item. An administrator reviews the request; a possible match is not proof of ownership.</li>
         <li><strong>QR codes are for messages, not tracking.</strong> They do not show an item's live location. Back2You helps people connect, but cannot guarantee that an item will be found or returned.</li>
@@ -140,5 +156,6 @@
     </div>
   </footer>
   <script src="/icons.js"></script>
+  <script src="/js/about.js?v=20261020-1"></script>
 </body>
 </html>

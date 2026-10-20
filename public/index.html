@@ -2021,10 +2021,15 @@
     // Initial load
     document.addEventListener('DOMContentLoaded', () => {
       loadTheme();
-      checkAuthSession();
+      const matchParams = new URLSearchParams(window.location.search);
+      checkAuthSession().then(() => {
+        if (matchParams.get('action') === 'register-belonging') {
+          window.history.replaceState(window.history.state, '', '/');
+          handleOpenRegisterBelonging();
+        }
+      });
       fetchStats();
       window.setInterval(loadMyNotifications, 30000);
-      const matchParams = new URLSearchParams(window.location.search);
       openMatchReferenceFromQr(matchParams.get('token'));
       const finderRef = window.location.pathname === '/found' ? matchParams.get('ref') : null;
       if (finderRef) openAnonymousFinderModal(finderRef);
