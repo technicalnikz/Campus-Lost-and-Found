@@ -200,6 +200,7 @@ function renderNav(activePage = '') {
     { href: 'browse.html',      label: 'Browse'    },
     { href: 'report-lost.html', label: 'Report Lost'  },
     { href: 'report-found.html',label: 'Report Found' },
+    { href: 'about.html',       label: 'About'     },
     { href: 'admin.html',       label: 'Admin'     },
   ];
 
