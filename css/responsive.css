@@ -1710,6 +1710,7 @@ input[type='submit'] {
 
   .nav-links a[data-mobile-icon='items']::before { content: '\25a3'; }
   .nav-links a[data-mobile-icon='report']::before { content: '\270e'; }
+  .nav-links a[data-mobile-icon='about']::before { content: '\24d8'; }
   .nav-links a[data-mobile-icon='dashboard']::before { content: '\2302'; }
 
   .nav-links a:hover,
