@@ -78,6 +78,48 @@ async function createTables(connection) {
   await connection.query(
     'INSERT INTO app_store_lock (lock_id) VALUES (1) ON CONFLICT (lock_id) DO NOTHING'
   );
+
+  // These tables are used only by the server through its direct PostgreSQL
+  // connection. They must not be reachable through Supabase's Data API.
+  // RLS also protects the tables if API grants are accidentally reintroduced.
+  for (const table of ['app_users', 'app_items', 'app_claims', 'app_migrations', 'app_store_lock']) {
+    await connection.query(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`);
+  }
+
+  // app_sessions may have been created by an older deployment. Do not fail
+  // startup when it is absent, but secure it if it still exists.
+  await connection.query(`
+    DO $security$
+    BEGIN
+      IF to_regclass('public.app_sessions') IS NOT NULL THEN
+        ALTER TABLE public.app_sessions ENABLE ROW LEVEL SECURITY;
+      END IF;
+    END
+    $security$;
+  `);
+
+  // Supabase projects normally have these roles; the conditional checks keep
+  // local PostgreSQL development databases without them working as well.
+  await connection.query(`
+    DO $security$
+    BEGIN
+      IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+        REVOKE ALL ON TABLE public.app_users, public.app_items, public.app_claims,
+          public.app_migrations, public.app_store_lock FROM anon;
+        IF to_regclass('public.app_sessions') IS NOT NULL THEN
+          REVOKE ALL ON TABLE public.app_sessions FROM anon;
+        END IF;
+      END IF;
+      IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+        REVOKE ALL ON TABLE public.app_users, public.app_items, public.app_claims,
+          public.app_migrations, public.app_store_lock FROM authenticated;
+        IF to_regclass('public.app_sessions') IS NOT NULL THEN
+          REVOKE ALL ON TABLE public.app_sessions FROM authenticated;
+        END IF;
+      END IF;
+    END
+    $security$;
+  `);
 }
 
 async function loadData(connection) {
