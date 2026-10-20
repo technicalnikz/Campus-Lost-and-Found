@@ -7,7 +7,7 @@
 }
 
 .about-hero {
-  padding: clamp(3rem, 8vw, 5.5rem) 0 2.5rem;
+  padding: clamp(2.5rem, 6vw, 4rem) 0 1.5rem;
   text-align: center;
 }
 
@@ -37,6 +37,17 @@
   line-height: 1.75;
 }
 
+.about-tagline {
+  max-width: 720px;
+  margin: 0 auto .7rem;
+  color: var(--blue-light);
+  font-size: clamp(1.05rem, 3vw, 1.4rem);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: -.025em;
+  line-height: 1.45;
+}
+
 .about-hero-actions {
   display: flex;
   justify-content: center;
@@ -46,16 +57,16 @@
 }
 
 .about-content {
-  padding-bottom: 5rem;
+  padding-bottom: 3.5rem;
 }
 
 .about-section {
-  padding: 2.5rem 0;
+  padding: 1.75rem 0;
 }
 
 .about-section-heading {
   max-width: 700px;
-  margin-bottom: 1.35rem;
+  margin-bottom: 1.15rem;
 }
 
 .about-section-heading h2,
@@ -180,8 +191,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  margin: 1.5rem 0 0;
-  padding: 1.5rem;
+  margin: 1rem 0 0;
+  padding: 1.35rem 1.5rem;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(59, 130, 246, .13), var(--card-bg));
