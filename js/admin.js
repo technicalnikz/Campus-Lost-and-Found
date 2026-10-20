@@ -1,4 +1,5 @@
 let deleteTargetId = null;
+let restoreTarget = null;
     let activeTab = 'items';
     let adminItems = [];
     let claimRequests = [];
@@ -83,6 +84,11 @@ let deleteTargetId = null;
       document.getElementById('confirmDelete').addEventListener('click', doDelete);
       document.getElementById('deleteModal').addEventListener('click', e => {
         if (e.target === document.getElementById('deleteModal')) closeDeleteModal();
+      });
+      document.getElementById('cancelRestore').addEventListener('click', closeRestoreModal);
+      document.getElementById('confirmRestore').addEventListener('click', confirmRestore);
+      document.getElementById('restoreModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('restoreModal')) closeRestoreModal();
       });
 
       document.getElementById('bulkClaimBtn').addEventListener('click', () => runBulkAction('claim'));
@@ -425,7 +431,7 @@ let deleteTargetId = null;
           <td class="actions-cell">
             <div class="action-buttons">
               ${pendingClaim ? `<button class="action-btn action-btn-claim" onclick="openClaimReview('${pendingClaim.id}')">Review Claim</button>` : ''}
-              ${canRestore ? `<button class="action-btn action-btn-restore" onclick="markRestore('${item.id}','${item.status}')">Restore</button>` : ''}
+              ${canRestore ? `<button class="action-btn action-btn-restore" onclick="openRestoreModal('${item.id}','${item.status}')">Restore</button>` : ''}
               <button class="action-btn action-btn-delete" onclick="openDeleteModal('${item.id}','${escHtml(item.title)}','${escHtml(reporterValues[0] || 'Unknown reporter')}')">Delete</button>
             </div>
           </td>
@@ -509,8 +515,10 @@ let deleteTargetId = null;
         if (!response.ok || !data.success) throw new Error(data.message || 'Unable to update item status.');
         await refreshAdminItems();
         showToast(data.message);
+        return true;
       } catch (error) {
         showToast(error.message, 'error');
+        return false;
       }
     }
 
@@ -521,7 +529,8 @@ let deleteTargetId = null;
         if (!response.ok || !data.success) throw new Error(data.message || 'Unable to update item status.');
         await refreshAdminItems();
         showToast(data.message);
-      } catch (error) { showToast(error.message, 'error'); }
+        return true;
+      } catch (error) { showToast(error.message, 'error'); return false; }
     }
 
     function markClaimed(id) {
@@ -529,8 +538,36 @@ let deleteTargetId = null;
     }
 
     function markRestore(id, status = 'claimed') {
-      if (status === 'archived') updateItemStatus(id, 'active');
-      else updateItemClaimStatus(id);
+      if (status === 'archived') return updateItemStatus(id, 'active');
+      return updateItemClaimStatus(id);
+    }
+
+    function openRestoreModal(id, status = 'claimed') {
+      const item = adminItems.find(entry => String(entry.id) === String(id));
+      restoreTarget = { id, status };
+      const title = item?.title || 'this item';
+      const message = status === 'archived'
+        ? `Restore "${title}" from the archive? It will become active again.`
+        : `Restore "${title}" and remove its claimed status?`;
+      document.getElementById('restoreMsg').textContent = message;
+      document.getElementById('restoreModal').classList.add('open');
+    }
+
+    function closeRestoreModal() {
+      document.getElementById('restoreModal').classList.remove('open');
+      restoreTarget = null;
+    }
+
+    async function confirmRestore() {
+      if (!restoreTarget) return;
+      const button = document.getElementById('confirmRestore');
+      const target = restoreTarget;
+      button.disabled = true;
+      try {
+        if (await markRestore(target.id, target.status)) closeRestoreModal();
+      } finally {
+        button.disabled = false;
+      }
     }
 
     function openDeleteModal(id, title, reporter = 'Unknown reporter') {

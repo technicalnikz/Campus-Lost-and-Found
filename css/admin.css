@@ -422,6 +422,8 @@
     }
     .del-modal h3 { font-size:1rem; font-weight:800; color:#f87171; margin-bottom:.6rem; }
     .del-modal p  { font-size:.85rem; color:var(--text-muted); margin-bottom:1.5rem; line-height:1.6; }
+    .restore-modal { border-color: rgba(59,130,246,.4); }
+    .restore-modal h3 { color: var(--blue-light); }
     [data-theme='light'] .del-modal {
       background: #ffffff;
       border: 1px solid rgba(239,68,68,.3);
