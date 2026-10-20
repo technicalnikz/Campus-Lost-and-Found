@@ -154,6 +154,21 @@
   margin-bottom: 0;
 }
 
+.benefit-icon-vault {
+  color: var(--blue-main);
+}
+
+.benefit-icon-vault svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .account-note {
   margin-top: 1rem;
   padding: .85rem 1rem;
