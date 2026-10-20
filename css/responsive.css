@@ -2347,6 +2347,10 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  #adminPanel .admin-search-row .admin-search-wrap {
+    grid-column: 1 / -1;
+  }
+
   #adminPanel .admin-search-row > * {
     min-width: 0;
   }
