@@ -156,10 +156,10 @@
   flex: 0 0 2.5rem;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(99, 102, 241, .2);
+  border: 1px solid rgba(71, 85, 105, .6);
   border-radius: 12px;
-  background: rgba(99, 102, 241, .1);
-  color: var(--blue-main);
+  background: rgba(30, 41, 59, .8);
+  color: var(--text-main);
 }
 
 .benefit-icon svg {
@@ -186,6 +186,11 @@
 
 .account-note strong {
   color: var(--text-main);
+}
+
+[data-theme='light'] .benefit-icon {
+  border-color: var(--border);
+  background: var(--card-bg);
 }
 
 .guidance-list {
