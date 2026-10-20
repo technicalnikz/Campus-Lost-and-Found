@@ -1321,6 +1321,7 @@ input[type='submit'] {
     --navbar-height: 56px;
   }
 
+  .about-page .nav-actions > .about-navbar-signin,
   .about-page .mobile-drawer-footer .mobile-drawer-signin {
     display: none !important;
   }
@@ -1379,7 +1380,6 @@ input[type='submit'] {
   }
 
   .nav-actions > .nav-register-btn,
-  .nav-actions > .about-navbar-signin,
   .nav-actions > .admin-profile,
   .nav-actions #userNavSlot .user-pill,
   .nav-actions .user-nav-slot .user-pill,
@@ -1715,6 +1715,7 @@ input[type='submit'] {
 
   .nav-links a[data-mobile-icon='items']::before { content: '\25a3'; }
   .nav-links a[data-mobile-icon='report']::before { content: '\270e'; }
+  .nav-links a[data-mobile-icon='about']::before { content: '\24d8'; }
   .nav-links a[data-mobile-icon='dashboard']::before { content: '\2302'; }
   .nav-links a[href$='about.html']::before {
     content: '?';

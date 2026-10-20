@@ -135,6 +135,7 @@ function initializeMobileDrawer(navbar) {
     link.dataset.mobileIcon = label.includes('report') ? 'report'
       : label.includes('register') ? 'register'
         : label.includes('item') || label.includes('browse') ? 'items'
+          : label.includes('about') ? 'about'
           : label.includes('dashboard') ? 'dashboard' : '';
   });
 

@@ -37,16 +37,6 @@
   line-height: 1.75;
 }
 
-.about-tagline {
-  max-width: 720px;
-  margin: 0 auto .7rem;
-  color: var(--blue-light);
-  font-size: clamp(1.05rem, 3vw, 1.4rem);
-  font-weight: 800;
-  letter-spacing: -.025em;
-  line-height: 1.45;
-}
-
 .about-hero-actions {
   display: flex;
   justify-content: center;
@@ -219,31 +209,7 @@
   }
 
   .about-card {
-    display: grid;
-    grid-template-columns: 2.65rem minmax(0, 1fr);
-    align-items: start;
-    column-gap: .75rem;
     padding: 1.1rem;
-  }
-
-  .about-card-icon {
-    grid-column: 1;
-    grid-row: 1;
-    margin: 0;
-  }
-
-  .about-card h3 {
-    display: flex;
-    grid-column: 2;
-    grid-row: 1;
-    min-height: 2.65rem;
-    align-items: center;
-    margin: 0;
-  }
-
-  .about-card p {
-    grid-column: 1 / -1;
-    margin-top: .65rem;
   }
 
   .about-cta {
@@ -265,13 +231,6 @@
   .benefit-row {
     gap: .75rem;
     padding: 1rem;
-  }
-
-  .benefit-icon {
-    flex-basis: 2.35rem;
-    width: 2.35rem;
-    height: 2.35rem;
-    font-size: 1.1rem;
   }
 
   .guidance-list {
