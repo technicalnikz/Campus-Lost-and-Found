@@ -11,6 +11,7 @@ let deleteTargetId = null;
     const selectedItemIds = new Set();
     let visibleAdminItems = [];
     let adminSort = { key: 'date', direction: 'desc' };
+    let adminTypeFilter = '';
     const adminItemsPerPage = 10;
     let adminCurrentPage = 1;
     let adminUsers = [];
@@ -113,7 +114,7 @@ let deleteTargetId = null;
       }));
 
       // Reactive admin filters
-      ['adminSearch','adminFilterType','adminFilterStatus'].forEach(id => {
+      ['adminSearch','adminFilterStatus'].forEach(id => {
         document.getElementById(id).addEventListener('input', () => {
           adminCurrentPage = 1;
           renderItemsTable();
@@ -332,9 +333,7 @@ let deleteTargetId = null;
 
     function showAdminItems(type) {
       if (activeTab !== 'items') document.querySelector('.admin-tab[data-tab="items"]').click();
-      const typeSelect = document.getElementById('adminFilterType');
-      typeSelect.value = type || '';
-      syncButtonSelect(typeSelect);
+      adminTypeFilter = type || '';
       adminCurrentPage = 1;
       renderItemsTable();
       document.getElementById('tabItems').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -443,7 +442,7 @@ let deleteTargetId = null;
     function getFilteredAdminItems() {
       let items = adminItems.slice();
       const query = document.getElementById('adminSearch').value.toLowerCase().trim();
-      const type = document.getElementById('adminFilterType').value;
+      const type = adminTypeFilter;
       const status = document.getElementById('adminFilterStatus').value;
       const dateRange = document.getElementById('adminFilterDate').value;
 
