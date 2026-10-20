@@ -2370,9 +2370,6 @@ button {
     overflow-wrap: anywhere;
   }
 
-  #adminPanel .admin-stats .action-needed-card {
-    grid-column: 1 / -1;
-  }
 }
 
 @media (max-width: 340px) {
