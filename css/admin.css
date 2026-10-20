@@ -62,7 +62,7 @@
     /* ── Admin Stats ── */
     .admin-stats {
       display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: .75rem;
       margin-bottom: 1.25rem;
     }
@@ -76,19 +76,10 @@
     .admin-stats .stat-card--found .stat-number { color: #34d399; }
     .admin-stats .stat-card--claimed { background: rgba(168,85,247,.1); border-color: rgba(168,85,247,.2); }
     .admin-stats .stat-card--claimed .stat-number { color: #c084fc; }
-    .admin-stats .stat-card--unresolved { background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.2); }
-    .admin-stats .stat-card--unresolved .stat-number { color: #fbbf24; }
-    .admin-stats .stat-card--pending { background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.2); }
-    .admin-stats .stat-card--pending .stat-number { color: #fbbf24; }
-    .admin-stats .stat-card--action-needed { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.2); }
-    .admin-stats .stat-card--action-needed .stat-number { color: #f87171; }
     .admin-stats .stat-card--total:hover { border-color: rgba(59,130,246,.45); }
     .admin-stats .stat-card--lost:hover { border-color: rgba(244,63,94,.45); }
     .admin-stats .stat-card--found:hover { border-color: rgba(16,185,129,.45); }
     .admin-stats .stat-card--claimed:hover { border-color: rgba(168,85,247,.45); }
-    .admin-stats .stat-card--unresolved:hover,
-    .admin-stats .stat-card--pending:hover { border-color: rgba(245,158,11,.45); }
-    .admin-stats .stat-card--action-needed:hover { border-color: rgba(239,68,68,.45); }
     .admin-tabs { margin-bottom: 1rem; }
     .bulk-toolbar { display:flex; align-items:center; gap:.65rem; flex-wrap:wrap; margin:-.45rem 0 1rem; padding:.7rem .85rem; border:1px solid var(--border); border-radius:9px; background:rgba(59,130,246,.04); color:var(--text-muted); font-size:.78rem; }
     .bulk-toolbar label { display:flex; align-items:center; gap:.35rem; margin-right:auto; }
@@ -382,7 +373,7 @@
     /* ── Search in admin ── */
     .admin-search-row {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: .75rem;
       margin-bottom: 1.25rem;
       align-items: center;
@@ -494,7 +485,6 @@
       #adminPanel { padding-bottom: 140px; }
       .admin-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .admin-stats .action-needed-card { grid-column: 1 / -1; }
       .admin-tab { padding: .3rem .65rem; border-radius: 6px; font-size: .72rem; }
       .admin-tab[data-tab='claims'] { white-space: normal; line-height: 1.05; }
       .admin-search-row .form-control { height: auto; padding: .3rem .65rem; border-radius: 6px; font-size: .72rem; }

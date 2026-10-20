@@ -11,6 +11,7 @@ let deleteTargetId = null;
     const selectedItemIds = new Set();
     let visibleAdminItems = [];
     let adminSort = { key: 'date', direction: 'desc' };
+    let adminTypeFilter = '';
     const adminItemsPerPage = 10;
     let adminCurrentPage = 1;
     let adminUsers = [];
@@ -113,7 +114,7 @@ let deleteTargetId = null;
       }));
 
       // Reactive admin filters
-      ['adminSearch','adminFilterType','adminFilterStatus'].forEach(id => {
+      ['adminSearch','adminFilterStatus'].forEach(id => {
         document.getElementById(id).addEventListener('input', () => {
           adminCurrentPage = 1;
           renderItemsTable();
@@ -305,18 +306,11 @@ let deleteTargetId = null;
       const lost    = items.filter(i => i.type==='lost').length;
       const found   = items.filter(i => i.type==='found').length;
       const claimed = items.filter(i => i.status==='claimed').length;
-      const pendingClaims = claimRequests.filter(claim => claim.status === 'pending');
-      const threshold = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      const staleActive = items.filter(i => i.status !== 'claimed' && new Date(i.createdAt || i.date).getTime() < threshold).length;
-      const pending = pendingClaims.length + staleActive;
       document.getElementById('adminStats').innerHTML = `
         <div class="stat-card stat-card--total"><div class="stat-number">${items.length}</div><div class="stat-label">Total Items</div></div>
         <div class="stat-card stat-card--lost"><div class="stat-number">${lost}</div><div class="stat-label">Lost</div></div>
         <div class="stat-card stat-card--found"><div class="stat-number">${found}</div><div class="stat-label">Found</div></div>
         <div class="stat-card stat-card--claimed"><div class="stat-number">${claimed}</div><div class="stat-label">Claimed</div></div>
-        <div class="stat-card stat-card--unresolved"><div class="stat-number">${staleActive}</div><div class="stat-label">Unresolved</div></div>
-        <div class="stat-card stat-card--pending"><div class="stat-number">${pendingClaims.length}</div><div class="stat-label">Pending Claims</div></div>
-        <div class="stat-card stat-card--action-needed action-needed-card"><div class="stat-number">${pending}</div><div class="stat-label">Action Needed</div></div>
       `;
 
       renderAdminInsights(items);
@@ -339,9 +333,7 @@ let deleteTargetId = null;
 
     function showAdminItems(type) {
       if (activeTab !== 'items') document.querySelector('.admin-tab[data-tab="items"]').click();
-      const typeSelect = document.getElementById('adminFilterType');
-      typeSelect.value = type || '';
-      syncButtonSelect(typeSelect);
+      adminTypeFilter = type || '';
       adminCurrentPage = 1;
       renderItemsTable();
       document.getElementById('tabItems').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -450,7 +442,7 @@ let deleteTargetId = null;
     function getFilteredAdminItems() {
       let items = adminItems.slice();
       const query = document.getElementById('adminSearch').value.toLowerCase().trim();
-      const type = document.getElementById('adminFilterType').value;
+      const type = adminTypeFilter;
       const status = document.getElementById('adminFilterStatus').value;
       const dateRange = document.getElementById('adminFilterDate').value;
 
