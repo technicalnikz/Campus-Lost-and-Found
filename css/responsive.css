@@ -1321,6 +1321,10 @@ input[type='submit'] {
     --navbar-height: 56px;
   }
 
+  .about-page .mobile-drawer-footer .mobile-drawer-signin {
+    display: none !important;
+  }
+
   body.mobile-drawer-open {
     overflow: hidden;
   }
@@ -1375,6 +1379,7 @@ input[type='submit'] {
   }
 
   .nav-actions > .nav-register-btn,
+  .nav-actions > .about-navbar-signin,
   .nav-actions > .admin-profile,
   .nav-actions #userNavSlot .user-pill,
   .nav-actions .user-nav-slot .user-pill,
