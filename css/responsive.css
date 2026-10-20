@@ -69,9 +69,10 @@ input[type='submit'] {
   }
 
   .auth-container {
-    min-height: auto;
+    min-height: calc(100vh - 120px);
+    min-height: calc(100dvh - 120px);
     padding: 1.25rem .75rem calc(1.5rem + env(safe-area-inset-bottom));
-    align-items: flex-start;
+    align-items: center;
   }
 
   .auth-card {
