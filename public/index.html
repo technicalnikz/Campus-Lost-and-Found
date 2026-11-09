@@ -108,7 +108,7 @@
     <!-- Search & Filter Controls -->
     <div class="filter-row">
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search by item name, reference code, location, or details..." data-input="scheduleItemsSearch" aria-label="Search items" />
+        <input type="text" id="searchInput" placeholder="Search items, codes or places…" data-input="scheduleItemsSearch" aria-label="Search by item name, reference code, location, or details" />
       </div>
       <div class="filter-chips" role="group" aria-label="Filter items">
         <button class="chip active" data-filter="all" data-action="setFilter" data-args='["all", "$el"]'>All</button>
@@ -121,7 +121,7 @@
 
     <!-- Campus Location Hotspots based on CSPC Offices -->
     <div class="hotspots-row">
-      <label for="locationFilterSelect">CSPC Offices &amp; Areas:</label>
+      <label for="locationFilterSelect">Office:</label>
       <div class="location-filter-wrap">
         <select id="locationFilterSelect" class="location-filter-select" data-change="setLocationFilter" data-args='["$value"]'>
           <option value="">All Offices</option>
@@ -173,11 +173,13 @@
           <div class="type-switcher">
             <label class="type-option active-lost" id="lblLost">
               <input type="radio" name="itemType" value="lost" checked data-change="updateTypeRadio" />
-              I Lost Something
+              <svg class="type-option-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+              <span>I lost it</span>
             </label>
             <label class="type-option" id="lblFound">
               <input type="radio" name="itemType" value="found" data-change="updateTypeRadio" />
-              I Found Something
+              <svg class="type-option-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg>
+              <span>I found it</span>
             </label>
           </div>
         </div>
@@ -261,10 +263,6 @@
               </optgroup>
             </select>
           </div>
-          <div class="input-field">
-            <label for="itemLocationDetails">Room or Specific Spot (Optional)</label>
-            <input type="text" id="itemLocationDetails" placeholder="e.g., Room 101" />
-          </div>
         </div>
 
         <div class="form-row">
@@ -275,34 +273,47 @@
         </div>
 
         <div class="input-field" style="margin-bottom: 1rem;">
-          <label for="itemVerification">Secret Ownership Verification Detail (Optional)</label>
-          <input type="text" id="itemVerification" placeholder="e.g., Lock screen wallpaper, serial ending digits, or secret detail to verify claimant" />
-        </div>
-
-        <div class="input-field" style="margin-bottom: 1rem;">
-          <label for="itemPhotoInput">Upload Photo (Optional)</label>
-          <div class="photo-upload-area" id="photoUploadArea" role="button" tabindex="0" data-action="openPhotoPicker" data-activate>
-            <div class="photo-upload-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 32" focusable="false">
-                <path d="M11 27h19a9 9 0 0 0 1-18A13 13 0 0 0 7 12a8 8 0 0 0 4 15z" fill="currentColor"/>
-                <path d="M20 23V11m-5 5 5-5 5 5" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <strong>Choose a photo or drag it here</strong>
-            <small>PNG, JPG, or WEBP · maximum 5MB</small>
-          </div>
-          <input type="file" id="itemPhotoInput" accept="image/*" data-change="handlePhotoSelect" data-args='["$event"]' style="display: none;" />
-          <div id="photoPreviewBox" class="photo-preview-box" style="display: none;">
-            <img id="photoPreviewImg" class="photo-preview-image" src="" alt="Photo Preview" />
-            <div id="photoPreviewMeta" class="photo-preview-meta"></div>
-            <button type="button" data-action="removePhoto" style="position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; padding: 0.25rem 0.55rem; font-size: 0.72rem; cursor: pointer; font-weight: 700;">✕ Remove Photo</button>
-          </div>
-        </div>
-
-        <div class="input-field" style="margin-bottom: 1.5rem;">
           <label for="itemDesc">Description &amp; Identifying Details *</label>
           <textarea id="itemDesc" placeholder="Describe the item publicly. Keep one unique identifying detail private for ownership checks." required minlength="5"></textarea>
         </div>
+
+        <!-- Optional fields stay folded away so the form is short; resetting the form folds them again. -->
+        <details class="report-more" id="reportMoreDetails">
+          <summary>
+            <span class="report-more-title">Add more details</span>
+            <span class="report-more-hint">Room, secret detail, photo · optional</span>
+          </summary>
+
+          <div class="input-field" style="margin-bottom: 1rem;">
+            <label for="itemLocationDetails">Room or Specific Spot (Optional)</label>
+            <input type="text" id="itemLocationDetails" placeholder="e.g., Room 101" />
+          </div>
+
+          <div class="input-field" style="margin-bottom: 1rem;">
+            <label for="itemVerification">Secret Ownership Verification Detail (Optional)</label>
+            <input type="text" id="itemVerification" placeholder="e.g., Lock screen wallpaper, serial ending digits, or secret detail to verify claimant" />
+          </div>
+
+          <div class="input-field" style="margin-bottom: 1rem;">
+            <label for="itemPhotoInput">Upload Photo (Optional)</label>
+            <div class="photo-upload-area" id="photoUploadArea" role="button" tabindex="0" data-action="openPhotoPicker" data-activate>
+              <div class="photo-upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 40 32" focusable="false">
+                  <path d="M11 27h19a9 9 0 0 0 1-18A13 13 0 0 0 7 12a8 8 0 0 0 4 15z" fill="currentColor"/>
+                  <path d="M20 23V11m-5 5 5-5 5 5" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <strong>Choose a photo or drag it here</strong>
+              <small>PNG, JPG, or WEBP · maximum 5MB</small>
+            </div>
+            <input type="file" id="itemPhotoInput" accept="image/*" data-change="handlePhotoSelect" data-args='["$event"]' style="display: none;" />
+            <div id="photoPreviewBox" class="photo-preview-box" style="display: none;">
+              <img id="photoPreviewImg" class="photo-preview-image" src="" alt="Photo Preview" />
+              <div id="photoPreviewMeta" class="photo-preview-meta"></div>
+              <button type="button" data-action="removePhoto" style="position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; padding: 0.25rem 0.55rem; font-size: 0.72rem; cursor: pointer; font-weight: 700;">✕ Remove Photo</button>
+            </div>
+          </div>
+        </details>
 
         <div style="display: flex; gap: 0.75rem; margin-top: 0.25rem;">
           <button type="button" class="btn btn-outline" data-action="resetItemForm" style="flex: 1; border: 1px solid var(--border); cursor: pointer;">Cancel</button>

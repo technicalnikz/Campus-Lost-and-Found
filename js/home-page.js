@@ -1281,6 +1281,31 @@ function setupPhotoDropZone() {
   area.addEventListener('drop', handlePhotoDrop);
 }
 
+// The optional fields fold away again whenever the form is cleared (Cancel or after submitting).
+function setupReportMoreDetails() {
+  const form = document.getElementById('itemForm');
+  const more = document.getElementById('reportMoreDetails');
+  if (!form || !more) return;
+  form.addEventListener('reset', () => { more.open = false; });
+}
+
+// On wide screens the report form is sticky beside the items (css/polish.css).
+// A form shorter than the window sticks just below the navbar; a taller one gets a
+// negative top, so it scrolls until its bottom is visible and then sticks there.
+function setupReportPanelSticky() {
+  const panel = document.getElementById('report');
+  if (!panel) return;
+  const gap = 16;
+  const update = () => {
+    const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 0;
+    const top = Math.min(navbarHeight + gap, window.innerHeight - panel.offsetHeight - gap);
+    panel.style.setProperty('--report-sticky-top', `${top}px`);
+  };
+  if ('ResizeObserver' in window) new ResizeObserver(update).observe(panel);
+  window.addEventListener('resize', update);
+  update();
+}
+
 function handlePhotoFile(file) {
   if (!file) return;
 
@@ -1618,6 +1643,8 @@ function loadTheme() {
 document.addEventListener('DOMContentLoaded', () => {
   loadTheme();
   setupPhotoDropZone();
+  setupReportMoreDetails();
+  setupReportPanelSticky();
   const matchParams = new URLSearchParams(window.location.search);
   checkAuthSession().then(() => {
     if (matchParams.get('action') === 'register-belonging') {

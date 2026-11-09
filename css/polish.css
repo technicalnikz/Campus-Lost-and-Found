@@ -536,10 +536,18 @@
 /* ── Home: items and report form side by side ───────────────────────────── */
 /* Below 1100px the wrapper is a plain block, so the two panels stack as before.
    From 1100px the items take the remaining width and the form gets a fixed
-   column on the right, all within the navbar's content width. */
+   column on the right. Everything lines up with the navbar's content edges:
+   1100px wide, or 1320px on large screens (navbar and footer widen to match). */
+:root { --home-content-width: 1100px; }
+
+/* responsive.css gives body overflow-x: hidden, which makes body a scroll container
+   and stops the sticky report form from sticking. clip trims sideways overflow the
+   same way without that; browsers without clip keep hidden. */
+:root body { overflow-x: clip; }
+
 @media (min-width: 1100px) {
   :root .hero-section {
-    max-width: 1100px;
+    max-width: var(--home-content-width);
   }
 
   .browse-report-layout {
@@ -548,7 +556,7 @@
     gap: clamp(0.75rem, 1.5vw, 1.25rem);
     align-items: start;
     width: calc(100% - 1rem);
-    max-width: 1100px;
+    max-width: var(--home-content-width);
     margin: clamp(0.75rem, 2vw, 1.25rem) auto;
   }
 
@@ -559,8 +567,148 @@
     margin: 0;
   }
 
+  /* The form stays in view while the item list scrolls. When it is taller than
+     the window, js/home-page.js sets a negative top so its bottom (the submit
+     button) is what stays on screen. */
+  :root .browse-report-layout > .tools-section {
+    position: sticky;
+    top: var(--report-sticky-top, calc(var(--navbar-height) + 1rem));
+  }
+
   /* The narrow column fits one field per row. */
   :root .browse-report-layout > .tools-section .form-row {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Large screens: 1320px content gives the items three cards per row. */
+@media (min-width: 1440px) {
+  body:has(.browse-report-layout) {
+    --home-content-width: 1320px;
+  }
+  /* The content width plus the bars' 1.25rem side padding. */
+  body:has(.browse-report-layout) .navbar-container,
+  :root body:has(.browse-report-layout) .site-footer .footer-container {
+    max-width: calc(var(--home-content-width) + 2.5rem);
+  }
+}
+
+/* Office and sort share one row beside each other. */
+@media (min-width: 769px) {
+  :root .browse-report-layout .hotspots-row {
+    flex-wrap: nowrap;
+  }
+  :root .browse-report-layout .location-filter-wrap {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+}
+
+/* ── Report form: lost / found switch ───────────────────────────────────── */
+/* Form labels are inline-block with a bottom margin (styles.css); these are flex
+   buttons, so the icon and text centre together. */
+:root .type-switcher .type-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  gap: 0.5rem;
+  min-height: 3rem;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.9rem;
+  border-radius: 12px;
+}
+.type-option-icon {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* The badge colours are readable on glass in both themes. !important beats the
+   theme-wide label colours, which are themselves !important (home.css, styles.css). */
+:root .type-switcher .type-option.active-lost { color: var(--badge-lost-fg) !important; }
+:root .type-switcher .type-option.active-found { color: var(--badge-found-fg) !important; }
+
+/* ── Report form: optional fields folded under "Add more details" ───────── */
+.report-more {
+  margin: 0 0 1.25rem;
+  border: 1px solid var(--control-border);
+  border-radius: 14px;
+  background: var(--control-bg);
+}
+.report-more > summary {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.6rem;
+  padding: 0.8rem 2.75rem 0.8rem 1rem;
+  border-radius: 14px;
+  list-style: none;
+  cursor: pointer;
+}
+.report-more > summary::-webkit-details-marker { display: none; }
+/* Chevron: points down when closed, up when open. */
+.report-more > summary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 1.15rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--blue-light);
+  border-bottom: 2px solid var(--blue-light);
+  transform: translateY(-70%) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.report-more[open] > summary::after { transform: translateY(-30%) rotate(-135deg); }
+.report-more > summary:hover .report-more-title { text-decoration: underline; }
+.report-more > summary:focus-visible {
+  outline: 2px solid var(--blue-light);
+  outline-offset: 2px;
+}
+.report-more-title {
+  color: var(--blue-light);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.report-more-hint {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+.report-more > .input-field { padding: 0 1rem; }
+.report-more[open] > summary { margin-bottom: 0.25rem; }
+
+/* ── Item cards without a photo: a short strip instead of a 16:9 block ───── */
+/* The strip is 4.5rem when nothing else sets the row height (a row of photo-less
+   cards). Beside a taller card it grows to fill the difference, so the card's
+   text stays together instead of leaving a gap in the middle. Phones (below
+   600px) keep their square thumbnails. */
+@media (min-width: 600px) {
+  :root #items .listing-card .listing-media:has(> .item-photo-frame[data-photo-state='empty']) {
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+  }
+  :root #items .listing-card:has(.item-photo-frame[data-photo-state='empty']) .listing-body {
+    flex-grow: 0;
+  }
+  :root #items .listing-card .item-photo-frame[data-photo-state='empty'] {
+    flex: 1 0 auto;
+    aspect-ratio: auto;
+    height: auto;
+    min-height: 4.5rem;
+  }
+  :root #items .listing-card .item-photo-frame[data-photo-state='empty'] .item-photo-status {
+    flex-direction: row;
+    gap: 0.6rem;
+  }
+  :root #items .listing-card .item-photo-frame[data-photo-state='empty'] .listing-placeholder-icon {
+    width: 1.6rem;
+    height: 1.6rem;
   }
 }
