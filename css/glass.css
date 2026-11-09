@@ -1,141 +1,446 @@
-/* Glass theme: frosted, translucent surfaces.
+/* Glass theme: frosted panels over a warm, softly lit backdrop.
    Loaded after every other stylesheet. Selectors use `:root .x` so they win over
-   the equal-specificity `[data-theme='light'] .x` rules that load earlier. */
+   the equal-specificity `[data-theme='light'] .x` rules that load earlier.
+
+   Layers:
+     backdrop  – fixed, already-soft gradient "photo" behind everything
+     panels    – large translucent sections (hero, items, report, about, admin, sign-in)
+     cards     – lighter glass inside panels (items, stats, forms)
+     floating  – bars, popups, dropdowns, toasts: the only layers with real blur,
+                 because content moves behind them. Panels and cards sit over the
+                 soft backdrop, where blur would look the same but cost more. */
 
 :root {
-  --glass-bg: rgba(24, 33, 56, 0.44);
-  --glass-bg-strong: rgba(15, 21, 38, 0.72);
-  --glass-border: rgba(160, 185, 255, 0.16);
-  --glass-highlight: rgba(255, 255, 255, 0.07);
-  --glass-shadow: 0 10px 32px rgba(2, 6, 23, 0.42);
-  --glass-blur: 16px;
-  --glass-blur-strong: 22px;
-  --glass-field: rgba(255, 255, 255, 0.05);
-  --overlay-scrim: rgba(2, 6, 23, 0.5);
+  --scene:
+    radial-gradient(55% 45% at 50% 0%, rgba(214, 120, 76, 0.16), transparent 70%),
+    radial-gradient(45% 60% at 0% 55%, rgba(160, 70, 48, 0.32), transparent 65%),
+    radial-gradient(45% 55% at 100% 40%, rgba(190, 96, 60, 0.28), transparent 65%),
+    radial-gradient(60% 50% at 65% 100%, rgba(130, 48, 62, 0.34), transparent 65%),
+    linear-gradient(180deg, #1b1311 0%, #160f0e 55%, #110b0b 100%);
+
+  --panel-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.035));
+  --panel-border: rgba(255, 255, 255, 0.13);
+  --panel-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+
+  --card-glass: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  --card-glass-hover: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  --card-border: rgba(255, 255, 255, 0.11);
+  --card-shadow: 0 14px 34px -20px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --well-bg: rgba(0, 0, 0, 0.22);
+
+  --control-bg: rgba(255, 255, 255, 0.06);
+  --control-border: rgba(255, 255, 255, 0.14);
+  --field-bg: rgba(255, 255, 255, 0.06);
+  --field-border: rgba(255, 255, 255, 0.14);
+  --option-hover: rgba(255, 255, 255, 0.08);
+  --pill-active-bg: rgba(255, 255, 255, 0.92);
+  --pill-active-fg: #1c1310;
+  --pill-active-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6);
+  --stat-active-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  --stat-active-ring: rgba(96, 165, 250, 0.6);
+
+  --bar-bg: rgba(22, 14, 12, 0.55);
+  --bar-border: rgba(255, 255, 255, 0.10);
+  --float-bg: rgba(32, 22, 20, 0.74);
+  --float-border: rgba(255, 255, 255, 0.14);
+  --float-shadow: 0 30px 80px -24px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  --scrim: rgba(10, 6, 5, 0.45);
+  --blur-bar: 24px;
+  --blur-float: 30px;
+
+  --badge-lost-bg: rgba(251, 113, 133, 0.16);
+  --badge-lost-fg: #fda4af;
+  --badge-lost-border: rgba(251, 113, 133, 0.35);
+  --badge-found-bg: rgba(52, 211, 153, 0.16);
+  --badge-found-fg: #6ee7b7;
+  --badge-found-border: rgba(52, 211, 153, 0.35);
+  --badge-claimed-bg: rgba(167, 180, 200, 0.16);
+  --badge-claimed-fg: #cbd5e1;
+  --badge-claimed-border: rgba(167, 180, 200, 0.32);
+  --badge-vault-bg: rgba(45, 212, 191, 0.16);
+  --badge-vault-fg: #5eead4;
+  --badge-vault-border: rgba(45, 212, 191, 0.35);
+
+  /* Readable accents on the darker glass (--blue-dark colours table headers and labels). */
+  --blue-main: #60a5fa;
+  --blue-dark: #93c5fd;
   /* Popups (css/modals.css) read this token. */
-  --modal-bg: var(--glass-bg-strong);
+  --modal-bg: var(--float-bg);
+  --overlay-scrim: var(--scrim);
 }
 
 [data-theme='light'] {
-  --glass-bg: rgba(255, 255, 255, 0.58);
-  --glass-bg-strong: rgba(255, 255, 255, 0.76);
-  --glass-border: rgba(255, 255, 255, 0.75);
-  --glass-highlight: rgba(255, 255, 255, 0.85);
-  --glass-shadow: 0 10px 30px rgba(30, 58, 138, 0.12);
-  --glass-field: rgba(255, 255, 255, 0.7);
-  --overlay-scrim: rgba(15, 23, 42, 0.28);
-  --modal-bg: var(--glass-bg-strong);
+  --scene:
+    radial-gradient(60% 45% at 50% 0%, rgba(255, 244, 234, 0.95), transparent 70%),
+    radial-gradient(45% 60% at 0% 60%, rgba(150, 86, 60, 0.50), transparent 65%),
+    radial-gradient(45% 55% at 100% 45%, rgba(214, 128, 92, 0.50), transparent 65%),
+    radial-gradient(60% 50% at 70% 100%, rgba(170, 92, 66, 0.45), transparent 65%),
+    radial-gradient(40% 40% at 15% 100%, rgba(232, 176, 140, 0.6), transparent 70%),
+    linear-gradient(180deg, #f3dccb 0%, #e9bfa4 55%, #d9a184 100%);
+
+  --panel-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.32));
+  --panel-border: rgba(255, 255, 255, 0.7);
+  --panel-shadow: 0 24px 60px -30px rgba(95, 45, 20, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  --card-glass: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42));
+  --card-glass-hover: linear-gradient(160deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.56));
+  --card-border: rgba(255, 255, 255, 0.8);
+  --card-shadow: 0 14px 30px -18px rgba(95, 45, 20, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --well-bg: rgba(255, 255, 255, 0.4);
+
+  --control-bg: rgba(255, 255, 255, 0.45);
+  --control-border: rgba(255, 255, 255, 0.8);
+  /* Matches the light theme's solid-white text inputs. */
+  --field-bg: #ffffff;
+  --field-border: rgba(37, 99, 235, 0.3);
+  --option-hover: rgba(29, 78, 216, 0.08);
+  --pill-active-bg: #ffffff;
+  --pill-active-fg: #1c1310;
+  --pill-active-shadow: 0 6px 16px -8px rgba(95, 45, 20, 0.45);
+  --stat-active-bg: #ffffff;
+  --stat-active-ring: rgba(29, 78, 216, 0.5);
+
+  --bar-bg: rgba(255, 247, 241, 0.6);
+  --bar-border: rgba(255, 255, 255, 0.7);
+  --float-bg: rgba(255, 249, 245, 0.8);
+  --float-border: rgba(255, 255, 255, 0.85);
+  --float-shadow: 0 30px 80px -24px rgba(95, 45, 20, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --scrim: rgba(60, 28, 14, 0.22);
+
+  --badge-lost-bg: rgba(225, 29, 72, 0.12);
+  --badge-lost-fg: #be123c;
+  --badge-lost-border: rgba(225, 29, 72, 0.3);
+  --badge-found-bg: rgba(5, 150, 105, 0.14);
+  --badge-found-fg: #047857;
+  --badge-found-border: rgba(5, 150, 105, 0.3);
+  --badge-claimed-bg: rgba(71, 85, 105, 0.12);
+  --badge-claimed-fg: #334155;
+  --badge-claimed-border: rgba(71, 85, 105, 0.25);
+  --badge-vault-bg: rgba(13, 148, 136, 0.14);
+  --badge-vault-fg: #0f766e;
+  --badge-vault-border: rgba(13, 148, 136, 0.3);
+
+  --blue-main: #1d4ed8;
+  --blue-dark: #1e40af;
+  --modal-bg: var(--float-bg);
+  --overlay-scrim: var(--scrim);
 }
 
-/* ── Shared glass surface ───────────────────────────────────────────────── */
+/* ── Backdrop ───────────────────────────────────────────────────────────── */
+:root body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  filter: none;
+  opacity: 1;
+  z-index: -1;
+  background: var(--scene);
+  pointer-events: none;
+}
+:root body::after { display: none; }
+
+/* ── Panels ─────────────────────────────────────────────────────────────── */
+:root .hero-section,
+:root .projects-section,
+:root .tools-section,
+:root .about-hero,
+:root .about-section,
+:root #adminPanel .page-section,
+:root .auth-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 28px;
+  box-shadow: var(--panel-shadow);
+}
+
+/* Home page sections become separate panels instead of divider-separated bands. */
+:root .hero-section,
+:root .projects-section,
+:root .tools-section {
+  width: calc(100% - 1rem);
+  margin: clamp(0.75rem, 2vw, 1.25rem) auto;
+  padding: clamp(1.1rem, 3.5vw, 2.25rem) !important;
+}
+:root .section-divider { display: none; }
+:root .tools-section .simple-card { margin-bottom: 0; }
+
+:root .about-hero {
+  margin-top: 1.25rem;
+  padding: clamp(1.75rem, 5vw, 3rem) clamp(1.1rem, 4vw, 2.5rem);
+}
+:root .about-section {
+  margin-block: 1rem;
+  padding: clamp(1.1rem, 3.5vw, 2rem);
+}
+:root #adminPanel .page-section {
+  margin-bottom: 1.5rem;
+  padding: clamp(1rem, 2.5vw, 1.75rem) !important;
+}
+
+/* ── Cards inside panels ────────────────────────────────────────────────── */
 :root .project-card,
 :root .stat-box,
 :root .simple-card,
-:root .auth-card,
-:root .insight-card,
-:root .admin-table-card,
-:root .broadcast-card,
-:root .user-form-panel,
 :root .about-card,
-:root .admin-stats .stat-card {
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-}
-
-/* Neutral panels take the glass fill; the admin stat cards keep their status tints. */
-:root .project-card,
-:root .stat-box:not(.active),
-:root .simple-card,
-:root .auth-card,
 :root .insight-card,
 :root .admin-table-card,
 :root .broadcast-card,
-:root .user-form-panel,
-:root .about-card {
-  background: linear-gradient(150deg, var(--glass-highlight), transparent 45%), var(--glass-bg);
+:root .user-form-panel {
+  background: var(--card-glass);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
+:root .project-card { border-radius: 22px; }
+:root .simple-card { border-radius: 22px; }
+:root .stat-box,
+:root .about-card,
+:root .insight-card,
+:root .broadcast-card,
+:root .user-form-panel { border-radius: 18px; }
+:root .admin-table-card { border-radius: 20px; }
+:root .admin-table-wrap { background: transparent; border-color: transparent; box-shadow: none; }
+:root .admin-stats .stat-card { border-radius: 18px; box-shadow: var(--card-shadow); }
 
 :root .project-card:hover {
-  border-color: rgba(96, 140, 255, 0.45);
-  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight), 0 0 28px rgba(59, 130, 246, 0.16);
+  background: var(--card-glass-hover);
+  border-color: var(--card-border);
+  box-shadow: var(--card-shadow), 0 18px 40px -22px rgba(29, 78, 216, 0.45);
 }
 
-/* ── Bars: top navigation and footer ────────────────────────────────────── */
+:root .stat-box:hover {
+  background: var(--card-glass-hover);
+  border-color: var(--card-border);
+}
+:root .stat-box.active {
+  background: var(--stat-active-bg);
+  border-color: var(--card-border);
+  box-shadow: var(--card-shadow), 0 0 0 2px var(--stat-active-ring);
+}
+
+:root .item-photo-frame {
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: var(--well-bg);
+}
+
+:root .hero-seal {
+  border: 1px solid var(--panel-border);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.05) 70%);
+  box-shadow: 0 22px 44px -20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+[data-theme='light'] .hero-seal {
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.45) 70%);
+  box-shadow: 0 22px 44px -20px rgba(95, 45, 20, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+/* ── Status badges: readable pills in both themes ───────────────────────── */
+:root .item-badge {
+  padding: 0.22rem 0.62rem;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+/* Admin table badges. */
+:root .badge {
+  border-radius: 999px;
+  white-space: nowrap;
+}
+:root .badge-lost { background: var(--badge-lost-bg); color: var(--badge-lost-fg); border: 1px solid var(--badge-lost-border); }
+:root .badge-found { background: var(--badge-found-bg); color: var(--badge-found-fg); border: 1px solid var(--badge-found-border); }
+:root .badge-claimed { background: var(--badge-claimed-bg); color: var(--badge-claimed-fg); border: 1px solid var(--badge-claimed-border); }
+:root .badge-registered { background: var(--badge-vault-bg); color: var(--badge-vault-fg); border: 1px solid var(--badge-vault-border); }
+
+/* ── Pills: buttons, chips, tabs, pages, search ─────────────────────────── */
+:root .btn,
+:root .btn-danger,
+:root .btn-success { border-radius: 999px; }
+:root .btn-primary {
+  background: linear-gradient(180deg, #4f8df8 0%, #2563eb 100%);
+  box-shadow: 0 10px 24px -10px rgba(37, 99, 235, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+:root .btn-primary:hover { background: linear-gradient(180deg, #60a5fa 0%, #1d4ed8 100%); }
+:root .btn-outline {
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  color: var(--blue-main);
+}
+:root .btn-outline:hover {
+  background: var(--card-glass-hover);
+  border-color: var(--blue-main);
+}
+
+:root .filter-chips .chip { border-radius: 999px; }
+:root .filter-chips .chip:not(.active) {
+  background: var(--control-bg) !important;
+  border-color: var(--control-border) !important;
+  color: var(--text-muted) !important;
+}
+:root .filter-chips .chip:not(.active):hover { color: var(--text-main) !important; }
+:root .filter-chips .chip.active {
+  background: var(--pill-active-bg) !important;
+  border-color: transparent !important;
+  color: var(--pill-active-fg) !important;
+  box-shadow: var(--pill-active-shadow);
+}
+
+:root .admin-tab { border-radius: 999px; background: var(--control-bg); border-color: var(--control-border); }
+:root .admin-tab.active {
+  background: var(--pill-active-bg);
+  border-color: transparent;
+  color: var(--pill-active-fg);
+  box-shadow: var(--pill-active-shadow);
+}
+
+:root .pagination-btn { border-radius: 999px; background: var(--control-bg); border-color: var(--control-border); }
+:root .pagination-btn.active {
+  background: var(--pill-active-bg);
+  border-color: transparent;
+  color: var(--pill-active-fg);
+  box-shadow: var(--pill-active-shadow);
+}
+
+:root .search-box input {
+  border-radius: 999px;
+  padding-inline: 1.15rem;
+  background: var(--field-bg);
+  border-color: var(--field-border);
+}
+:root .hotspots-row .button-select-trigger {
+  border-radius: 999px;
+  padding-inline: 1.15rem 2.5rem;
+}
+/* The panel padding leaves less room; a smaller basis keeps office + sort on one row. */
+:root .location-filter-wrap { flex-basis: 300px; }
+:root .button-select-trigger,
+:root .category-picker {
+  background: var(--field-bg);
+  border-color: var(--field-border);
+}
+:root .input-field input,
+:root .input-field select,
+:root .input-field textarea,
+:root .category-picker { border-radius: 12px; }
+
+/* Sign-in / register switch as a segmented pill control. */
+:root .auth-tabs {
+  padding: 4px;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  background: var(--control-bg);
+}
+:root .auth-tab { border-radius: 999px; }
+:root .auth-tab.active {
+  background: var(--pill-active-bg);
+  color: var(--pill-active-fg);
+  box-shadow: var(--pill-active-shadow);
+}
+
+:root .theme-toggle,
+:root .notif-bell-btn,
+:root .user-pill {
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+}
+
+/* ── Floating layers: bars, popups, dropdowns, toasts (real blur) ───────── */
 :root .navbar,
 :root .site-footer {
-  background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(160%);
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(160%);
-  box-shadow: inset 0 -1px 0 var(--glass-border);
+  background: var(--bar-bg);
+  -webkit-backdrop-filter: blur(var(--blur-bar)) saturate(180%);
+  backdrop-filter: blur(var(--blur-bar)) saturate(180%);
 }
-:root .navbar { border-bottom: 1px solid var(--glass-border); }
-:root .site-footer { border-top: 1px solid var(--glass-border); box-shadow: inset 0 1px 0 var(--glass-highlight); }
-
-/* ── Controls: search, chips, dropdown buttons ──────────────────────────── */
-:root .search-box input,
-:root .chip:not(.active),
-:root .button-select-trigger {
-  background: var(--glass-field);
-  border-color: var(--glass-border);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+:root .navbar {
+  border-bottom: 1px solid var(--bar-border);
+  box-shadow: 0 10px 30px -22px rgba(0, 0, 0, 0.6);
+}
+:root .site-footer {
+  border-top: 1px solid var(--bar-border);
+  box-shadow: none;
 }
 
-/* ── Popups ─────────────────────────────────────────────────────────────── */
+/* The scrim must not blur: a blurred ancestor would stop the popup card from
+   blurring the page behind it. */
 :root .slip-overlay,
 :root .del-modal-backdrop {
-  background: var(--overlay-scrim);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  background: var(--scrim);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 :root .slip-overlay .modal-card,
 :root .slip-overlay > .category-picker-modal,
 :root .del-modal {
-  background: linear-gradient(150deg, var(--glass-highlight), transparent 40%), var(--glass-bg-strong);
-  border-color: var(--glass-border);
-  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(150%);
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(150%);
+  background: var(--float-bg) !important;
+  border: 1px solid var(--float-border);
+  border-radius: 26px;
+  box-shadow: var(--float-shadow);
+  -webkit-backdrop-filter: blur(var(--blur-float)) saturate(170%);
+  backdrop-filter: blur(var(--blur-float)) saturate(170%);
 }
-/* Keep the semantic edge colours on danger / success popups. */
-:root .slip-overlay .modal-card--danger { border-color: rgba(239, 68, 68, 0.45); }
+/* Beats the light theme's solid-white rule for popup panels. */
+[data-theme='light'] .slip-overlay > div.category-picker-modal:not(.slip-box):not(.modal-card) {
+  background: var(--float-bg) !important;
+}
+:root .slip-overlay .modal-card--danger,
+:root .del-modal { border-color: rgba(239, 68, 68, 0.45); }
 :root .slip-overlay .modal-card--success { border-color: rgba(34, 197, 94, 0.55); }
-:root .slip-overlay .modal-card:not(.modal-card--danger):not(.modal-card--success):not(.modal-card--neutral) { border-color: rgba(96, 140, 255, 0.45); }
-[data-theme='light'] .slip-overlay > .category-picker-modal { background: linear-gradient(150deg, var(--glass-highlight), transparent 40%), var(--glass-bg-strong) !important; }
 
-/* Toasts float over content too. */
+:root .button-select-menu {
+  background: var(--float-bg);
+  border: 1px solid var(--float-border);
+  border-radius: 16px;
+  box-shadow: var(--float-shadow);
+  -webkit-backdrop-filter: blur(var(--blur-float)) saturate(170%);
+  backdrop-filter: blur(var(--blur-float)) saturate(170%);
+}
+:root .button-select-option {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-main);
+  border-radius: 10px;
+}
+:root .button-select-option:hover,
+:root .button-select-option:focus-visible,
+:root .button-select-option.selected {
+  background: var(--option-hover);
+  border-color: transparent;
+  color: var(--blue-main);
+}
+
 :root .toast {
-  background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
-  backdrop-filter: blur(var(--glass-blur-strong));
+  background: var(--float-bg);
+  border: 1px solid var(--float-border);
+  border-radius: 16px;
+  -webkit-backdrop-filter: blur(var(--blur-float)) saturate(170%);
+  backdrop-filter: blur(var(--blur-float)) saturate(170%);
 }
 
-/* ── Performance and accessibility ──────────────────────────────────────── */
-/* Many blurred cards scrolling at once is slow on budget phones: keep the frosted
-   look on bars and popups, but give list cards a solid-enough fill instead. */
-@media (max-width: 639px) {
-  :root .project-card,
-  :root .stat-box,
-  :root .admin-stats .stat-card,
-  :root .insight-card {
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-  :root .project-card,
-  :root .stat-box:not(.active),
-  :root .insight-card {
-    background: linear-gradient(150deg, var(--glass-highlight), transparent 45%), var(--glass-bg-strong);
-  }
-}
-
-/* People who ask for less transparency, and browsers without blur, get solid surfaces. */
+/* ── Accessibility and fallbacks ────────────────────────────────────────── */
+/* People who ask for less transparency get solid surfaces in the same layout. */
 @media (prefers-reduced-transparency: reduce) {
-  :root { --glass-bg: rgb(22, 30, 50); --glass-bg-strong: rgb(15, 21, 38); }
-  [data-theme='light'] { --glass-bg: #ffffff; --glass-bg-strong: #ffffff; }
+  :root {
+    --panel-bg: #1e1614;
+    --card-glass: #261d1a;
+    --card-glass-hover: #2d2320;
+    --control-bg: #2a201c;
+    --bar-bg: #1a1210;
+    --float-bg: #1e1614;
+  }
+  [data-theme='light'] {
+    --panel-bg: #fbf3ee;
+    --card-glass: #ffffff;
+    --card-glass-hover: #ffffff;
+    --control-bg: #ffffff;
+    --bar-bg: #fbf3ee;
+    --float-bg: #ffffff;
+  }
 }
+/* Without blur support, floating layers need a near-solid fill to stay readable. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :root { --glass-bg: rgba(22, 30, 50, 0.94); --glass-bg-strong: rgba(15, 21, 38, 0.96); }
-  [data-theme='light'] { --glass-bg: rgba(255, 255, 255, 0.95); --glass-bg-strong: rgba(255, 255, 255, 0.97); }
+  :root { --bar-bg: rgba(22, 14, 12, 0.95); --float-bg: rgba(32, 22, 20, 0.97); }
+  [data-theme='light'] { --bar-bg: rgba(255, 247, 241, 0.96); --float-bg: rgba(255, 249, 245, 0.98); }
 }

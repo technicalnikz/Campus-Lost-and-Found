@@ -38,6 +38,12 @@
       color: var(--blue-main);
       line-height: 1;
     }
+    .stat-val--lost { color: #f87171; }
+    .stat-val--found { color: #4ade80; }
+    .stat-val--claimed { color: var(--blue-main); }
+    /* Darker shades keep the numbers readable on white cards. */
+    [data-theme='light'] .stat-val--lost { color: #dc2626; }
+    [data-theme='light'] .stat-val--found { color: #059669; }
     .stat-lbl {
       display: block;
       font-size: .75rem;
