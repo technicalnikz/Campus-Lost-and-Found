@@ -1,4 +1,4 @@
-/* Glass theme: frosted, translucent surfaces over a soft coloured backdrop.
+/* Glass theme: frosted, translucent surfaces.
    Loaded after every other stylesheet. Selectors use `:root .x` so they win over
    the equal-specificity `[data-theme='light'] .x` rules that load earlier. */
 
@@ -11,9 +11,6 @@
   --glass-blur: 16px;
   --glass-blur-strong: 22px;
   --glass-field: rgba(255, 255, 255, 0.05);
-  --ambient-a: #3b5bdb;   /* seal gear navy */
-  --ambient-b: #0f9f7a;   /* seal laurel green */
-  --ambient-opacity: 0.55;
   --overlay-scrim: rgba(2, 6, 23, 0.5);
   /* Popups (css/modals.css) read this token. */
   --modal-bg: var(--glass-bg-strong);
@@ -26,32 +23,8 @@
   --glass-highlight: rgba(255, 255, 255, 0.85);
   --glass-shadow: 0 10px 30px rgba(30, 58, 138, 0.12);
   --glass-field: rgba(255, 255, 255, 0.7);
-  --ambient-a: #6d8cff;
-  --ambient-b: #34d3a6;
-  --ambient-opacity: 0.28;
   --overlay-scrim: rgba(15, 23, 42, 0.28);
   --modal-bg: var(--glass-bg-strong);
-}
-
-/* ── Backdrop: two soft colour fields behind everything ─────────────────── */
-:root body::before,
-:root body::after {
-  opacity: var(--ambient-opacity);
-  filter: blur(110px);
-}
-:root body::before {
-  width: 560px;
-  height: 560px;
-  background: var(--ambient-a);
-  top: -140px;
-  left: -120px;
-}
-:root body::after {
-  width: 520px;
-  height: 520px;
-  background: var(--ambient-b);
-  bottom: -160px;
-  right: -120px;
 }
 
 /* ── Shared glass surface ───────────────────────────────────────────────── */
