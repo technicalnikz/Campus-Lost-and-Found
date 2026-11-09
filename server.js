@@ -30,6 +30,18 @@ function createApp() {
     app.set('trust proxy', 1);
   }
 
+  app.disable('x-powered-by');
+  app.use((req, res, next) => {
+    res.set({
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': 'geolocation=(), microphone=()'
+    });
+    if (isProduction) res.set('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+    next();
+  });
+
   app.use(express.json({ limit: '256kb' }));
   app.use(express.urlencoded({ extended: true, limit: '64kb' }));
   app.use(session({
@@ -79,8 +91,10 @@ function createApp() {
   });
 
   app.use(express.static(path.join(__dirname, 'public')));
-  app.use(['/data', '/routes', '/middleware', '/tests', '/node_modules', '/.git', '/server.js', '/package.json', '/package-lock.json'], (req, res) => res.sendStatus(404));
-  app.use(express.static(__dirname));
+  // Serve only browser assets from the project root; server code, scripts and data stay private.
+  app.use('/css', express.static(path.join(__dirname, 'css')));
+  app.use('/js', express.static(path.join(__dirname, 'js')));
+  app.get('/icons.js', (req, res) => res.sendFile(path.join(__dirname, 'icons.js')));
 
   app.use('/api/*', (req, res) => res.status(404).json({ success: false, message: 'API endpoint not found.' }));
 

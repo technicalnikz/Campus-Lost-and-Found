@@ -53,18 +53,25 @@ function getAppUrl(pathname) {
   return new URL(pathname, parsedBaseUrl).toString();
 }
 
-async function sendRegistrationEmail(user) {
+function getVerificationUrl(token) {
+  const url = new URL(getAppUrl('/api/auth/verify-email'));
+  url.searchParams.set('token', token);
+  return url.toString();
+}
+
+// Proves the student owns their @my.cspc.edu.ph inbox before the account can sign in.
+async function sendVerificationEmail(user, token) {
   const transport = createTransport();
   const name = user.fullName || 'there';
   const safeName = escapeHtml(name);
-  const signInUrl = getAppUrl('/login');
+  const verifyUrl = getVerificationUrl(token);
 
   await transport.sendMail({
     from: process.env.SMTP_FROM,
     to: user.email,
-    subject: 'Welcome to Back2You — your account is ready',
-    text: `Hi ${name},\n\nWelcome to Back2You! Your account has been created successfully.\n\nYou can now sign in to report a lost item, report an item you found, and receive alerts if a found item may match your lost-item report. You can also register personal belongings to create QR recovery stickers.\n\nA possible match is only a suggestion—not confirmation of ownership. Please verify your item with campus staff before arranging a handover.\n\nSign in to Back2You: ${signInUrl}\n\nWe hope Back2You helps reunite you with your belongings.\n\nBest,\nThe Back2You Team`,
-    html: `<p>Hi ${safeName},</p><p>Welcome to Back2You! Your account has been created successfully.</p><p>You can now sign in to report a lost item, report an item you found, and receive alerts if a found item may match your lost-item report. You can also register personal belongings to create QR recovery stickers.</p><p>A possible match is only a suggestion—not confirmation of ownership. Please verify your item with campus staff before arranging a handover.</p><p><a href="${escapeHtml(signInUrl)}">Sign in to Back2You</a></p><p>We hope Back2You helps reunite you with your belongings.</p><p>Best,<br>The Back2You Team</p>`
+    subject: 'Confirm your Back2You account',
+    text: `Hi ${name},\n\nWelcome to Back2You! Please confirm that this is your CSPC email address to activate your account:\n\n${verifyUrl}\n\nThis link expires in 24 hours. You cannot sign in until your email is confirmed.\n\nOnce confirmed, you can report a lost item, report an item you found, and receive alerts if a found item may match your lost-item report. You can also register personal belongings to create QR recovery stickers.\n\nIf you did not create this account, you can ignore this email.\n\nBest,\nThe Back2You Team`,
+    html: `<p>Hi ${safeName},</p><p>Welcome to Back2You! Please confirm that this is your CSPC email address to activate your account:</p><p><a href="${escapeHtml(verifyUrl)}">Confirm my email address</a></p><p>This link expires in 24 hours. You cannot sign in until your email is confirmed.</p><p>Once confirmed, you can report a lost item, report an item you found, and receive alerts if a found item may match your lost-item report. You can also register personal belongings to create QR recovery stickers.</p><p>If you did not create this account, you can ignore this email.</p><p>Best,<br>The Back2You Team</p>`
   });
 }
 
@@ -176,7 +183,7 @@ async function sendBroadcastEmail(user, subject, message) {
 }
 
 module.exports = {
-  sendRegistrationEmail,
+  sendVerificationEmail,
   sendPossibleMatchEmail,
   sendClaimStatusEmail,
   sendClaimRequestEmail,

@@ -13,6 +13,10 @@ const ALLOWED_CATEGORIES = [
   'Others'
 ];
 
+// Exact CSPC addresses: no subdomains, spaces, or extra @ signs.
+const STUDENT_EMAIL = /^[a-z0-9._%+-]+@my\.cspc\.edu\.ph$/;
+const STAFF_EMAIL = /^[a-z0-9._%+-]+@cspc\.edu\.ph$/;
+
 function sanitizeString(str) {
   if (typeof str !== 'string') return '';
   return str
@@ -86,19 +90,21 @@ function validateUserAuth(req, res, next) {
   const { email, password } = req.body;
   const errors = [];
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email.trim())) {
-    errors.push('A valid email address is required.');
-  } else {
-    const normalizedEmail = email.trim().toLowerCase();
-    const isStudentDomain = normalizedEmail.endsWith('@my.cspc.edu.ph');
-    const isStaffDomain = normalizedEmail.endsWith('@cspc.edu.ph');
-    if (!isStudentDomain && !isStaffDomain) {
-      errors.push('Use a CSPC email address ending in @my.cspc.edu.ph or @cspc.edu.ph.');
+  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (req.path === '/register') {
+    // Self-registration is for students only.
+    if (!STUDENT_EMAIL.test(normalizedEmail)) {
+      errors.push('Use your CSPC student email address ending in @my.cspc.edu.ph.');
     }
+  } else if (!STUDENT_EMAIL.test(normalizedEmail) && !STAFF_EMAIL.test(normalizedEmail)) {
+    errors.push('Use your CSPC email address ending in @my.cspc.edu.ph.');
   }
 
-  if (req.path !== '/register' && (!password || password.length < 6)) {
+  if (typeof password !== 'string' || !password) {
+    errors.push('Password is required.');
+  } else if (password.length > 128) {
+    errors.push('Password must be at most 128 characters long.');
+  } else if (req.path !== '/register' && password.length < 6) {
     errors.push('Password must be at least 6 characters long.');
   }
 
@@ -128,12 +134,14 @@ function validateUserAuth(req, res, next) {
     });
   }
 
-  req.body.email = email.trim().toLowerCase();
+  req.body.email = normalizedEmail;
   next();
 }
 
 module.exports = {
   validateItemReport,
   validateUserAuth,
-  sanitizeString
+  sanitizeString,
+  STUDENT_EMAIL,
+  STAFF_EMAIL
 };

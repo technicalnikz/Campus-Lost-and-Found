@@ -1050,7 +1050,7 @@ router.get('/:id', (req, res) => {
   const items = getItems();
   const item = items.find(i => String(i.id) === String(req.params.id));
   const user = req.session?.user;
-  const canViewPrivateFields = user && (user.role === 'admin' || item?.reportedBy === user.id);
+  const canViewPrivateFields = user && (user.role === 'admin' || (item && String(item.reportedBy) === String(user.id)));
   if (!item || (item.type === 'registered' && !canViewPrivateFields)) {
     return res.status(404).json({ success: false, message: 'Item not found.' });
   }

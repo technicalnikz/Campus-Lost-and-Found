@@ -252,82 +252,137 @@ test.after(async () => {
   process.env.NODE_ENV = 'development';
 });
 
-test('registration succeeds and reports when confirmation email SMTP is not configured', async () => {
-  const adminRegistrationResponse = await fetch(`${baseUrl}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fullName: 'Impostor',
-      studentId: '1010012',
-      department: 'College of Computer Studies (CCS)',
-      email: 'admin@cspc.edu.ph',
-      password: 'StrongPassword1!'
-    })
+function registrationBody(overrides = {}) {
+  return JSON.stringify({
+    fullName: 'New Student',
+    studentId: '1010011',
+    department: 'College of Computer Studies (CCS)',
+    email: 'new.student@my.cspc.edu.ph',
+    password: 'StudentPass1!',
+    ...overrides
   });
-  assert.equal(adminRegistrationResponse.status, 400);
+}
 
-  const missingDepartmentResponse = await fetch(`${baseUrl}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fullName: 'New Student',
-      studentId: '1010011',
-      email: 'new.student@my.cspc.edu.ph',
-      password: 'StudentPass1!'
-    })
-  });
+async function postJson(url, body) {
+  return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+}
+
+test('registration accepts only @my.cspc.edu.ph student addresses', async () => {
+  for (const email of [
+    'admin@cspc.edu.ph',
+    'someone@gmail.com',
+    'student@my.cspc.edu.ph.evil.com',
+    'student@fake.my.cspc.edu.ph',
+    'stu dent@my.cspc.edu.ph',
+    'a@b@my.cspc.edu.ph'
+  ]) {
+    const response = await postJson(`${baseUrl}/api/auth/register`, registrationBody({ email, studentId: '1' }));
+    assert.equal(response.status, 400, email);
+  }
+  const loginResponse = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'someone@gmail.com', password: 'StudentPass1!' }));
+  assert.equal(loginResponse.status, 400);
+});
+
+test('new accounts cannot sign in until the emailed confirmation link is opened', async t => {
+  const missingDepartmentResponse = await postJson(`${baseUrl}/api/auth/register`, registrationBody({ department: undefined }));
   assert.equal(missingDepartmentResponse.status, 400);
 
-  const response = await fetch(`${baseUrl}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fullName: 'New Student',
-      studentId: '1010011',
-      department: 'College of Computer Studies (CCS)',
-      email: 'new.student@my.cspc.edu.ph',
-      password: 'StudentPass1!'
-    })
+  const smtp = await startSmtpCaptureServer();
+  const mailEnvironment = Object.fromEntries(smtpEnvironmentKeys.map(key => [key, process.env[key]]));
+  t.after(async () => {
+    await new Promise(resolve => smtp.server.close(resolve));
+    Object.entries(mailEnvironment).forEach(([key, value]) => {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    });
   });
+  process.env.SMTP_HOST = '127.0.0.1';
+  process.env.SMTP_PORT = String(smtp.port);
+  process.env.SMTP_SECURE = 'false';
+  process.env.SMTP_FROM = 'Back2You <noreply@example.edu>';
+  process.env.APP_BASE_URL = baseUrl;
+  delete process.env.SMTP_USER;
+  delete process.env.SMTP_PASS;
 
+  // Someone without access to the inbox registers the address first.
+  const squatterResponse = await postJson(`${baseUrl}/api/auth/register`, registrationBody({ password: 'Squatter1!pass' }));
+  assert.equal(squatterResponse.status, 201);
+
+  const response = await postJson(`${baseUrl}/api/auth/register`, registrationBody());
   assert.equal(response.status, 201);
   const result = await response.json();
   assert.equal(result.success, true);
-  assert.equal(result.emailSent, false);
-  assert.match(result.message, /confirmation email could not be sent/i);
+  assert.equal(result.verificationRequired, true);
+  assert.equal(result.emailSent, true);
+  assert.equal(result.user, undefined);
+  assert.equal(response.headers.get('set-cookie'), null);
+
   const users = JSON.parse(fs.readFileSync(path.join(dataDir, 'users.json'), 'utf8'));
-  const registeredUser = users.find(user => user.email === 'new.student@my.cspc.edu.ph');
-  assert.ok(registeredUser);
-  assert.equal(registeredUser.department, 'College of Computer Studies (CCS)');
+  const pending = users.filter(user => user.email === 'new.student@my.cspc.edu.ph');
+  assert.equal(pending.length, 1);
+  assert.equal(pending[0].emailVerified, false);
+  assert.equal(pending[0].department, 'College of Computer Studies (CCS)');
+  assert.match(pending[0].verificationTokenHash, /^[a-f0-9]{64}$/);
 
-  const sessionCookie = response.headers.get('set-cookie').split(';')[0];
-  await new Promise((resolve, reject) => appServer.close(error => error ? reject(error) : resolve()));
-  appServer = createApp().listen(0);
-  await new Promise(resolve => appServer.once('listening', resolve));
-  baseUrl = `http://127.0.0.1:${appServer.address().port}`;
+  const blockedLogin = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'new.student@my.cspc.edu.ph', password: 'StudentPass1!' }));
+  assert.equal(blockedLogin.status, 403);
+  assert.equal((await blockedLogin.json()).code, 'EMAIL_NOT_VERIFIED');
+  assert.equal(blockedLogin.headers.get('set-cookie'), null);
 
-  const sessionResponse = await fetch(`${baseUrl}/api/auth/me`, {
-    headers: { Cookie: sessionCookie }
-  });
-  assert.equal((await sessionResponse.json()).authenticated, true);
+  const forgedLink = await fetch(`${baseUrl}/api/auth/verify-email?token=${'0'.repeat(64)}`, { redirect: 'manual' });
+  assert.equal(forgedLink.headers.get('location'), '/login?verified=invalid');
+
+  const squatterEmail = smtp.messages[0].content.replace(/=\r\n/g, '').replace(/=3D/g, '=');
+  const squatterToken = squatterEmail.match(/verify-email\?token=([a-f0-9]{64})/)[1];
+  const supersededLink = await fetch(`${baseUrl}/api/auth/verify-email?token=${squatterToken}`, { redirect: 'manual' });
+  assert.equal(supersededLink.headers.get('location'), '/login?verified=invalid');
+
+  const latestEmail = smtp.messages.at(-1);
+  assert.match(latestEmail.recipient, /new\.student@my\.cspc\.edu\.ph/);
+  const emailContent = latestEmail.content.replace(/=\r\n/g, '').replace(/=3D/g, '=');
+  assert.match(emailContent, /Confirm your Back2You account/);
+  const token = emailContent.match(/verify-email\?token=([a-f0-9]{64})/)[1];
+  const verifyResponse = await fetch(`${baseUrl}/api/auth/verify-email?token=${token}`, { redirect: 'manual' });
+  assert.equal(verifyResponse.status, 302);
+  assert.equal(verifyResponse.headers.get('location'), '/login?verified=success');
+
+  const reusedLink = await fetch(`${baseUrl}/api/auth/verify-email?token=${token}`, { redirect: 'manual' });
+  assert.equal(reusedLink.headers.get('location'), '/login?verified=invalid');
+
+  const squatterLogin = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'new.student@my.cspc.edu.ph', password: 'Squatter1!pass' }));
+  assert.equal(squatterLogin.status, 401);
+  await login('new.student@my.cspc.edu.ph', 'StudentPass1!');
 
   const itemsResponse = await fetch(`${baseUrl}/api/items`);
   assert.equal((await itemsResponse.json()).items.length, 5);
 
-  const duplicateResponse = await fetch(`${baseUrl}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fullName: 'New Student',
-      studentId: '1010011',
-      department: 'College of Computer Studies (CCS)',
-      email: 'new.student@my.cspc.edu.ph',
-      password: 'StudentPass1!'
-    })
-  });
+  const duplicateResponse = await postJson(`${baseUrl}/api/auth/register`, registrationBody());
   assert.equal(duplicateResponse.status, 409);
   assert.equal(JSON.parse(fs.readFileSync(path.join(dataDir, 'users.json'), 'utf8'))
     .filter(user => user.email === 'new.student@my.cspc.edu.ph').length, 1);
+});
+
+test('student accounts cannot sign in with the staff domain and repeated failures are throttled', async () => {
+  const staffDomain = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'student@cspc.edu.ph', password: studentPassword }));
+  assert.equal(staffDomain.status, 401);
+
+  const email = 'password.guesser@my.cspc.edu.ph';
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const response = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email, password: 'WrongPass1!' }));
+    assert.equal(response.status, 401);
+  }
+  const locked = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email, password: 'WrongPass1!' }));
+  assert.equal(locked.status, 429);
+});
+
+test('server source, scripts and data files are not publicly served', async () => {
+  for (const url of ['/services/email.js', '/scripts/manage-admin.js', '/routes/authRoutes.js', '/data/items.json', '/server.js', '/package.json', '/README.md', '/.env']) {
+    const response = await fetch(`${baseUrl}${url}`);
+    assert.equal(response.status, 404, url);
+  }
+  const asset = await fetch(`${baseUrl}/js/login.js`);
+  assert.equal(asset.status, 200);
+  assert.equal(asset.headers.get('x-content-type-options'), 'nosniff');
 });
 
 test('public item responses exclude private fields', async () => {

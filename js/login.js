@@ -87,6 +87,26 @@ function togglePasswordVisibility(inputId, btn) {
 
     function hideError() {
       document.getElementById('authError').style.display = 'none';
+      document.getElementById('authNotice').style.display = 'none';
+    }
+
+    function showNotice(msg) {
+      const box = document.getElementById('authNotice');
+      box.innerText = msg;
+      box.style.display = 'block';
+    }
+
+    // Result of opening the confirmation link from the verification email.
+    function showVerificationResult() {
+      const params = new URLSearchParams(window.location.search);
+      const result = params.get('verified');
+      if (!result) return;
+      if (result === 'success') showNotice('Your email is confirmed. You can now sign in.');
+      else if (result === 'expired') showError('That confirmation link has expired. Sign in with your email and password to receive a new one.');
+      else showError('That confirmation link is invalid or was already used. Sign in to receive a new one if needed.');
+      params.delete('verified');
+      const query = params.toString();
+      window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
     }
 
     function updatePasswordRequirements() {
@@ -168,9 +188,13 @@ function togglePasswordVisibility(inputId, btn) {
 
         const data = await res.json();
         if (data.success) {
-          sessionStorage.setItem('currentUser', JSON.stringify(data.user));
-          sessionStorage.setItem('userRole', data.user.role);
-          window.location.replace('/');
+          // New accounts stay locked until the emailed confirmation link is opened.
+          document.getElementById('registerForm').reset();
+          updatePasswordRequirements();
+          switchTab('login');
+          document.getElementById('loginEmail').value = email;
+          if (data.emailSent === false) showError(data.message);
+          else showNotice(data.message);
         } else {
           showError(data.message || (data.errors ? data.errors.join(' ') : 'Registration failed.'));
         }
@@ -181,6 +205,7 @@ function togglePasswordVisibility(inputId, btn) {
 
     document.getElementById('regPassword').addEventListener('input', updatePasswordRequirements);
     updatePasswordRequirements();
+    showVerificationResult();
     redirectAuthenticatedUser();
     window.addEventListener('pageshow', event => {
       if (event.persisted) redirectAuthenticatedUser();
