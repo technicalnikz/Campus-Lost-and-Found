@@ -426,6 +426,39 @@
     </div>
   </div>
 
+  <!-- CHANGE PASSWORD MODAL -->
+  <div class="slip-overlay" id="changePasswordModal" onclick="if(event.target===this) closeChangePasswordModal()">
+    <div class="modal-card" style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 2rem; max-width: 420px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
+        <div>
+          <h2 class="modal-title" style="font-size: 1.25rem; font-weight: 800; margin: 0 0 0.2rem;">Change Password</h2>
+          <p class="modal-subtitle" id="changePasswordEmail" style="font-size: 0.78rem; color: var(--text-muted); margin: 0;"></p>
+        </div>
+        <button type="button" onclick="closeChangePasswordModal()" aria-label="Close" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+        <div class="input-field" style="margin-bottom: 0.9rem;">
+          <label for="currentPassword">Current Password</label>
+          <input type="password" id="currentPassword" autocomplete="current-password" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+        </div>
+        <div class="input-field" style="margin-bottom: 0.9rem;">
+          <label for="newPassword">New Password</label>
+          <input type="password" id="newPassword" autocomplete="new-password" minlength="8" maxlength="128" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+        </div>
+        <div class="input-field" style="margin-bottom: 0.6rem;">
+          <label for="newPasswordConfirm">Confirm New Password</label>
+          <input type="password" id="newPasswordConfirm" autocomplete="new-password" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+        </div>
+        <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.75rem;">At least 8 characters, with an uppercase letter, a lowercase letter, a number, and one of ! @ # $ % ? &amp; *</p>
+        <p id="changePasswordError" role="alert" style="display: none; font-size: 0.78rem; color: #f87171; margin: 0 0 0.75rem;"></p>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-outline" onclick="closeChangePasswordModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="changePasswordSubmit">Save Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- REPORT SUCCESS CONFIRMATION MODAL -->
   <div class="slip-overlay" id="reportSuccessModal" onclick="if(event.target===this) closeReportSuccessModal()">
     <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 2rem; max-width: 460px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
@@ -743,7 +776,7 @@
             <span class="notif-icon" aria-hidden="true">🔔</span><span id="notifCountBadge" class="notif-badge" style="display:none;">0</span>
           </button>
           <div class="user-pill">
-            <span class="user-name">${escapeHtml(isAdmin ? 'Admin' : user.fullName)}</span>
+            <button type="button" class="user-name user-name-btn" onclick="openChangePasswordModal()" title="Account settings: change password">${escapeHtml(isAdmin ? 'Admin' : user.fullName)}</button>
             ${isAdmin ? '' : '<span class="role-badge">Student</span>'}
             <button type="button" onclick="handleLogout()" class="user-pill-logout" title="Sign out of account">Logout</button>
           </div>
@@ -791,6 +824,55 @@
         } catch (storageError) {
           // Ignore unreadable cached state and leave authentication to the next request.
         }
+      }
+    }
+
+    function openChangePasswordModal() {
+      if (!currentUser) return;
+      document.getElementById('changePasswordEmail').textContent = currentUser.email || '';
+      document.getElementById('changePasswordError').style.display = 'none';
+      document.getElementById('changePasswordModal').classList.add('open');
+      document.getElementById('currentPassword').focus();
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('changePasswordModal').classList.remove('open');
+      document.getElementById('changePasswordForm').reset();
+    }
+
+    async function handleChangePassword(event) {
+      event.preventDefault();
+      const errorBox = document.getElementById('changePasswordError');
+      const showChangeError = message => {
+        errorBox.textContent = message;
+        errorBox.style.display = 'block';
+      };
+      errorBox.style.display = 'none';
+      const newPassword = document.getElementById('newPassword').value;
+      if (newPassword !== document.getElementById('newPasswordConfirm').value) {
+        showChangeError('The two new passwords do not match.');
+        return;
+      }
+      const button = document.getElementById('changePasswordSubmit');
+      button.disabled = true;
+      try {
+        const res = await fetch('/api/auth/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ currentPassword: document.getElementById('currentPassword').value, newPassword })
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeChangePasswordModal();
+          showToast(data.message);
+        } else {
+          showChangeError(data.message || 'Could not change the password.');
+        }
+      } catch (err) {
+        showChangeError('Network error. Please try again.');
+      } finally {
+        button.disabled = false;
       }
     }
 

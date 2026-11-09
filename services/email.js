@@ -75,6 +75,22 @@ async function sendVerificationEmail(user, token) {
   });
 }
 
+async function sendPasswordResetEmail(user, token) {
+  const transport = createTransport();
+  const name = user.fullName || 'there';
+  const resetUrl = new URL(getAppUrl('/login'));
+  resetUrl.searchParams.set('reset', token);
+  const link = resetUrl.toString();
+
+  await transport.sendMail({
+    from: process.env.SMTP_FROM,
+    to: user.email,
+    subject: 'Reset your Back2You password',
+    text: `Hi ${name},\n\nWe received a request to reset your Back2You password. Open this link to choose a new password:\n\n${link}\n\nThis link expires in 1 hour and can only be used once.\n\nIf you did not request this, you can ignore this email. Your password will not change.\n\nBack2You – CSPC Lost & Found`,
+    html: `<p>Hi ${escapeHtml(name)},</p><p>We received a request to reset your Back2You password. Open this link to choose a new password:</p><p><a href="${escapeHtml(link)}">Reset my password</a></p><p>This link expires in 1 hour and can only be used once.</p><p>If you did not request this, you can ignore this email. Your password will not change.</p><p>Back2You – CSPC Lost &amp; Found</p>`
+  });
+}
+
 async function sendPossibleMatchEmail(user, lostItem, foundItem) {
   const matchUrl = new URL(getAppUrl('/'));
   matchUrl.searchParams.set('search', foundItem.refCode);
@@ -184,6 +200,7 @@ async function sendBroadcastEmail(user, subject, message) {
 
 module.exports = {
   sendVerificationEmail,
+  sendPasswordResetEmail,
   sendPossibleMatchEmail,
   sendClaimStatusEmail,
   sendClaimRequestEmail,

@@ -1788,6 +1788,23 @@ input[type='submit'] {
     display: none;
   }
 
+  .mobile-drawer-password {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 34px;
+    padding: .3rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-main);
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
   .mobile-drawer-footer:has(> .mobile-drawer-signin:only-child) {
     display: none;
   }

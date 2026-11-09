@@ -70,13 +70,96 @@ function togglePasswordVisibility(inputId, btn) {
 
     // Theme initialization and click handling are provided by the shared main.js.
 
-    function switchTab(tab) {
-      const isLogin = tab === 'login';
-      document.getElementById('tabLogin').classList.toggle('active', isLogin);
-      document.getElementById('tabRegister').classList.toggle('active', !isLogin);
-      document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
-      document.getElementById('registerForm').style.display = isLogin ? 'none' : 'block';
+    function showAuthForm(formId) {
+      ['loginForm', 'registerForm', 'forgotForm', 'resetForm'].forEach(id => {
+        document.getElementById(id).style.display = id === formId ? 'block' : 'none';
+      });
+      document.getElementById('tabLogin').classList.toggle('active', formId !== 'registerForm');
+      document.getElementById('tabRegister').classList.toggle('active', formId === 'registerForm');
       hideError();
+    }
+
+    function switchTab(tab) {
+      showAuthForm(tab === 'login' ? 'loginForm' : 'registerForm');
+    }
+
+    function showForgotPassword() {
+      showAuthForm('forgotForm');
+      document.getElementById('forgotEmail').value = document.getElementById('loginEmail').value.trim();
+      document.getElementById('forgotEmail').focus();
+    }
+
+    async function handleForgotPassword(e) {
+      e.preventDefault();
+      hideError();
+      const button = document.getElementById('forgotSubmit');
+      button.disabled = true;
+      try {
+        const res = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ email: document.getElementById('forgotEmail').value.trim() })
+        });
+        const data = await res.json();
+        if (data.success) showNotice(data.message);
+        else showError(data.message || 'Could not send the reset link.');
+      } catch (err) {
+        showError('Network error connecting to authentication service.');
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    // The reset token is read once from the emailed link and kept out of the address bar.
+    let passwordResetToken = null;
+
+    function openResetFromLink() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('reset');
+      if (!token) return false;
+      passwordResetToken = token;
+      params.delete('reset');
+      const query = params.toString();
+      window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+      showAuthForm('resetForm');
+      return true;
+    }
+
+    async function handleResetPassword(e) {
+      e.preventDefault();
+      hideError();
+      const password = document.getElementById('resetPassword').value;
+      if (password !== document.getElementById('resetPasswordConfirm').value) {
+        showError('The two passwords do not match.');
+        return;
+      }
+      const button = document.getElementById('resetSubmit');
+      button.disabled = true;
+      try {
+        const res = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ token: passwordResetToken, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          passwordResetToken = null;
+          document.getElementById('resetForm').reset();
+          showAuthForm('loginForm');
+          showNotice(data.message);
+        } else if (data.code === 'RESET_LINK_INVALID') {
+          showAuthForm('forgotForm');
+          showError(data.message);
+        } else {
+          showError(data.message || 'Could not reset the password.');
+        }
+      } catch (err) {
+        showError('Network error connecting to authentication service.');
+      } finally {
+        button.disabled = false;
+      }
     }
 
     function showError(msg) {
@@ -206,7 +289,8 @@ function togglePasswordVisibility(inputId, btn) {
     document.getElementById('regPassword').addEventListener('input', updatePasswordRequirements);
     updatePasswordRequirements();
     showVerificationResult();
-    redirectAuthenticatedUser();
+    if (openResetFromLink()) document.body.classList.remove('auth-checking');
+    else redirectAuthenticatedUser();
     window.addEventListener('pageshow', event => {
-      if (event.persisted) redirectAuthenticatedUser();
+      if (event.persisted && !passwordResetToken) redirectAuthenticatedUser();
     });

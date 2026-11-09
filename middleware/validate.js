@@ -86,6 +86,31 @@ function validateItemReport(req, res, next) {
   next();
 }
 
+// Shared by registration, password reset, and password change.
+function passwordStrengthErrors(password, minLength = 8) {
+  const value = typeof password === 'string' ? password : '';
+  const errors = [];
+  if (value.length < minLength) {
+    errors.push(`Password must be at least ${minLength} characters long.`);
+  }
+  if (value.length > 128) {
+    errors.push('Password must be at most 128 characters long.');
+  }
+  if (!/[A-Z]/.test(value)) {
+    errors.push('Password must contain one uppercase letter (A-Z).');
+  }
+  if (!/[a-z]/.test(value)) {
+    errors.push('Password must contain one lowercase letter (a-z).');
+  }
+  if (!/[0-9]/.test(value)) {
+    errors.push('Password must contain one number (0-9).');
+  }
+  if (!/[!@#$%?&*]/.test(value)) {
+    errors.push('Password must contain one special symbol (!, @, #, $, %, ?, &, *).');
+  }
+  return errors;
+}
+
 function validateUserAuth(req, res, next) {
   const { email, password } = req.body;
   const errors = [];
@@ -109,21 +134,7 @@ function validateUserAuth(req, res, next) {
   }
 
   if (req.path === '/register') {
-    if (!password || password.length < 8) {
-      errors.push('Password must be at least 8 characters long.');
-    }
-    if (!/[A-Z]/.test(password || '')) {
-      errors.push('Password must contain one uppercase letter (A-Z).');
-    }
-    if (!/[a-z]/.test(password || '')) {
-      errors.push('Password must contain one lowercase letter (a-z).');
-    }
-    if (!/[0-9]/.test(password || '')) {
-      errors.push('Password must contain one number (0-9).');
-    }
-    if (!/[!@#$%?&*]/.test(password || '')) {
-      errors.push('Password must contain one special symbol (!, @, #, $, %, ?, &, *).');
-    }
+    errors.push(...passwordStrengthErrors(password));
   }
 
   if (errors.length > 0) {
@@ -142,6 +153,7 @@ module.exports = {
   validateItemReport,
   validateUserAuth,
   sanitizeString,
+  passwordStrengthErrors,
   STUDENT_EMAIL,
   STAFF_EMAIL
 };

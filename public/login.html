@@ -67,7 +67,45 @@
         <button type="submit" class="btn btn-primary" style="width: 100%; border: none; cursor: pointer; margin-top: 0.5rem;">
           Sign In
         </button>
+        <button type="button" class="auth-link-btn" onclick="showForgotPassword()">Forgot password?</button>
+      </form>
 
+      <!-- FORGOT PASSWORD FORM -->
+      <form id="forgotForm" style="display: none;" onsubmit="handleForgotPassword(event)">
+        <p class="auth-form-intro">Enter your CSPC email and we'll send you a link to reset your password.</p>
+        <div class="form-group">
+          <label for="forgotEmail">CSPC Email</label>
+          <input type="email" id="forgotEmail" placeholder="e.g., student@my.cspc.edu.ph" pattern="[A-Za-z0-9._%+\-]+@(my\.)?cspc\.edu\.ph" title="Use your CSPC email address ending in @my.cspc.edu.ph" required />
+        </div>
+        <button type="submit" id="forgotSubmit" class="btn btn-primary" style="width: 100%; border: none; cursor: pointer; margin-top: 0.5rem;">
+          Send Reset Link
+        </button>
+        <button type="button" class="auth-link-btn" onclick="switchTab('login')">Back to sign in</button>
+      </form>
+
+      <!-- RESET PASSWORD FORM (opened from the emailed link) -->
+      <form id="resetForm" style="display: none;" onsubmit="handleResetPassword(event)">
+        <p class="auth-form-intro">Choose a new password for your account.</p>
+        <div class="form-group">
+          <label for="resetPassword">New Password</label>
+          <div class="password-wrap">
+            <input type="password" id="resetPassword" placeholder="Create a secure password" minlength="8" maxlength="128" autocomplete="new-password" required />
+            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('resetPassword', this)" aria-label="Show password" aria-pressed="false" title="Show password">
+              <svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="resetPasswordConfirm">Confirm New Password</label>
+          <input type="password" id="resetPasswordConfirm" placeholder="Type the new password again" autocomplete="new-password" required />
+        </div>
+        <p class="auth-form-hint">At least 8 characters (12 for admins), with an uppercase letter, a lowercase letter, a number, and one of ! @ # $ % ? &amp; *</p>
+        <button type="submit" id="resetSubmit" class="btn btn-primary" style="width: 100%; border: none; cursor: pointer; margin-top: 0.5rem;">
+          Save New Password
+        </button>
       </form>
 
       <!-- REGISTRATION FORM -->

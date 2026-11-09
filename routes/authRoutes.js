@@ -4,11 +4,11 @@ const router = express.Router();
 const path = require('path');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const { validateUserAuth, sanitizeString, STUDENT_EMAIL, STAFF_EMAIL } = require('../middleware/validate');
-const { sendVerificationEmail } = require('../services/email');
+const { validateUserAuth, sanitizeString, passwordStrengthErrors, STUDENT_EMAIL, STAFF_EMAIL } = require('../middleware/validate');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/email');
 const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
 const postgresStore = require('../services/postgresStore');
-const { requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -23,11 +23,14 @@ const STUDENT_DEPARTMENTS = new Set([
 
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 const VERIFICATION_RESEND_MS = 2 * 60 * 1000;
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 const LOGIN_LIMIT = { max: 8, windowMs: 15 * 60 * 1000 };
 const REGISTRATION_LIMIT = { max: 5, windowMs: 60 * 60 * 1000 };
+const RESET_REQUEST_LIMIT = { max: 5, windowMs: 60 * 60 * 1000 };
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync('timing-equalizer-not-a-real-password', 10);
 const loginFailures = new Map();
 const registrationAttempts = new Map();
+const resetRequests = new Map();
 
 // In-memory fixed-window counters; enough for a single app instance.
 function isRateLimited(store, key, limit) {
@@ -68,19 +71,50 @@ function issueVerificationToken() {
   };
 }
 
-async function deliverVerificationEmail(user, token) {
+function issuePasswordResetToken() {
+  const value = crypto.randomBytes(32).toString('hex');
+  const now = Date.now();
+  return {
+    value,
+    fields: {
+      passwordResetTokenHash: hashToken(value),
+      passwordResetExpiresAt: new Date(now + PASSWORD_RESET_TTL_MS).toISOString(),
+      passwordResetSentAt: new Date(now).toISOString()
+    }
+  };
+}
+
+function clearPasswordReset(user) {
+  delete user.passwordResetTokenHash;
+  delete user.passwordResetExpiresAt;
+  delete user.passwordResetSentAt;
+}
+
+function minimumPasswordLength(user) {
+  return user.role === 'admin' ? 12 : 8;
+}
+
+async function deliverAccountEmail(send, user, token, devPath) {
   try {
-    await sendVerificationEmail(user, token);
+    await send(user, token);
     return true;
   } catch (error) {
-    console.error('Verification email could not be sent:', error.message);
+    console.error('Account email could not be sent:', error.message);
     if (process.env.NODE_ENV !== 'production') {
-      // Local development without SMTP: print the link so the account can still be confirmed.
+      // Local development without SMTP: print the link so the flow can still be completed.
       const base = process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
-      console.info(`Development verification link for ${user.email}: ${base}/api/auth/verify-email?token=${token}`);
+      console.info(`Development link for ${user.email}: ${base}${devPath}${token}`);
     }
     return false;
   }
+}
+
+function deliverVerificationEmail(user, token) {
+  return deliverAccountEmail(sendVerificationEmail, user, token, '/api/auth/verify-email?token=');
+}
+
+function deliverPasswordResetEmail(user, token) {
+  return deliverAccountEmail(sendPasswordResetEmail, user, token, '/login?reset=');
 }
 
 function authenticateSession(req, user) {
@@ -315,6 +349,114 @@ router.post('/login', validateUserAuth, async (req, res) => {
   }
 });
 
+// POST /api/auth/forgot-password - Email a one-hour reset link.
+// The reply is identical whether or not the account exists.
+router.post('/forgot-password', async (req, res) => {
+  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  if (!STUDENT_EMAIL.test(email) && !STAFF_EMAIL.test(email)) {
+    return res.status(400).json({ success: false, message: 'Use your CSPC email address ending in @my.cspc.edu.ph.' });
+  }
+  if (isRateLimited(resetRequests, req.ip, RESET_REQUEST_LIMIT)) {
+    return res.status(429).json({ success: false, message: 'Too many reset requests. Please try again later.' });
+  }
+  recordAttempt(resetRequests, req.ip, RESET_REQUEST_LIMIT);
+
+  try {
+    const users = getUsers();
+    const user = users.find(u => u.email.toLowerCase() === email);
+    const lastSent = Date.parse(user?.passwordResetSentAt) || 0;
+    if (user && Date.now() - lastSent > VERIFICATION_RESEND_MS) {
+      const token = issuePasswordResetToken();
+      Object.assign(user, token.fields);
+      saveUsers(users);
+      await deliverPasswordResetEmail(user, token.value);
+    }
+    res.json({
+      success: true,
+      message: `If an account exists for ${email}, a password reset link has been sent. The link expires in 1 hour.`
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Could not process the reset request.' });
+  }
+});
+
+// POST /api/auth/reset-password - Set a new password using the emailed link.
+router.post('/reset-password', async (req, res) => {
+  const token = typeof req.body.token === 'string' ? req.body.token : '';
+  const invalid = () => res.status(400).json({
+    success: false,
+    code: 'RESET_LINK_INVALID',
+    message: 'This reset link is invalid or has expired. Please request a new one.'
+  });
+  if (!/^[a-f0-9]{64}$/.test(token)) return invalid();
+
+  try {
+    const users = getUsers();
+    const tokenHash = hashToken(token);
+    const user = users.find(u => u.passwordResetTokenHash === tokenHash);
+    if (!user || Date.parse(user.passwordResetExpiresAt) < Date.now()) return invalid();
+
+    const errors = passwordStrengthErrors(req.body.password, minimumPasswordLength(user));
+    if (errors.length) return res.status(400).json({ success: false, message: errors.join(' '), errors });
+
+    user.passwordHash = await bcrypt.hash(req.body.password, 10);
+    user.passwordChangedAt = new Date().toISOString();
+    clearPasswordReset(user);
+    // Opening the emailed link proves the student owns the inbox.
+    if (user.emailVerified === false) {
+      user.emailVerified = true;
+      user.emailVerifiedAt = user.passwordChangedAt;
+      delete user.verificationTokenHash;
+      delete user.verificationExpiresAt;
+      delete user.verificationSentAt;
+    }
+    saveUsers(users);
+    loginFailures.forEach((entry, key) => {
+      if (key.endsWith(`|${user.email}`)) loginFailures.delete(key);
+    });
+    res.json({ success: true, message: 'Your password has been changed. You can now sign in.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Could not reset the password.' });
+  }
+});
+
+// POST /api/auth/change-password - Signed-in users change their own password.
+router.post('/change-password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const attemptKey = `${req.ip}|${req.session.user.email}`;
+  if (isRateLimited(loginFailures, attemptKey, LOGIN_LIMIT)) {
+    return res.status(429).json({ success: false, message: 'Too many incorrect attempts. Please wait 15 minutes and try again.' });
+  }
+
+  try {
+    const users = getUsers();
+    const user = users.find(u => String(u.id) === String(req.session.user.id));
+    if (!user) return res.status(401).json({ success: false, message: 'Authentication required. Please log in.' });
+
+    const currentMatches = typeof currentPassword === 'string'
+      && await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!currentMatches) {
+      recordAttempt(loginFailures, attemptKey, LOGIN_LIMIT);
+      return res.status(400).json({ success: false, message: 'Your current password is incorrect.' });
+    }
+
+    const errors = passwordStrengthErrors(newPassword, minimumPasswordLength(user));
+    if (newPassword === currentPassword) errors.push('Choose a password different from your current one.');
+    if (errors.length) return res.status(400).json({ success: false, message: errors.join(' '), errors });
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.passwordChangedAt = new Date().toISOString();
+    clearPasswordReset(user);
+    saveUsers(users);
+    loginFailures.delete(attemptKey);
+    // New session ID so a previously captured session cookie stops working.
+    await authenticateSession(req, req.session.user);
+    res.json({ success: true, message: 'Your password has been changed.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Could not change the password.' });
+  }
+});
+
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
   req.session.destroy(err => {
@@ -342,7 +484,10 @@ router.get('/me', (req, res) => {
 
 // GET /api/auth/users - Admin-only user directory (never expose password hashes).
 router.get('/users', requireRole('admin'), (req, res) => {
-  const users = getUsers().map(({ passwordHash, verificationTokenHash, verificationExpiresAt, verificationSentAt, ...user }) => user);
+  const users = getUsers().map(({
+    passwordHash, verificationTokenHash, verificationExpiresAt, verificationSentAt,
+    passwordResetTokenHash, passwordResetExpiresAt, passwordResetSentAt, ...user
+  }) => user);
   res.json({ success: true, users });
 });
 
@@ -361,8 +506,8 @@ router.post('/users', requireRole('admin'), async (req, res) => {
     if ((role === 'student' && !STUDENT_EMAIL.test(email)) || (role === 'admin' && !STAFF_EMAIL.test(email))) {
       errors.push(role === 'student' ? 'Student accounts must use an @my.cspc.edu.ph email.' : 'Admin accounts must use an @cspc.edu.ph email.');
     }
-    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%?&*]/.test(password)) {
-      errors.push('Password must be at least 8 characters and include uppercase, lowercase, number, and special character.');
+    if (passwordStrengthErrors(password, role === 'admin' ? 12 : 8).length) {
+      errors.push(`Password must be at least ${role === 'admin' ? 12 : 8} characters and include uppercase, lowercase, number, and special character.`);
     }
     if (role === 'student' && !STUDENT_DEPARTMENTS.has(department)) errors.push('Select a valid college department.');
     if (role === 'admin' && department !== 'Administration') errors.push('Admin accounts must use the Administration department.');

@@ -252,6 +252,13 @@ function syncMobileDrawerAccount(navbar) {
   }
 
   footer.replaceChildren();
+  const changePassword = account?.querySelector('.user-name-btn');
+  if (changePassword) {
+    const drawerPassword = changePassword.cloneNode(false);
+    drawerPassword.className = 'mobile-drawer-password';
+    drawerPassword.textContent = 'Change Password';
+    footer.append(drawerPassword);
+  }
   const logout = account?.querySelector('.user-pill-logout');
   if (logout) {
     const drawerLogout = logout.cloneNode(true);

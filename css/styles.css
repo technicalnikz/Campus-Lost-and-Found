@@ -330,6 +330,18 @@ body::after {
   white-space: nowrap;
 }
 
+/* The name doubles as the entry point to account settings. */
+.user-pill .user-name-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
 .user-pill-logout {
   background: transparent;
   border: none;

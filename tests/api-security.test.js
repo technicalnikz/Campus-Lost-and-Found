@@ -385,6 +385,96 @@ test('server source, scripts and data files are not publicly served', async () =
   assert.equal(asset.headers.get('x-content-type-options'), 'nosniff');
 });
 
+test('forgotten passwords can be reset once through the emailed link', async t => {
+  const smtp = await startSmtpCaptureServer();
+  const mailEnvironment = Object.fromEntries(smtpEnvironmentKeys.map(key => [key, process.env[key]]));
+  t.after(async () => {
+    await new Promise(resolve => smtp.server.close(resolve));
+    Object.entries(mailEnvironment).forEach(([key, value]) => {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    });
+  });
+  process.env.SMTP_HOST = '127.0.0.1';
+  process.env.SMTP_PORT = String(smtp.port);
+  process.env.SMTP_SECURE = 'false';
+  process.env.SMTP_FROM = 'Back2You <noreply@example.edu>';
+  process.env.APP_BASE_URL = baseUrl;
+  delete process.env.SMTP_USER;
+  delete process.env.SMTP_PASS;
+
+  const outsider = await postJson(`${baseUrl}/api/auth/forgot-password`, JSON.stringify({ email: 'someone@gmail.com' }));
+  assert.equal(outsider.status, 400);
+
+  const unknown = await postJson(`${baseUrl}/api/auth/forgot-password`, JSON.stringify({ email: 'nobody.here@my.cspc.edu.ph' }));
+  const known = await postJson(`${baseUrl}/api/auth/forgot-password`, JSON.stringify({ email: 'new.student@my.cspc.edu.ph' }));
+  assert.equal(unknown.status, 200);
+  assert.equal(known.status, 200);
+  // Same wording either way, so the form cannot be used to discover accounts.
+  assert.equal(
+    (await unknown.json()).message.replace('nobody.here', 'X'),
+    (await known.json()).message.replace('new.student', 'X')
+  );
+  assert.equal(smtp.messages.length, 1);
+  assert.match(smtp.messages[0].recipient, /new\.student@my\.cspc\.edu\.ph/);
+
+  const emailContent = smtp.messages[0].content.replace(/=\r\n/g, '').replace(/=3D/g, '=');
+  assert.match(emailContent, /Reset your Back2You password/);
+  const token = emailContent.match(/login\?reset=([a-f0-9]{64})/)[1];
+
+  const weak = await postJson(`${baseUrl}/api/auth/reset-password`, JSON.stringify({ token, password: 'short' }));
+  assert.equal(weak.status, 400);
+
+  const forged = await postJson(`${baseUrl}/api/auth/reset-password`, JSON.stringify({ token: 'f'.repeat(64), password: 'BrandNew1!pass' }));
+  assert.equal(forged.status, 400);
+  assert.equal((await forged.json()).code, 'RESET_LINK_INVALID');
+
+  const reset = await postJson(`${baseUrl}/api/auth/reset-password`, JSON.stringify({ token, password: 'BrandNew1!pass' }));
+  assert.equal(reset.status, 200);
+
+  const reused = await postJson(`${baseUrl}/api/auth/reset-password`, JSON.stringify({ token, password: 'Another1!pass' }));
+  assert.equal(reused.status, 400);
+
+  const oldPassword = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'new.student@my.cspc.edu.ph', password: 'StudentPass1!' }));
+  assert.equal(oldPassword.status, 401);
+  await login('new.student@my.cspc.edu.ph', 'BrandNew1!pass');
+
+  const users = JSON.parse(fs.readFileSync(path.join(dataDir, 'users.json'), 'utf8'));
+  const user = users.find(entry => entry.email === 'new.student@my.cspc.edu.ph');
+  assert.equal(user.passwordResetTokenHash, undefined);
+});
+
+test('signed-in users can change their password only with the current one', async () => {
+  const unauthenticated = await postJson(`${baseUrl}/api/auth/change-password`, JSON.stringify({ currentPassword: 'x', newPassword: 'y' }));
+  assert.equal(unauthenticated.status, 401);
+
+  const cookie = await login('new.student@my.cspc.edu.ph', 'BrandNew1!pass');
+  const change = body => fetch(`${baseUrl}/api/auth/change-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body: JSON.stringify(body)
+  });
+
+  const wrongCurrent = await change({ currentPassword: 'NotMyPass1!', newPassword: 'Changed1!pass' });
+  assert.equal(wrongCurrent.status, 400);
+  const weak = await change({ currentPassword: 'BrandNew1!pass', newPassword: 'weak' });
+  assert.equal(weak.status, 400);
+  const same = await change({ currentPassword: 'BrandNew1!pass', newPassword: 'BrandNew1!pass' });
+  assert.equal(same.status, 400);
+
+  const changed = await change({ currentPassword: 'BrandNew1!pass', newPassword: 'Changed1!pass' });
+  assert.equal(changed.status, 200);
+  assert.ok(changed.headers.get('set-cookie'), 'session is re-issued after a password change');
+
+  const oldPassword = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'new.student@my.cspc.edu.ph', password: 'BrandNew1!pass' }));
+  assert.equal(oldPassword.status, 401);
+  await login('new.student@my.cspc.edu.ph', 'Changed1!pass');
+
+  const users = await fetch(`${baseUrl}/api/auth/users`, { headers: { Cookie: await login('admin@cspc.edu.ph', adminPassword) } });
+  const listed = (await users.json()).users;
+  assert.ok(listed.every(user => !('passwordHash' in user) && !('passwordResetTokenHash' in user) && !('verificationTokenHash' in user)));
+});
+
 test('public item responses exclude private fields', async () => {
   for (const privatePath of ['/data/users.json', '/routes/authRoutes.js', '/server.js', '/package.json']) {
     const response = await fetch(`${baseUrl}${privatePath}`);
