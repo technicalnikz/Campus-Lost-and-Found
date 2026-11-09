@@ -43,7 +43,7 @@
     .stat-val--claimed { color: var(--blue-main); }
     /* Darker shades keep the numbers readable on white cards. */
     [data-theme='light'] .stat-val--lost { color: #dc2626; }
-    [data-theme='light'] .stat-val--found { color: #059669; }
+    [data-theme='light'] .stat-val--found { color: #15803d; }
     .stat-lbl {
       display: block;
       font-size: .75rem;
