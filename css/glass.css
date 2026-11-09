@@ -80,19 +80,32 @@
 
 [data-theme='light'] {
   --glow-rgb: 37, 99, 235;
+  /* Light mode: the same blue glows, larger and stronger, plus a soft one behind the
+     middle of the page, so the more transparent glass below has colour to show through. */
+  --scene:
+    radial-gradient(circle 560px at 130px 130px,
+      rgba(var(--glow-rgb), 0.34), rgba(var(--glow-rgb), 0.26) 25%, rgba(var(--glow-rgb), 0.17) 42%,
+      rgba(var(--glow-rgb), 0.09) 58%, rgba(var(--glow-rgb), 0.03) 74%, rgba(var(--glow-rgb), 0) 92%),
+    radial-gradient(circle 600px at calc(100% - 160px) calc(100% - 160px),
+      rgba(var(--glow-rgb), 0.34), rgba(var(--glow-rgb), 0.26) 25%, rgba(var(--glow-rgb), 0.17) 42%,
+      rgba(var(--glow-rgb), 0.09) 58%, rgba(var(--glow-rgb), 0.03) 74%, rgba(var(--glow-rgb), 0) 92%),
+    radial-gradient(ellipse 46% 40% at 38% 46%,
+      rgba(var(--glow-rgb), 0.2), rgba(var(--glow-rgb), 0.1) 45%, rgba(var(--glow-rgb), 0) 100%),
+    linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark2) 100%);
 
-  --panel-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.32));
-  --panel-border: rgba(255, 255, 255, 0.7);
-  --panel-shadow: 0 24px 60px -30px rgba(30, 58, 138, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  /* Bright top-left sheen fading to clear, with a white rim and a top-edge highlight. */
+  --panel-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.16) 55%, rgba(255, 255, 255, 0.08) 100%);
+  --panel-border: rgba(255, 255, 255, 0.85);
+  --panel-shadow: 0 28px 64px -30px rgba(30, 58, 138, 0.38), inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -1px 0 rgba(255, 255, 255, 0.35);
 
-  --card-glass: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42));
-  --card-glass-hover: linear-gradient(160deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.56));
-  --card-border: rgba(255, 255, 255, 0.8);
-  --card-shadow: 0 14px 30px -18px rgba(30, 58, 138, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  --well-bg: rgba(226, 232, 240, 0.55);
+  --card-glass: linear-gradient(160deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.26) 60%, rgba(255, 255, 255, 0.18) 100%);
+  --card-glass-hover: linear-gradient(160deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.46) 60%, rgba(255, 255, 255, 0.36) 100%);
+  --card-border: rgba(255, 255, 255, 0.9);
+  --card-shadow: 0 16px 34px -18px rgba(30, 58, 138, 0.32), inset 0 1px 0 rgba(255, 255, 255, 1), inset 0 -1px 0 rgba(255, 255, 255, 0.4);
+  --well-bg: rgba(226, 232, 240, 0.45);
   --well-border: rgba(37, 99, 235, 0.2);
 
-  --control-bg: rgba(255, 255, 255, 0.55);
+  --control-bg: rgba(255, 255, 255, 0.45);
   --control-border: rgba(37, 99, 235, 0.18);
   /* Matches the light theme's solid-white text inputs. */
   --field-bg: #ffffff;
@@ -102,10 +115,11 @@
   --stat-active-bg: linear-gradient(160deg, rgba(219, 234, 254, 0.95), rgba(191, 219, 254, 0.7));
   --stat-active-ring: rgba(37, 99, 235, 0.5);
 
-  --bar-bg: rgba(248, 250, 252, 0.62);
+  /* Bars and popups blur what's behind them, so they can be clearer and stay readable. */
+  --bar-bg: rgba(248, 250, 252, 0.5);
   --bar-border: rgba(37, 99, 235, 0.14);
-  --float-bg: rgba(255, 255, 255, 0.82);
-  --float-border: rgba(255, 255, 255, 0.9);
+  --float-bg: rgba(255, 255, 255, 0.7);
+  --float-border: rgba(255, 255, 255, 0.95);
   --float-shadow: 0 30px 80px -24px rgba(15, 23, 42, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --scrim: rgba(15, 23, 42, 0.28);
 

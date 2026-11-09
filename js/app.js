@@ -222,7 +222,7 @@ function renderNav(activePage = '') {
       </div>
       <div class="nav-actions">
         <button type="button" class="theme-toggle" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle theme">
-          <span class="theme-toggle-icon">🌙</span>
+          ${themeToggleIconHtml('dark')}
         </button>
         <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation menu">
           <span></span><span></span><span></span>

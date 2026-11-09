@@ -1602,7 +1602,7 @@ function toggleTheme() {
 function updateThemeIcon() {
   const theme = document.documentElement.getAttribute('data-theme') || 'dark';
   document.querySelectorAll('.theme-toggle').forEach(btn => {
-    btn.innerHTML = `<span class="theme-toggle-icon">${theme === 'light' ? '☀️' : '🌙'}</span>`;
+    btn.innerHTML = themeToggleIconHtml(theme);
     btn.setAttribute('title', theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode');
     btn.setAttribute('aria-label', theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode');
   });
