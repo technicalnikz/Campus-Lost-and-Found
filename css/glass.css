@@ -1,0 +1,168 @@
+/* Glass theme: frosted, translucent surfaces over a soft coloured backdrop.
+   Loaded after every other stylesheet. Selectors use `:root .x` so they win over
+   the equal-specificity `[data-theme='light'] .x` rules that load earlier. */
+
+:root {
+  --glass-bg: rgba(24, 33, 56, 0.44);
+  --glass-bg-strong: rgba(15, 21, 38, 0.72);
+  --glass-border: rgba(160, 185, 255, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.07);
+  --glass-shadow: 0 10px 32px rgba(2, 6, 23, 0.42);
+  --glass-blur: 16px;
+  --glass-blur-strong: 22px;
+  --glass-field: rgba(255, 255, 255, 0.05);
+  --ambient-a: #3b5bdb;   /* seal gear navy */
+  --ambient-b: #0f9f7a;   /* seal laurel green */
+  --ambient-opacity: 0.55;
+  --overlay-scrim: rgba(2, 6, 23, 0.5);
+  /* Popups (css/modals.css) read this token. */
+  --modal-bg: var(--glass-bg-strong);
+}
+
+[data-theme='light'] {
+  --glass-bg: rgba(255, 255, 255, 0.58);
+  --glass-bg-strong: rgba(255, 255, 255, 0.76);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-highlight: rgba(255, 255, 255, 0.85);
+  --glass-shadow: 0 10px 30px rgba(30, 58, 138, 0.12);
+  --glass-field: rgba(255, 255, 255, 0.7);
+  --ambient-a: #6d8cff;
+  --ambient-b: #34d3a6;
+  --ambient-opacity: 0.28;
+  --overlay-scrim: rgba(15, 23, 42, 0.28);
+  --modal-bg: var(--glass-bg-strong);
+}
+
+/* ── Backdrop: two soft colour fields behind everything ─────────────────── */
+:root body::before,
+:root body::after {
+  opacity: var(--ambient-opacity);
+  filter: blur(110px);
+}
+:root body::before {
+  width: 560px;
+  height: 560px;
+  background: var(--ambient-a);
+  top: -140px;
+  left: -120px;
+}
+:root body::after {
+  width: 520px;
+  height: 520px;
+  background: var(--ambient-b);
+  bottom: -160px;
+  right: -120px;
+}
+
+/* ── Shared glass surface ───────────────────────────────────────────────── */
+:root .project-card,
+:root .stat-box,
+:root .simple-card,
+:root .auth-card,
+:root .insight-card,
+:root .admin-table-card,
+:root .broadcast-card,
+:root .user-form-panel,
+:root .about-card,
+:root .admin-stats .stat-card {
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+}
+
+/* Neutral panels take the glass fill; the admin stat cards keep their status tints. */
+:root .project-card,
+:root .stat-box:not(.active),
+:root .simple-card,
+:root .auth-card,
+:root .insight-card,
+:root .admin-table-card,
+:root .broadcast-card,
+:root .user-form-panel,
+:root .about-card {
+  background: linear-gradient(150deg, var(--glass-highlight), transparent 45%), var(--glass-bg);
+}
+
+:root .project-card:hover {
+  border-color: rgba(96, 140, 255, 0.45);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight), 0 0 28px rgba(59, 130, 246, 0.16);
+}
+
+/* ── Bars: top navigation and footer ────────────────────────────────────── */
+:root .navbar,
+:root .site-footer {
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(160%);
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(160%);
+  box-shadow: inset 0 -1px 0 var(--glass-border);
+}
+:root .navbar { border-bottom: 1px solid var(--glass-border); }
+:root .site-footer { border-top: 1px solid var(--glass-border); box-shadow: inset 0 1px 0 var(--glass-highlight); }
+
+/* ── Controls: search, chips, dropdown buttons ──────────────────────────── */
+:root .search-box input,
+:root .chip:not(.active),
+:root .button-select-trigger {
+  background: var(--glass-field);
+  border-color: var(--glass-border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* ── Popups ─────────────────────────────────────────────────────────────── */
+:root .slip-overlay,
+:root .del-modal-backdrop {
+  background: var(--overlay-scrim);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+:root .slip-overlay .modal-card,
+:root .slip-overlay > .category-picker-modal,
+:root .del-modal {
+  background: linear-gradient(150deg, var(--glass-highlight), transparent 40%), var(--glass-bg-strong);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-highlight);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(150%);
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(150%);
+}
+/* Keep the semantic edge colours on danger / success popups. */
+:root .slip-overlay .modal-card--danger { border-color: rgba(239, 68, 68, 0.45); }
+:root .slip-overlay .modal-card--success { border-color: rgba(34, 197, 94, 0.55); }
+:root .slip-overlay .modal-card:not(.modal-card--danger):not(.modal-card--success):not(.modal-card--neutral) { border-color: rgba(96, 140, 255, 0.45); }
+[data-theme='light'] .slip-overlay > .category-picker-modal { background: linear-gradient(150deg, var(--glass-highlight), transparent 40%), var(--glass-bg-strong) !important; }
+
+/* Toasts float over content too. */
+:root .toast {
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  backdrop-filter: blur(var(--glass-blur-strong));
+}
+
+/* ── Performance and accessibility ──────────────────────────────────────── */
+/* Many blurred cards scrolling at once is slow on budget phones: keep the frosted
+   look on bars and popups, but give list cards a solid-enough fill instead. */
+@media (max-width: 639px) {
+  :root .project-card,
+  :root .stat-box,
+  :root .admin-stats .stat-card,
+  :root .insight-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  :root .project-card,
+  :root .stat-box:not(.active),
+  :root .insight-card {
+    background: linear-gradient(150deg, var(--glass-highlight), transparent 45%), var(--glass-bg-strong);
+  }
+}
+
+/* People who ask for less transparency, and browsers without blur, get solid surfaces. */
+@media (prefers-reduced-transparency: reduce) {
+  :root { --glass-bg: rgb(22, 30, 50); --glass-bg-strong: rgb(15, 21, 38); }
+  [data-theme='light'] { --glass-bg: #ffffff; --glass-bg-strong: #ffffff; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --glass-bg: rgba(22, 30, 50, 0.94); --glass-bg-strong: rgba(15, 21, 38, 0.96); }
+  [data-theme='light'] { --glass-bg: rgba(255, 255, 255, 0.95); --glass-bg-strong: rgba(255, 255, 255, 0.97); }
+}
