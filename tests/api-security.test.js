@@ -255,8 +255,6 @@ test.after(async () => {
 function registrationBody(overrides = {}) {
   return JSON.stringify({
     fullName: 'New Student',
-    studentId: '1010011',
-    department: 'College of Computer Studies (CCS)',
     email: 'new.student@my.cspc.edu.ph',
     password: 'StudentPass1!',
     ...overrides
@@ -276,7 +274,7 @@ test('registration accepts only @my.cspc.edu.ph student addresses', async () => 
     'stu dent@my.cspc.edu.ph',
     'a@b@my.cspc.edu.ph'
   ]) {
-    const response = await postJson(`${baseUrl}/api/auth/register`, registrationBody({ email, studentId: '1' }));
+    const response = await postJson(`${baseUrl}/api/auth/register`, registrationBody({ email }));
     assert.equal(response.status, 400, email);
   }
   const loginResponse = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'someone@gmail.com', password: 'StudentPass1!' }));
@@ -284,9 +282,6 @@ test('registration accepts only @my.cspc.edu.ph student addresses', async () => 
 });
 
 test('new accounts cannot sign in until the emailed confirmation link is opened', async t => {
-  const missingDepartmentResponse = await postJson(`${baseUrl}/api/auth/register`, registrationBody({ department: undefined }));
-  assert.equal(missingDepartmentResponse.status, 400);
-
   const smtp = await startSmtpCaptureServer();
   const mailEnvironment = Object.fromEntries(smtpEnvironmentKeys.map(key => [key, process.env[key]]));
   t.after(async () => {
@@ -321,7 +316,8 @@ test('new accounts cannot sign in until the emailed confirmation link is opened'
   const pending = users.filter(user => user.email === 'new.student@my.cspc.edu.ph');
   assert.equal(pending.length, 1);
   assert.equal(pending[0].emailVerified, false);
-  assert.equal(pending[0].department, 'College of Computer Studies (CCS)');
+  assert.equal(pending[0].department, '');
+  assert.equal(pending[0].studentId, 'N/A');
   assert.match(pending[0].verificationTokenHash, /^[a-f0-9]{64}$/);
 
   const blockedLogin = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'new.student@my.cspc.edu.ph', password: 'StudentPass1!' }));

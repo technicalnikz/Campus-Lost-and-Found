@@ -189,17 +189,11 @@ function ensureDefaultAdminAccount() {
 // POST /api/auth/register
 router.post('/register', validateUserAuth, async (req, res) => {
   try {
-    const { email, password, fullName, studentId, department } = req.body;
+    const { email, password, fullName } = req.body;
     if (!STUDENT_EMAIL.test(email)) {
       return res.status(400).json({
         success: false,
         message: 'Student registration requires an @my.cspc.edu.ph email address.'
-      });
-    }
-    if (!STUDENT_DEPARTMENTS.has(department)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Select a valid college department.'
       });
     }
     if (isRateLimited(registrationAttempts, req.ip, REGISTRATION_LIMIT)) {
@@ -229,9 +223,10 @@ router.post('/register', validateUserAuth, async (req, res) => {
       email,
       passwordHash,
       fullName: sanitizeString(fullName) || 'CSPC Student',
-      studentId: sanitizeString(studentId) || 'N/A',
+      // Self-registration no longer asks for a student ID or department.
+      studentId: 'N/A',
       role: 'student', // default self-registration is student role
-      department: sanitizeString(department),
+      department: '',
       emailVerified: false,
       ...token.fields,
       createdAt: new Date().toISOString()

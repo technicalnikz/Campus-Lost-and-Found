@@ -250,22 +250,15 @@ function togglePasswordVisibility(inputId, btn) {
       }
 
       const fullName = document.getElementById('regFullName').value.trim();
-      const studentId = document.getElementById('regStudentId').value.trim();
-      const department = document.getElementById('regDepartment').value;
       const email = document.getElementById('regEmail').value.trim();
       const password = document.getElementById('regPassword').value;
-
-      if (!department) {
-        showError('Please select your college department.');
-        return;
-      }
 
       try {
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
-          body: JSON.stringify({ fullName, studentId, department, email, password })
+          body: JSON.stringify({ fullName, email, password })
         });
 
         const data = await res.json();
