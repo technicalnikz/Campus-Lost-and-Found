@@ -150,9 +150,9 @@ let restoreTarget = null;
         <tr>
           <td>${escHtml(user.fullName || '—')}</td>
           <td>${escHtml(user.email || '—')}</td>
-          <td><span class="badge">${escHtml(user.role || 'student')}</span></td>
+          <td><span class="badge ${user.role === 'admin' ? 'badge-role-admin' : 'badge-role-student'}">${escHtml(user.role === 'admin' ? 'Admin' : 'Student')}</span></td>
           <td>${escHtml(user.department || '—')}</td>
-          <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</td>
+          <td>${escHtml(formatDate(user.createdAt))}</td>
           <td><button type="button" class="action-btn action-btn-delete user-delete-button" data-user-id="${escHtml(user.id)}" data-user-name="${escHtml(user.fullName || user.email)}"${user.id === window.currentAdminUserId ? ' disabled' : ''}>Delete</button></td>
         </tr>`).join('');
       body.querySelectorAll('.user-delete-button').forEach(button => button.addEventListener('click', () => openDeleteUserModal(button.dataset.userId, button.dataset.userName)));

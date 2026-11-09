@@ -144,6 +144,7 @@ function statusBadge(status) {
     lost:    { label: 'Lost',    cls: 'badge-lost'    },
     found:   { label: 'Found',   cls: 'badge-found'   },
     claimed: { label: 'Claimed', cls: 'badge-claimed' },
+    active:  { label: 'Active',  cls: 'badge-active'  },
   };
   const b = map[status] || { label: status, cls: '' };
   return `<span class="badge ${b.cls}">${b.label}</span>`;

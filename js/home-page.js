@@ -305,6 +305,7 @@ function showItemsLoading(grid) {
 
 function showItemsError(grid) {
   document.getElementById('itemsPagination').innerHTML = '';
+  updateItemsSummary(0);
   grid.innerHTML = `
     <div class="feed-empty feed-empty--error" role="alert">
       <p class="feed-empty-title">Couldn't load campus items</p>
@@ -374,6 +375,7 @@ function renderItemsGrid(items) {
 
   if (!items || items.length === 0) {
     pagination.innerHTML = '';
+    updateItemsSummary(0);
     if (currentFilter === 'registered') {
       grid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 3.5rem 1rem; background: rgba(59,130,246,0.06); border: 1.5px dashed rgba(59,130,246,0.35); border-radius: 16px;">
@@ -462,9 +464,6 @@ function renderItemsGrid(items) {
       badgeHtml = '<span class="item-badge badge-found">Found</span>';
     }
 
-    const canManageStatus = item.canResolve === true || currentUser?.role === 'admin';
-    const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
-
     let matchBadgeHtml = '';
     if (item.potentialMatch && currentUser) {
       matchBadgeHtml = `<button type="button" class="btn-match-qr potential-match-badge" data-action="openMatchQrModal" data-args="${actionArgs(item.id, item.potentialMatch.id)}"><span class="potential-match-shimmer" aria-hidden="true"></span><svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fde68a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="m19 14 .9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z"/></svg><span class="potential-match-label">Potential Match</span></button>`;
@@ -474,61 +473,134 @@ function renderItemsGrid(items) {
     const delBtnHtml = canDelete
       ? `<button class="btn-sm btn-del" data-action="deleteItem" data-args="${actionArgs(item.id)}">Remove</button>`
       : '';
-    const claimBtnHtml = canManageStatus
-        ? `<button class="btn-sm btn-claim" data-action="toggleClaim" data-args="${actionArgs(item.id)}">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
-        : '';
+    const actionsHtml = matchBadgeHtml + delBtnHtml;
 
     const photoUrl = getItemPhotoUrl(item);
     const photoInteraction = photoUrl
-      ? `role="button" tabindex="0" data-activate data-action="openImageModal" data-args="${actionArgs(photoUrl, item.title)}"`
+      ? `role="button" tabindex="0" aria-label="View photo of ${escapeHtml(item.title)}" data-activate data-action="openImageModal" data-args="${actionArgs(photoUrl, item.title)}"`
       : '';
+    // Without a photo, the category icon fills the frame (it also shows if a photo fails to load).
     const photoHtml = `
-      <div class="item-photo-container">
+      <div class="item-photo-container listing-media">
         <div class="item-photo-frame" data-photo-state="${photoUrl ? 'loading' : 'empty'}" ${photoInteraction}>
-        ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="${itemIndex < 2 ? 'eager' : 'lazy'}" fetchpriority="${itemIndex === 0 ? 'high' : 'auto'}" decoding="async" data-item-photo />` : ''}
-        <div class="item-photo-status" role="status" aria-live="polite">
-          ${photoUrl ? '<span class="item-photo-spinner" aria-hidden="true"></span>' : ''}
-          <span class="item-photo-status-text">${photoUrl ? 'Loading photo...' : 'No photo uploaded'}</span>
+          ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="${itemIndex < 2 ? 'eager' : 'lazy'}" fetchpriority="${itemIndex === 0 ? 'high' : 'auto'}" decoding="async" data-item-photo />` : ''}
+          <div class="item-photo-status" role="status" aria-live="polite">
+            ${photoUrl ? '<span class="item-photo-spinner" aria-hidden="true"></span>' : ''}
+            ${categoryIconHtml(item.category, 'listing-placeholder-icon')}
+            <span class="item-photo-status-text">${photoUrl ? 'Loading photo...' : 'No photo'}</span>
+          </div>
         </div>
-        </div>
-        ${matchBadgeHtml}
       </div>
     `;
 
     return `
-      <div class="project-card" id="item-card-${item.id}">
-        <div class="project-card-header">
-          <div class="item-card-header-content">
-            <div class="item-card-meta-row">
-              <div class="item-card-category-ref">
-                <span class="project-type" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
-                <span class="ref-code" title="${escapeHtml(item.refCode || '')}">${escapeHtml(item.refCode || '')}</span>
-              </div>
-              ${badgeHtml}
-            </div>
-            <h3 style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
-          </div>
-        </div>
-
+      <article class="project-card listing-card" id="item-card-${item.id}">
         ${photoHtml}
-
-        <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
-
-        <div class="card-meta-line">
-          <span><strong>Location:</strong> ${escapeHtml(item.location)}</span>
-          <span><strong>Reported:</strong> ${formatTimestamp(item.createdAt || item.date)}</span>
-          ${item.claimedAt ? `<span><strong>Claimed:</strong> ${formatTimestamp(item.claimedAt)}</span>` : ''}
+        <div class="listing-body">
+          <div class="listing-topline">
+            ${badgeHtml}
+            ${item.refCode ? `<span class="ref-code listing-ref" title="Reference code">${escapeHtml(item.refCode)}</span>` : ''}
+          </div>
+          <h3 class="listing-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h3>
+          <p class="listing-category">${escapeHtml(item.category || 'Uncategorized')}</p>
+          ${item.desc ? `
+          <p class="listing-desc">${escapeHtml(item.desc)}</p>
+          <button type="button" class="listing-more" data-action="toggleItemDescription" data-args='["$el"]' aria-expanded="false" hidden>Show more</button>` : ''}
+          <ul class="listing-facts">
+            <li><span class="listing-fact-icon" aria-hidden="true">📍</span><span><span class="visually-hidden">Location: </span>${escapeHtml(item.location || 'Location not given')}</span></li>
+            <li><span class="listing-fact-icon" aria-hidden="true">🕐</span><span>${cardTimeHtml(item.createdAt || item.date, 'Reported')}</span></li>
+            ${item.claimedAt ? `<li><span class="listing-fact-icon" aria-hidden="true">✅</span><span>${cardTimeHtml(item.claimedAt, 'Claimed')}</span></li>` : ''}
+          </ul>
+          ${actionsHtml ? `<div class="card-actions listing-actions">${actionsHtml}</div>` : ''}
         </div>
-
-        <div class="card-actions">
-
-          ${delBtnHtml}
-        </div>
-      </div>
+      </article>
     `;
   }).join('');
   renderItemsPagination(totalPages);
+  updateItemsSummary(items.length, (currentPage - 1) * itemsPerPage + 1, (currentPage - 1) * itemsPerPage + pageItems.length);
+  updateDescriptionToggles(grid);
 }
+
+// Category name → icon symbol defined in index.html (#category-icon-*).
+const CATEGORY_ICON_IDS = {
+  'Electronics': 'electronics',
+  'Water Bottles/Tumblers': 'bottle',
+  'Clothing & Accessories': 'clothing',
+  'Books & Documents': 'books',
+  'Bags & Wallets': 'bag',
+  'Keys': 'key',
+  'Jewelry': 'jewelry',
+  'Sports Equipment': 'sports',
+  'School Supplies': 'school',
+  'ID / Cards': 'id'
+};
+
+function categoryIconHtml(category, className) {
+  const iconId = CATEGORY_ICON_IDS[category] || 'other';
+  return `<svg class="${className}" aria-hidden="true" focusable="false"><use href="#category-icon-${iconId}"></use></svg>`;
+}
+
+// "just now", "3 hrs ago", "yesterday", "4 days ago", then the date itself.
+function relativeTimeLabel(date) {
+  const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr${hours === 1 ? '' : 's'} ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  return `on ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+}
+
+// Short label for cards; the exact date and time stay available on hover.
+function cardTimeHtml(value, verb) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return `${verb} recently`;
+  const exact = `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  return `${verb} <time datetime="${date.toISOString()}" title="${exact}">${relativeTimeLabel(date)}</time>`;
+}
+
+function updateItemsSummary(total, start = 0, end = 0) {
+  const summary = document.getElementById('itemsSummary');
+  if (!summary) return;
+  if (!total) {
+    summary.textContent = '';
+    return;
+  }
+  const noun = currentFilter === 'registered' ? 'belonging' : 'item';
+  summary.textContent = total > itemsPerPage
+    ? `Showing ${start}–${end} of ${total} ${noun}s`
+    : `${total} ${noun}${total === 1 ? '' : 's'}`;
+}
+
+// Descriptions are clamped to a few lines; offer "Show more" only where text is cut off.
+function updateDescriptionToggles(root) {
+  if (!root) return;
+  root.querySelectorAll('.listing-desc').forEach(description => {
+    const button = description.nextElementSibling;
+    if (!button || !button.classList.contains('listing-more')) return;
+    if (description.classList.contains('is-expanded')) {
+      button.hidden = false;
+      return;
+    }
+    button.hidden = description.scrollHeight <= description.clientHeight + 1;
+  });
+}
+
+function toggleItemDescription(button) {
+  const description = button.previousElementSibling;
+  if (!description) return;
+  const expanded = description.classList.toggle('is-expanded');
+  button.textContent = expanded ? 'Show less' : 'Show more';
+  button.setAttribute('aria-expanded', String(expanded));
+}
+
+let descriptionToggleTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(descriptionToggleTimer);
+  descriptionToggleTimer = setTimeout(() => updateDescriptionToggles(document.getElementById('itemsGrid')), 150);
+});
 
 function renderItemsPagination(totalPages) {
   const pagination = document.getElementById('itemsPagination');

@@ -553,6 +553,19 @@ test('claimed items are excluded from lost and found results and included in cla
   assert.deepEqual(claimedItems.map(item => item.id).sort((a, b) => a - b), [15, 16]);
 });
 
+test('home page stats match the public lists and leave out private belongings', async () => {
+  const listed = async query => (await (await fetch(`${baseUrl}/api/items${query}`)).json()).items.length;
+  const response = await fetch(`${baseUrl}/api/items/stats`);
+  assert.equal(response.status, 200);
+  const { stats } = await response.json();
+  assert.deepEqual(stats, {
+    total: await listed(''),
+    lost: await listed('?type=lost'),
+    found: await listed('?type=found'),
+    claimed: await listed('?status=claimed')
+  });
+});
+
 test('registered belongings are private except through QR reference lookup', async () => {
   const directResponse = await fetch(`${baseUrl}/api/items/12`);
   assert.equal(directResponse.status, 404);

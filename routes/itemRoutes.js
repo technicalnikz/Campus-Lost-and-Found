@@ -360,16 +360,21 @@ function linkMatchedItems(lostItem, foundItem, matchedAt) {
 }
 
 // GET /api/stats - High-level overview
+// The home page's stat boxes double as filters, so each count matches what that filter
+// lists publicly: private registered belongings and archived reports are left out, and
+// Lost/Found count only items that have not been claimed yet.
 router.get('/stats', (req, res) => {
-  const items = getItems();
-  const total = items.length;
-  const lost = items.filter(i => i.type === 'lost').length;
-  const found = items.filter(i => i.type === 'found').length;
-  const claimed = items.filter(i => i.claimed || i.status === 'claimed').length;
+  const items = getItems().filter(i => i.type !== 'registered' && i.status !== 'archived');
+  const open = items.filter(i => !isItemClaimed(i));
 
   res.json({
     success: true,
-    stats: { total, lost, found, claimed }
+    stats: {
+      total: items.length,
+      lost: open.filter(i => i.type === 'lost').length,
+      found: open.filter(i => i.type === 'found').length,
+      claimed: items.filter(isItemClaimed).length
+    }
   });
 });
 
