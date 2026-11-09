@@ -348,7 +348,7 @@ body::after {
   color: var(--text-muted);
   cursor: pointer;
   font-weight: 700;
-  font-size: 0.72rem;
+  font-size: .75rem;
   padding: 0.2rem 0.45rem;
   border-radius: 4px;
   transition: all 0.15s ease;
@@ -370,7 +370,7 @@ body::after {
 .role-badge {
   background: var(--blue-main);
   color: #ffffff;
-  font-size: 0.64rem;
+  font-size: .75rem;
   font-weight: 800;
   padding: 0.18rem 0.5rem;
   border-radius: 999px;
@@ -415,7 +415,7 @@ body::after {
   background: #ef4444;
   color: #ffffff;
   border-radius: 999px;
-  font-size: 0.625rem;
+  font-size: .75rem;
   font-weight: 800;
   line-height: 1;
   display: inline-flex;
@@ -948,7 +948,7 @@ h2 {
 }
 
 .project-type {
-  font-size: 0.72rem;
+  font-size: .75rem;
   font-weight: 600;
   color: var(--blue-dark);
   letter-spacing: 0.06em;
@@ -986,7 +986,7 @@ h2 {
   padding: 0.6rem 0.75rem;
   margin: 0.5rem 0;
   color: var(--blue-light);
-  font-size: 0.74rem;
+  font-size: .75rem;
   line-height: 1.4;
 }
 
@@ -1000,7 +1000,7 @@ h2 {
   padding: 0.2rem 0.55rem;
   border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: .75rem;
   font-weight: 600;
   color: var(--blue-main);
   background: rgba(59, 130, 246, 0.07);
@@ -1338,7 +1338,7 @@ select option {
 .button-select-group-label {
   padding: 0.55rem 0.65rem 0.2rem;
   color: var(--blue-main);
-  font-size: 0.7rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
@@ -1384,7 +1384,7 @@ select option {
   .site-footer .footer-left img { width: 1.25rem !important; height: 1.25rem !important; max-height: 1.25rem; flex: 0 0 1.25rem; }
   .site-footer .footer-left > div { min-width: 0; }
   .site-footer .footer-right { min-width: 0; flex: 0 1 auto; text-align: right; }
-  .site-footer .footer-left p, .site-footer .footer-right p { line-height: 1.2; font-size: .625rem; overflow-wrap: anywhere; }
+  .site-footer .footer-left p, .site-footer .footer-right p { line-height: 1.2; font-size: .75rem; overflow-wrap: anywhere; }
   .navbar-container { padding-inline: .5rem; gap: .25rem; }
   .nav-actions { gap: .25rem; min-width: 0; }
   .nav-logo { gap: .35rem; font-size: .78rem; }
@@ -1393,8 +1393,8 @@ select option {
   #userNavSlot, .user-nav-slot { gap: .25rem; min-width: 0; }
   .user-pill { max-width: 150px; gap: .2rem; padding-inline: .35rem; overflow: hidden; height: 32px; }
   .user-pill .user-name { flex: 1 1 auto; min-width: 0; max-width: 66px; }
-  .user-pill .role-badge { flex: 0 0 auto; max-width: none; white-space: nowrap; padding-inline: .25rem; font-size: .42rem; }
-  .user-pill-logout { display: inline-flex; font-size: .58rem; padding-inline: .2rem; }
+  .user-pill .role-badge { flex: 0 0 auto; max-width: none; white-space: nowrap; padding-inline: .25rem; font-size: .75rem; }
+  .user-pill-logout { display: inline-flex; font-size: .75rem; padding-inline: .2rem; }
   .nav-actions > .nav-register-btn {
     display: none !important;
   }
@@ -1721,25 +1721,20 @@ select::placeholder,
   color: #0f172a;
 }
 
-[data-theme='light'] .slip-overlay > div:not(.slip-box),
-[data-theme='light'] .slip-overlay .modal-card,
-[data-theme='light'] .slip-overlay [style*="background: #18181b"],
-[data-theme='light'] .slip-overlay [style*="background:#18181b"] {
+/* Popups using .modal-card get their colours from css/modals.css. */
+[data-theme='light'] .slip-overlay > div:not(.slip-box):not(.modal-card) {
   background: #ffffff !important;
   color: #0f172a !important;
   box-shadow: 0 10px 45px rgba(0, 0, 0, 0.18) !important;
   border-color: var(--blue-main) !important;
 }
 
-[data-theme='light'] .slip-overlay h2,
-[data-theme='light'] .slip-overlay h3,
-[data-theme='light'] .slip-overlay h2[style],
-[data-theme='light'] .slip-overlay h3[style] {
+[data-theme='light'] .slip-overlay h2:not(.modal-confirm-title):not(.modal-heading--accent),
+[data-theme='light'] .slip-overlay h3:not(.modal-confirm-title):not(.modal-heading--accent) {
   color: #0f172a !important;
 }
 
-[data-theme='light'] .slip-overlay p,
-[data-theme='light'] .slip-overlay p[style*="color: var(--text-muted)"] {
+[data-theme='light'] .slip-overlay p:not(.modal-error):not(.field-error):not(.modal-body-text) {
   color: #475569 !important;
 }
 
@@ -1775,17 +1770,6 @@ select::placeholder,
   border-color: rgba(37, 99, 235, 0.25);
 }
 
-[data-theme='light'] #anonymousDemoBox {
-  background: #f1f5f9 !important;
-  border-color: rgba(37, 99, 235, 0.35) !important;
-}
-
-[data-theme='light'] #anonymousMsgInput {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
-}
-
 [data-theme='light'] #regCategory,
 [data-theme='light'] #regLocation {
   background: #ffffff !important;
@@ -1795,7 +1779,7 @@ select::placeholder,
 /* Modal helper badges, pill tags, and notices */
 .modal-badge-pill {
   display: inline-block;
-  font-size: 0.68rem;
+  font-size: .75rem;
   font-weight: 800;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
@@ -1804,8 +1788,7 @@ select::placeholder,
   background: rgba(59, 130, 246, 0.18);
   color: #93c5fd;
 }
-[data-theme='light'] .modal-badge-pill,
-[data-theme='light'] .slip-overlay span[style*="color: #93c5fd"] {
+[data-theme='light'] .modal-badge-pill {
   background: rgba(37, 99, 235, 0.12) !important;
   color: #1d4ed8 !important;
   border: 1px solid rgba(37, 99, 235, 0.25) !important;
@@ -1821,29 +1804,13 @@ select::placeholder,
   border: 1px solid rgba(59, 130, 246, 0.25);
   color: #bfdbfe;
 }
-[data-theme='light'] .modal-notice-box,
-[data-theme='light'] .slip-overlay div[style*="color: #bfdbfe"] {
+[data-theme='light'] .modal-notice-box {
   background: rgba(37, 99, 235, 0.08) !important;
   border-color: rgba(37, 99, 235, 0.25) !important;
   color: #1e3a8a !important;
 }
-[data-theme='light'] .modal-notice-box strong,
-[data-theme='light'] .slip-overlay div[style*="color: #bfdbfe"] strong {
+[data-theme='light'] .modal-notice-box strong {
   color: #1d4ed8 !important;
-}
-
-[data-theme='light'] .slip-overlay span[style*="color: #4ade80"],
-[data-theme='light'] .slip-overlay div[style*="color: #4ade80"] {
-  color: #15803d !important;
-}
-
-[data-theme='light'] .slip-overlay span[style*="color: #86efac"],
-[data-theme='light'] .slip-overlay div[style*="color: #86efac"] {
-  color: #166534 !important;
-}
-
-[data-theme='light'] .slip-overlay div[style*="color: #cbd5e1"] {
-  color: #334155 !important;
 }
 
 [data-theme='light'] .slip-overlay select option,
@@ -1852,6 +1819,13 @@ select::placeholder,
 [data-theme='light'] select option {
   background: #ffffff !important;
   color: #0f172a !important;
+}
+
+/* Loading / empty / error message in the notifications popup. */
+.notif-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
 }
 
 [data-theme='light'] .notif-item {
@@ -1947,7 +1921,7 @@ select::placeholder,
 
 .category-picker-eyebrow {
   color: var(--blue-main);
-  font-size: 0.68rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2101,7 +2075,7 @@ select::placeholder,
 .photo-preview-meta {
   padding: 0.55rem 8.5rem 0.55rem 0.75rem;
   color: var(--text-muted);
-  font-size: 0.74rem;
+  font-size: .75rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2139,7 +2113,7 @@ select::placeholder,
       display: inline-block;
       padding: 0.18rem 0.6rem;
       border-radius: 6px;
-      font-size: 0.7rem;
+      font-size: .75rem;
       font-weight: 700;
       letter-spacing: 0.05em;
       text-transform: uppercase;
@@ -2192,7 +2166,7 @@ select::placeholder,
       display: flex; flex-direction: column; gap: 0.4rem;
     }
     .item-card-category {
-      font-size: 0.72rem; font-weight: 600;
+      font-size: .75rem; font-weight: 600;
       color: var(--blue-dark); letter-spacing: 0.06em;
     }
     .item-card-title {
@@ -2438,7 +2412,7 @@ select::placeholder,
   background: transparent;
   color: var(--text-main);
   text-align: left;
-  font-size: .68rem;
+  font-size: .75rem;
   cursor: pointer;
 }
 .belonging-menu-icon {
@@ -2506,6 +2480,6 @@ select::placeholder,
   .belonging-menu button {
     min-height: 25px;
     padding: .2rem .65rem;
-    font-size: .68rem;
+    font-size: .75rem;
   }
 }

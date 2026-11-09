@@ -726,7 +726,33 @@ test('finder QR landing URL serves the app for the anonymous finder screen', asy
   assert.match(response.headers.get('content-type'), /text\/html/);
   const html = await response.text();
   assert.match(html, /id="anonymousFinderModal"/);
-  assert.match(html, /openAnonymousFinderModal\(finderRef\)/);
+  const scriptPath = html.match(/src="(\/js\/home-page\.js[^"]*)"/)[1];
+  const script = await (await fetch(`${baseUrl}${scriptPath}`)).text();
+  assert.match(script, /openAnonymousFinderModal\(finderRef\)/);
+});
+
+test('pages send a strict script policy and contain no inline scripts or handlers', async () => {
+  for (const url of ['/', '/login', '/about.html']) {
+    const response = await fetch(`${baseUrl}${url}`);
+    const policy = response.headers.get('content-security-policy');
+    assert.match(policy, /script-src 'self'(;|$)/, url);
+    assert.match(policy, /object-src 'none'/, url);
+    const html = await response.text();
+    assert.doesNotMatch(html, /<script(?![^>]*\ssrc=)[^>]*>/i, `${url} has an inline <script>`);
+    assert.doesNotMatch(html, /\son[a-z]+="/i, `${url} has an inline event handler`);
+  }
+});
+
+test('page assets are stamped with content versions and cached accordingly', async () => {
+  const html = await (await fetch(`${baseUrl}/`)).text();
+  const stamped = html.match(/src="(\/js\/ui\.js\?v=[a-f0-9]{10})"/);
+  assert.ok(stamped, 'ui.js is versioned');
+  const versioned = await fetch(`${baseUrl}${stamped[1]}`);
+  assert.equal(versioned.status, 200);
+  assert.match(versioned.headers.get('cache-control'), /immutable/);
+  const unversioned = await fetch(`${baseUrl}/js/ui.js`);
+  assert.equal(unversioned.headers.get('cache-control'), 'no-cache');
+  assert.equal((await fetch(`${baseUrl}/`)).headers.get('cache-control'), 'no-cache');
 });
 
 test('private registered records are visible to their owner only', async () => {

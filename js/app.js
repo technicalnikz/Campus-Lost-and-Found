@@ -233,43 +233,6 @@ function renderNav(activePage = '') {
 
 
 
-/* ══════════════════════════════════
-   ITEM CARD BUILDER
-   ══════════════════════════════════ */
-
-function buildItemCard(item) {
-  const dateLabel = item.type === 'lost'
-    ? `Lost: ${formatDate(item.dateLost)}`
-    : `Found: ${formatDate(item.dateFound)}`;
-
-  const photoUrl = (item.imageUrl || item.photo) && item.id
-    ? `/api/items/${encodeURIComponent(item.id)}/photo`
-    : (item.imageUrl || item.photo || '');
-  const thumb = photoUrl
-    ? `<img src="${photoUrl}" alt="${item.title}" class="card-thumb" onerror="this.replaceWith(document.createTextNode('Photo unavailable'))">`
-    : `<div class="card-thumb-placeholder">${categoryIcon(item.category)}</div>`;
-
-  return `
-  <a class="item-card" href="item-detail.html?id=${item.id}">
-    <div class="item-card-top">
-      ${thumb}
-      <div class="item-card-badges">
-        ${typeBadge(item.type)}
-        ${statusBadge(item.status)}
-      </div>
-    </div>
-    <div class="item-card-body">
-      <p class="item-card-category">${categoryIcon(item.category)} ${item.category}</p>
-      <h3 class="item-card-title">${escHtml(item.title)}</h3>
-      <p class="item-card-desc">${escHtml(item.description).substring(0, 90)}…</p>
-      <div class="item-card-meta">
-        <span>📍 ${escHtml(item.location)}</span>
-        <span>🗓️ ${dateLabel}</span>
-      </div>
-    </div>
-  </a>`;
-}
-
 function escHtml(str) {
   if (str === null || str === undefined) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');

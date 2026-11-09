@@ -106,7 +106,7 @@ input[type='submit'] {
     width: min(100%, 10rem);
     min-height: 30px;
     padding: .25rem .6rem;
-    font-size: .68rem;
+    font-size: .75rem;
     border: 1px solid rgba(239, 68, 68, .45);
     border-radius: 10px;
     background: rgba(239, 68, 68, .1);
@@ -122,7 +122,7 @@ input[type='submit'] {
 
   .nav-links a {
     height: 24px !important;
-    font-size: .72rem !important;
+    font-size: .75rem !important;
     line-height: 1 !important;
   }
 
@@ -131,7 +131,7 @@ input[type='submit'] {
     height: 30px !important;
     width: min(100%, 10rem);
     padding: .25rem .6rem !important;
-    font-size: .68rem !important;
+    font-size: .75rem !important;
   }
 
   body {
@@ -206,7 +206,7 @@ input[type='submit'] {
     min-width: 50px;
     height: 36px !important;
     padding: 0 .35rem !important;
-    font-size: .64rem !important;
+    font-size: .75rem !important;
     border-radius: 6px !important;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -355,7 +355,7 @@ input[type='submit'] {
   }
 
   #items .item-card-category-ref .project-type {
-    font-size: .56rem;
+    font-size: .75rem;
     line-height: 1.1;
   }
 
@@ -367,7 +367,7 @@ input[type='submit'] {
     overflow: visible;
     white-space: nowrap;
     text-overflow: clip;
-    font-size: .52rem;
+    font-size: .75rem;
     line-height: 1.1;
   }
 
@@ -380,7 +380,7 @@ input[type='submit'] {
     max-width: 3.5rem;
     box-sizing: border-box;
     padding: .17rem .3rem;
-    font-size: .5rem;
+    font-size: .75rem;
     line-height: 1.2;
     text-align: center;
     white-space: nowrap;
@@ -420,7 +420,8 @@ input[type='submit'] {
 
   /* The desktop location wrapper has a 420px flex-basis. Reset it on mobile
      so the column layout does not reserve a large blank area below the select. */
-  .location-filter-wrap {
+  .location-filter-wrap,
+  .sort-filter-wrap {
     flex: 0 0 auto !important;
     height: auto !important;
   }
@@ -555,7 +556,7 @@ input[type='submit'] {
     min-width: 50px;
     height: 36px !important;
     padding: 0 .35rem !important;
-    font-size: .64rem !important;
+    font-size: .75rem !important;
     border-radius: 6px !important;
   }
 
@@ -606,13 +607,13 @@ input[type='submit'] {
     max-width: 3.2rem;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: .4rem;
+    font-size: .75rem;
     padding-inline: .2rem;
   }
 
   .user-pill-logout {
     flex: 0 0 auto;
-    font-size: .55rem;
+    font-size: .75rem;
     padding-inline: .15rem;
   }
 
@@ -671,7 +672,7 @@ input[type='submit'] {
 
   .site-footer .footer-left p,
   .site-footer .footer-right p {
-    font-size: .625rem;
+    font-size: .75rem;
     line-height: 1.2;
     overflow-wrap: anywhere;
   }
@@ -714,7 +715,7 @@ input[type='submit'] {
 
   .nav-logo {
     gap: .2rem;
-    font-size: .68rem;
+    font-size: .75rem;
   }
 
   .nav-logo img {
@@ -727,7 +728,7 @@ input[type='submit'] {
     width: 24px;
     min-width: 24px;
     height: 24px;
-    font-size: .62rem;
+    font-size: .75rem;
   }
 
   #userNavSlot,
@@ -738,7 +739,7 @@ input[type='submit'] {
 
   .user-pill {
     max-width: 9rem !important;
-    font-size: .56rem;
+    font-size: .75rem;
     gap: .12rem;
     padding-inline: .25rem;
   }
@@ -748,7 +749,7 @@ input[type='submit'] {
   }
 
   .user-pill-logout {
-    font-size: .42rem;
+    font-size: .75rem;
     min-height: 19px;
     padding-inline: .3rem;
     margin-left: .08rem;
@@ -763,7 +764,7 @@ input[type='submit'] {
   .nav-signin-btn {
     min-width: 3.8rem;
     max-width: 4.2rem;
-    font-size: .68rem !important;
+    font-size: .75rem !important;
     padding-inline: .35rem !important;
   }
 }
@@ -887,7 +888,7 @@ input[type='submit'] {
     min-height: 32px !important;
     padding: 0 !important;
     flex: 0 0 32px !important;
-    font-size: .72rem;
+    font-size: .75rem;
   }
 
   .nav-actions .theme-toggle {
@@ -896,7 +897,7 @@ input[type='submit'] {
     height: 32px !important;
     aspect-ratio: 1 / 1;
     border-radius: 50% !important;
-    font-size: .72rem;
+    font-size: .75rem;
     position: relative;
     z-index: 1002;
     pointer-events: auto;
@@ -928,7 +929,7 @@ input[type='submit'] {
     min-height: 32px;
     overflow-x: auto;
     white-space: nowrap;
-    font-size: .64rem;
+    font-size: .75rem;
   }
 
   .user-pill .user-name {
@@ -940,12 +941,12 @@ input[type='submit'] {
   .user-pill .role-badge {
     display: none !important;
     max-width: 3rem;
-    font-size: .36rem;
+    font-size: .75rem;
     padding-inline: .2rem;
   }
 
   .user-pill-logout {
-    font-size: .48rem;
+    font-size: .75rem;
     min-height: 22px;
     padding: 0 .45rem;
     border: 1px solid rgba(148, 163, 184, .45);
@@ -962,7 +963,7 @@ input[type='submit'] {
     max-width: 50px;
     height: 36px !important;
     padding: 0 .35rem !important;
-    font-size: .64rem !important;
+    font-size: .75rem !important;
     border-radius: 6px !important;
     position: relative;
     z-index: 2;
@@ -1032,7 +1033,7 @@ input[type='submit'] {
   #anonymousFinderModal .modal-green-notice {
     padding: 0.55rem !important;
     margin-bottom: 0.75rem !important;
-    font-size: 0.7rem !important;
+    font-size: .75rem !important;
     line-height: 1.35 !important;
   }
 
@@ -1074,7 +1075,7 @@ input[type='submit'] {
     min-height: 3.2rem;
     padding: .5rem;
     gap: .4rem;
-    font-size: .68rem;
+    font-size: .75rem;
     line-height: 1.2;
   }
 
@@ -1109,7 +1110,7 @@ input[type='submit'] {
   }
 
   #report .input-field label {
-    font-size: .68rem;
+    font-size: .75rem;
     line-height: 1.2;
   }
 
@@ -1120,7 +1121,7 @@ input[type='submit'] {
     min-height: 38px !important;
     height: 38px;
     padding: .45rem .6rem !important;
-    font-size: .74rem !important;
+    font-size: .75rem !important;
     border-radius: 7px;
   }
 
@@ -1155,7 +1156,7 @@ input[type='submit'] {
     min-width: 0;
     min-height: 36px;
     padding: .3rem .12rem;
-    font-size: .52rem;
+    font-size: .75rem;
     white-space: nowrap;
   }
 
@@ -1182,7 +1183,7 @@ input[type='submit'] {
     align-items: center;
     justify-content: center;
     padding: .6rem .45rem;
-    font-size: .68rem;
+    font-size: .75rem;
     line-height: 1.2;
     text-align: center;
   }
@@ -1216,7 +1217,7 @@ input[type='submit'] {
   #items .item-card-category-ref .ref-code {
     width: auto;
     max-width: 100%;
-    font-size: .48rem;
+    font-size: .75rem;
     white-space: nowrap;
     overflow: visible;
   }
@@ -1226,7 +1227,7 @@ input[type='submit'] {
     right: 0;
     min-width: 2.15rem;
     padding: .16rem .28rem;
-    font-size: .48rem;
+    font-size: .75rem;
   }
 }
 
@@ -1561,7 +1562,7 @@ input[type='submit'] {
     padding: 0;
     border: 2px solid var(--bg-main);
     border-radius: 999px;
-    font-size: .625rem;
+    font-size: .75rem;
     font-weight: 700;
     line-height: 1;
   }
@@ -1672,7 +1673,7 @@ input[type='submit'] {
 
   .mobile-drawer-account-details > span {
     color: var(--text-muted);
-    font-size: .68rem;
+    font-size: .75rem;
   }
 
   .mobile-drawer-account-details .mobile-drawer-role-badge {
@@ -1682,7 +1683,7 @@ input[type='submit'] {
     border-radius: 999px;
     background: rgba(59, 130, 246, .18);
     color: var(--blue-light);
-    font-size: .58rem;
+    font-size: .75rem;
     font-weight: 800;
     letter-spacing: .04em;
     text-transform: uppercase;
@@ -1724,7 +1725,7 @@ input[type='submit'] {
     height: 1.1rem;
     border: 1px solid currentColor;
     border-radius: 50%;
-    font-size: .72rem;
+    font-size: .75rem;
     font-weight: 800;
     line-height: 1;
   }
@@ -2115,7 +2116,7 @@ button {
   min-width: 0;
   min-height: 35px;
   padding: .35rem .25rem !important;
-  font-size: .7rem;
+  font-size: .75rem;
   white-space: normal;
 }
 
@@ -2136,7 +2137,7 @@ button {
     flex: 1 1 0;
     min-width: 0;
     padding: .2rem .2rem !important;
-    font-size: .58rem;
+    font-size: .75rem;
     line-height: 1.05;
     text-align: center;
   }
@@ -2155,7 +2156,7 @@ button {
   }
 
   .qr-feature-details {
-    font-size: .7rem !important;
+    font-size: .75rem !important;
   }
 
   #qrPrintArea img#qrCodeImage {
@@ -2171,7 +2172,7 @@ button {
   }
 
   .qr-actions { gap: .35rem; }
-  .qr-actions .btn { font-size: .62rem; }
+  .qr-actions .btn { font-size: .75rem; }
 }
 
 @media (min-width: 360px) and (max-width: 480px) {
@@ -2210,7 +2211,7 @@ button {
   }
 
   .qr-modal-header p {
-    font-size: .68rem !important;
+    font-size: .75rem !important;
     line-height: 1.3;
   }
 
@@ -2264,14 +2265,14 @@ button {
   }
 
   #registerBelongingModal .modal-subtitle {
-    font-size: .68rem !important;
+    font-size: .75rem !important;
     line-height: 1.25 !important;
   }
 
   #registerBelongingModal .modal-notice-box {
     padding: .35rem .45rem !important;
     margin-bottom: .5rem !important;
-    font-size: .64rem !important;
+    font-size: .75rem !important;
     line-height: 1.2 !important;
   }
 
@@ -2279,13 +2280,13 @@ button {
     margin-bottom: .4rem !important;
   }
 
-  #registerBelongingModal form > div[style*="grid-template-columns"] {
+  #registerBelongingModal form > .modal-grid-2 {
     gap: .35rem !important;
     margin-bottom: .4rem !important;
   }
 
   #registerBelongingModal label {
-    font-size: .68rem !important;
+    font-size: .75rem !important;
     line-height: 1.15 !important;
   }
 
@@ -2293,7 +2294,7 @@ button {
   #registerBelongingModal select,
   #registerBelongingModal textarea {
     padding: .32rem !important;
-    font-size: .72rem !important;
+    font-size: .75rem !important;
   }
 
   #registerBelongingModal form > div:last-child {
@@ -2306,7 +2307,7 @@ button {
 
   #registerBelongingModal form button {
     padding: .3rem .55rem !important;
-    font-size: .68rem !important;
+    font-size: .75rem !important;
   }
 }
 
@@ -2319,12 +2320,14 @@ button {
     padding-inline: .75rem !important;
   }
 
+  /* Three chips per row keeps labels at a readable 12px with ~40px tap targets;
+     "My Belongings" spans two columns. Guests see four chips on one row. */
   .filter-chips {
     display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    grid-template-rows: minmax(2rem, auto) !important;
-    grid-auto-flow: column !important;
-    gap: .25rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: none !important;
+    grid-auto-flow: row !important;
+    gap: .35rem;
     width: 100%;
   }
 
@@ -2336,10 +2339,10 @@ button {
     display: block;
     width: 100%;
     min-width: 0;
-    min-height: 2rem;
-    padding: .35rem .1rem;
+    min-height: 2.5rem;
+    padding: .45rem .25rem;
     border-radius: .5rem;
-    font-size: clamp(.4375rem, 2.3vw, .625rem);
+    font-size: .75rem;
     font-weight: 600;
     line-height: 1.25;
     text-align: center;
@@ -2347,9 +2350,9 @@ button {
     box-sizing: border-box;
   }
 
-  .filter-chips .chip-my-vault {
-    grid-column: auto !important;
-    letter-spacing: -.04em;
+  .filter-chips .chip.chip-my-vault {
+    grid-column: span 2 !important;
+    grid-row: auto !important;
   }
 
   .filter-chips .my-belongings-icon,
@@ -2412,7 +2415,7 @@ button {
 
 @media (max-width: 340px) {
   .filter-chips .chip-my-vault {
-    font-size: .4rem !important;
+    font-size: .75rem !important;
   }
 }
 

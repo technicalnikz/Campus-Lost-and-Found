@@ -8,9 +8,61 @@ const FileStore = require('session-file-store')(session);
 const path = require('path');
 const fs = require('fs');
 
+const crypto = require('crypto');
+
 const authRoutes = require('./routes/authRoutes');
 const itemRoutes = require('./routes/itemRoutes');
 const postgresStore = require('./services/postgresStore');
+
+// Browser assets referenced by the HTML pages, mapped to their files on disk.
+function assetFile(urlPath) {
+  if (urlPath === '/icons.js') return path.join(__dirname, 'icons.js');
+  if (urlPath === '/vendor/qrcode.js') return require.resolve('qrcode-generator/qrcode.js');
+  const match = /^\/(css|js)\/([\w.-]+)$/.exec(urlPath);
+  return match ? path.join(__dirname, match[1], match[2]) : null;
+}
+
+// Files only change on deploy (which restarts the app) in production; during
+// development, re-read them on every request so edits show up immediately.
+const cacheAssetInfo = () => process.env.NODE_ENV === 'production';
+
+const assetVersions = new Map();
+function assetVersion(urlPath) {
+  if (!cacheAssetInfo() || !assetVersions.has(urlPath)) {
+    const file = assetFile(urlPath);
+    let version = null;
+    try {
+      version = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex').slice(0, 10);
+    } catch {
+      // Unknown or missing asset: leave its URL unversioned.
+    }
+    assetVersions.set(urlPath, version);
+  }
+  return assetVersions.get(urlPath);
+}
+
+// Stamp every CSS/JS link with a hash of its contents so browsers fetch new files
+// after each deploy without anyone editing ?v= tags by hand.
+const pageCache = new Map();
+function sendPage(res, file) {
+  if (!cacheAssetInfo() || !pageCache.has(file)) {
+    const html = fs.readFileSync(file, 'utf8').replace(
+      /(src|href)="(\/(?:css|js|vendor)\/[\w.-]+|\/icons\.js)(?:\?v=[^"]*)?"/g,
+      (whole, attr, urlPath) => {
+        const version = assetVersion(urlPath);
+        return version ? `${attr}="${urlPath}?v=${version}"` : whole;
+      }
+    );
+    pageCache.set(file, html);
+  }
+  res.set('Cache-Control', 'no-cache');
+  res.type('html').send(pageCache.get(file));
+}
+
+// Versioned asset URLs never change content, so they can be cached for a year.
+function setAssetCacheHeaders(res) {
+  res.set('Cache-Control', res.req.query.v ? 'public, max-age=31536000, immutable' : 'no-cache');
+}
 
 function createApp() {
   const app = express();
@@ -36,7 +88,21 @@ function createApp() {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'geolocation=(), microphone=()'
+      'Permissions-Policy': 'geolocation=(), microphone=()',
+      // Scripts only from this site (no inline code or handlers); inline style
+      // attributes are still used by some markup. QR codes and photo previews use data:/blob: images.
+      'Content-Security-Policy': [
+        "default-src 'self'",
+        "script-src 'self'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: blob:",
+        "connect-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'"
+      ].join('; ')
     });
     if (isProduction) res.set('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
     next();
@@ -68,33 +134,38 @@ function createApp() {
   app.use('/api/stats', (req, res) => res.redirect('/api/items/stats'));
   app.use('/uploads', express.static(path.join(dataDir, 'uploads'), { fallthrough: false, maxAge: '7d' }));
 
+  const page = name => path.join(__dirname, 'public', name);
+
   app.get('/admin.html', (req, res) => {
     if (!req.session?.user) return res.redirect('/login?redirect=/admin.html');
     if (req.session.user.role !== 'admin') return res.redirect('/');
-    res.sendFile(path.join(__dirname, 'admin.html'));
+    sendPage(res, path.join(__dirname, 'admin.html'));
   });
 
   app.get(['/browse.html', '/item-detail.html'], (req, res) => res.redirect(302, '/#items'));
   app.get('/report-lost.html', (req, res) => res.redirect(302, '/?report=lost#itemForm'));
   app.get('/report-found.html', (req, res) => res.redirect(302, '/?report=found#itemForm'));
-  app.get('/found', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-  app.get('/match-reference', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+  app.get(['/found', '/match-reference', '/index.html'], (req, res) => sendPage(res, page('index.html')));
   app.get('/', (req, res) => {
     if (req.session?.user?.role === 'admin') return res.redirect(302, '/admin.html');
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    sendPage(res, page('index.html'));
   });
   app.get('/login', (req, res) => {
     const user = req.session?.user;
     if (user?.role === 'admin') return res.redirect(302, '/admin.html');
     if (user?.role === 'student') return res.redirect(302, '/');
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    sendPage(res, page('login.html'));
   });
+  app.get(['/login.html', '/about.html'], (req, res) => sendPage(res, page(path.basename(req.path))));
 
   app.use(express.static(path.join(__dirname, 'public')));
   // Serve only browser assets from the project root; server code, scripts and data stay private.
-  app.use('/css', express.static(path.join(__dirname, 'css')));
-  app.use('/js', express.static(path.join(__dirname, 'js')));
-  app.get('/icons.js', (req, res) => res.sendFile(path.join(__dirname, 'icons.js')));
+  app.use('/css', express.static(path.join(__dirname, 'css'), { setHeaders: setAssetCacheHeaders }));
+  app.use('/js', express.static(path.join(__dirname, 'js'), { setHeaders: setAssetCacheHeaders }));
+  app.get(['/icons.js', '/vendor/qrcode.js'], (req, res) => {
+    setAssetCacheHeaders(res);
+    res.sendFile(assetFile(req.path));
+  });
 
   app.use('/api/*', (req, res) => res.status(404).json({ success: false, message: 'API endpoint not found.' }));
 

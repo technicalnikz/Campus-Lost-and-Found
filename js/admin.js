@@ -287,7 +287,7 @@ let restoreTarget = null;
           <td>${escHtml(item.location || '—')}</td>
           <td>${escHtml(item.refCode || '—')}</td>
           <td>${escHtml(formatDate(item.createdAt || item.date))}</td>
-          <td class="actions-cell"><button class="action-btn action-btn-delete" onclick="openDeleteModal('${escHtml(item.id)}','${escHtml(item.title || 'this belonging')}','${escHtml(item.ownerName || 'the registered student')}')">Delete</button></td>
+          <td class="actions-cell"><button class="action-btn action-btn-delete" data-action="openDeleteModal" data-args="${actionArgs(item.id, item.title || 'this belonging', item.ownerName || 'the registered student')}">Delete</button></td>
         </tr>`).join('');
     }
 
@@ -430,9 +430,9 @@ let restoreTarget = null;
           <td class="status-cell" title="${pendingClaim ? 'Pending Verification' : latestClaim?.status === 'rejected' && !item.claimed ? 'Rejected · Available' : escHtml(item.status)}">${itemStatus}</td>
           <td class="actions-cell">
             <div class="action-buttons">
-              ${pendingClaim ? `<button class="action-btn action-btn-claim" onclick="openClaimReview('${pendingClaim.id}')">Review Claim</button>` : ''}
-              ${canRestore ? `<button class="action-btn action-btn-restore" onclick="openRestoreModal('${item.id}','${item.status}')">Restore</button>` : ''}
-              <button class="action-btn action-btn-delete" onclick="openDeleteModal('${item.id}','${escHtml(item.title)}','${escHtml(reporterValues[0] || 'Unknown reporter')}')">Delete</button>
+              ${pendingClaim ? `<button class="action-btn action-btn-claim" data-action="openClaimReview" data-args="${actionArgs(pendingClaim.id)}">Review Claim</button>` : ''}
+              ${canRestore ? `<button class="action-btn action-btn-restore" data-action="openRestoreModal" data-args="${actionArgs(item.id, item.status)}">Restore</button>` : ''}
+              <button class="action-btn action-btn-delete" data-action="openDeleteModal" data-args="${actionArgs(item.id, item.title, reporterValues[0] || 'Unknown reporter')}">Delete</button>
             </div>
           </td>
         </tr>`;
@@ -489,13 +489,13 @@ let restoreTarget = null;
       const pageButtons = Array.from({ length: totalPages }, (_, index) => {
         const page = index + 1;
         const active = page === adminCurrentPage;
-        return `<button type="button" class="pagination-button${active ? ' active' : ''}" onclick="changeAdminItemsPage(${page})" aria-label="Page ${page}"${active ? ' aria-current="page"' : ''}>${page}</button>`;
+        return `<button type="button" class="pagination-button${active ? ' active' : ''}" data-action="changeAdminItemsPage" data-args="${actionArgs(page)}" aria-label="Page ${page}"${active ? ' aria-current="page"' : ''}>${page}</button>`;
       }).join('');
 
       controls.innerHTML = `
-        <button type="button" class="pagination-button" onclick="changeAdminItemsPage(${adminCurrentPage - 1})" ${adminCurrentPage === 1 ? 'disabled' : ''}>Previous</button>
+        <button type="button" class="pagination-button" data-action="changeAdminItemsPage" data-args="${actionArgs(adminCurrentPage - 1)}" ${adminCurrentPage === 1 ? 'disabled' : ''}>Previous</button>
         ${pageButtons}
-        <button type="button" class="pagination-button" onclick="changeAdminItemsPage(${adminCurrentPage + 1})" ${adminCurrentPage === totalPages ? 'disabled' : ''}>Next</button>`;
+        <button type="button" class="pagination-button" data-action="changeAdminItemsPage" data-args="${actionArgs(adminCurrentPage + 1)}" ${adminCurrentPage === totalPages ? 'disabled' : ''}>Next</button>`;
     }
 
     function changeAdminItemsPage(page) {

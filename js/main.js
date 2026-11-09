@@ -2,6 +2,22 @@ const THEME_STORAGE_KEY = 'cspc_theme';
 let dashboardBackPrompted = false;
 let dashboardBackGuardInstalled = false;
 
+// Brief on-page message; uses the page's own toast when it has one.
+function showStatusMessage(message, isError = false) {
+  if (typeof window.showToast === 'function') {
+    window.showToast(message, isError);
+    return;
+  }
+  document.querySelector('.toast')?.remove();
+  const toast = document.createElement('div');
+  toast.className = `toast${isError ? ' toast-error' : ''}`;
+  toast.setAttribute('role', isError ? 'alert' : 'status');
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => toast.remove(), 3200);
+}
+
 function installDashboardBackGuard() {
   if (dashboardBackGuardInstalled) return;
   dashboardBackGuardInstalled = true;
@@ -19,7 +35,7 @@ function installDashboardBackGuard() {
 
     if (!dashboardBackPrompted) {
       dashboardBackPrompted = true;
-      window.alert('Press back again to exit/sign out');
+      showStatusMessage('Press back again to exit or sign out.');
       restoreDashboardEntry();
       return;
     }

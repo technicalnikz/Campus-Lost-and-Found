@@ -8,8 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="stylesheet" href="/css/login.css" />
-  <link rel="stylesheet" href="/css/responsive.css?v=20261020-2" />
-  <script src="/js/main.js?v=20261017-5"></script>
+  <link rel="stylesheet" href="/css/responsive.css" />
+  <script src="/js/main.js"></script>
+  <script src="/js/ui.js"></script>
 </head>
 <body class="auth-checking">
   <div class="auth-checking-state" role="status" aria-live="polite">Checking your session...</div>
@@ -39,15 +40,15 @@
       </div>
 
       <div class="auth-tabs">
-        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
-        <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">Register Account</button>
+        <button class="auth-tab active" id="tabLogin" data-action="switchTab" data-args='["login"]'>Sign In</button>
+        <button class="auth-tab" id="tabRegister" data-action="switchTab" data-args='["register"]'>Register Account</button>
       </div>
 
       <div class="error-msg" id="authError"></div>
       <div class="notice-msg" id="authNotice" role="status"></div>
 
       <!-- LOGIN FORM -->
-      <form id="loginForm" onsubmit="handleLogin(event)">
+      <form id="loginForm" data-submit="handleLogin">
         <div class="form-group">
           <label>CSPC Email</label>
           <input type="email" id="loginEmail" placeholder="e.g., student@my.cspc.edu.ph" pattern="[A-Za-z0-9._%+\-]+@(my\.)?cspc\.edu\.ph" title="Use your CSPC email address ending in @my.cspc.edu.ph" required />
@@ -56,7 +57,7 @@
           <label>Password</label>
           <div class="password-wrap">
             <input type="password" id="loginPassword" placeholder="Enter your password" required />
-            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('loginPassword', this)" aria-label="Show password" aria-pressed="false" title="Show password">
+            <button type="button" class="btn-toggle-pw" data-action="togglePasswordVisibility" data-args='["loginPassword", "$el"]' aria-label="Show password" aria-pressed="false" title="Show password">
               <svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
                 <circle cx="12" cy="12" r="3" />
@@ -67,11 +68,11 @@
         <button type="submit" class="btn btn-primary" style="width: 100%; border: none; cursor: pointer; margin-top: 0.5rem;">
           Sign In
         </button>
-        <button type="button" class="auth-link-btn" onclick="showForgotPassword()">Forgot password?</button>
+        <button type="button" class="auth-link-btn" data-action="showForgotPassword">Forgot password?</button>
       </form>
 
       <!-- FORGOT PASSWORD FORM -->
-      <form id="forgotForm" style="display: none;" onsubmit="handleForgotPassword(event)">
+      <form id="forgotForm" style="display: none;" data-submit="handleForgotPassword">
         <p class="auth-form-intro">Enter your CSPC email and we'll send you a link to reset your password.</p>
         <div class="form-group">
           <label for="forgotEmail">CSPC Email</label>
@@ -80,17 +81,17 @@
         <button type="submit" id="forgotSubmit" class="btn btn-primary" style="width: 100%; border: none; cursor: pointer; margin-top: 0.5rem;">
           Send Reset Link
         </button>
-        <button type="button" class="auth-link-btn" onclick="switchTab('login')">Back to sign in</button>
+        <button type="button" class="auth-link-btn" data-action="switchTab" data-args='["login"]'>Back to sign in</button>
       </form>
 
       <!-- RESET PASSWORD FORM (opened from the emailed link) -->
-      <form id="resetForm" style="display: none;" onsubmit="handleResetPassword(event)">
+      <form id="resetForm" style="display: none;" data-submit="handleResetPassword">
         <p class="auth-form-intro">Choose a new password for your account.</p>
         <div class="form-group">
           <label for="resetPassword">New Password</label>
           <div class="password-wrap">
             <input type="password" id="resetPassword" placeholder="Create a secure password" minlength="8" maxlength="128" autocomplete="new-password" required />
-            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('resetPassword', this)" aria-label="Show password" aria-pressed="false" title="Show password">
+            <button type="button" class="btn-toggle-pw" data-action="togglePasswordVisibility" data-args='["resetPassword", "$el"]' aria-label="Show password" aria-pressed="false" title="Show password">
               <svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
                 <circle cx="12" cy="12" r="3" />
@@ -109,7 +110,7 @@
       </form>
 
       <!-- REGISTRATION FORM -->
-      <form id="registerForm" style="display: none;" onsubmit="handleRegister(event)">
+      <form id="registerForm" style="display: none;" data-submit="handleRegister">
         <div class="form-group">
           <label>Full Name *</label>
           <input type="text" id="regFullName" placeholder="e.g., Maria Santos" required />
@@ -138,7 +139,7 @@
           <label for="regPassword">Password *</label>
           <div class="password-wrap">
             <input type="password" id="regPassword" placeholder="Create a secure password" minlength="8" required aria-describedby="passwordRequirements" />
-            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('regPassword', this)" aria-label="Show password" aria-pressed="false" title="Show password">
+            <button type="button" class="btn-toggle-pw" data-action="togglePasswordVisibility" data-args='["regPassword", "$el"]' aria-label="Show password" aria-pressed="false" title="Show password">
               <svg class="password-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
                 <circle cx="12" cy="12" r="3" />

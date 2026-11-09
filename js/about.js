@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderGuestNavigation();
     } catch (error) {
       console.error('Unable to sign out from the About page:', error);
-      window.alert('Unable to sign out. Please try again.');
+      showStatusMessage('Unable to sign out. Please try again.', true);
     }
   }
 

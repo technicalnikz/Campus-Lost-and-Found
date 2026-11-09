@@ -7,8 +7,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="/css/styles.css" />
   <link rel="stylesheet" href="/css/home.css" />
-  <link rel="stylesheet" href="/css/responsive.css?v=20261020-2" />
-  <script src="/js/main.js?v=20261020-1"></script>
+  <link rel="stylesheet" href="/css/modals.css" />
+  <link rel="stylesheet" href="/css/responsive.css" />
+  <script src="/js/main.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/vendor/qrcode.js"></script>
 </head>
 <body>
 
@@ -24,11 +27,11 @@
         <a href="#items">Items</a>
         <a href="#report">Report Item</a>
         <a href="/about.html">About</a>
-        <button type="button" class="btn btn-outline nav-btn-action nav-register-btn nav-register-mobile" onclick="handleOpenRegisterBelonging()">Register Belonging</button>
-        <button type="button" class="mobile-menu-logout" id="mobileMenuLogout" onclick="handleLogout()">Logout</button>
+        <button type="button" class="btn btn-outline nav-btn-action nav-register-btn nav-register-mobile" data-action="handleOpenRegisterBelonging">Register Belonging</button>
+        <button type="button" class="mobile-menu-logout" id="mobileMenuLogout" data-action="handleLogout">Logout</button>
       </div>
       <div class="nav-actions">
-        <button type="button" class="btn btn-outline nav-btn-action nav-register-btn" onclick="handleOpenRegisterBelonging()">Register Belonging</button>
+        <button type="button" class="btn btn-outline nav-btn-action nav-register-btn" data-action="handleOpenRegisterBelonging">Register Belonging</button>
         <button type="button" class="theme-toggle" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle theme">
           <span class="theme-toggle-icon">🌙</span>
         </button>
@@ -50,19 +53,19 @@
       
       <!-- Quick Stats -->
       <div class="hero-stats">
-        <button type="button" class="stat-box active" data-filter="all" aria-label="Show all items" aria-pressed="true" onclick="setFilter('all', this)">
+        <button type="button" class="stat-box active" data-filter="all" aria-label="Show all items" aria-pressed="true" data-action="setFilter" data-args='["all", "$el"]'>
           <span class="stat-val" id="statTotal">0</span>
           <span class="stat-lbl">Total Items</span>
         </button>
-        <button type="button" class="stat-box" data-filter="lost" aria-label="Show lost items" aria-pressed="false" onclick="setFilter('lost', this)">
+        <button type="button" class="stat-box" data-filter="lost" aria-label="Show lost items" aria-pressed="false" data-action="setFilter" data-args='["lost", "$el"]'>
           <span class="stat-val" id="statLost" style="color: #f87171;">0</span>
           <span class="stat-lbl">Lost</span>
         </button>
-        <button type="button" class="stat-box" data-filter="found" aria-label="Show found items" aria-pressed="false" onclick="setFilter('found', this)">
+        <button type="button" class="stat-box" data-filter="found" aria-label="Show found items" aria-pressed="false" data-action="setFilter" data-args='["found", "$el"]'>
           <span class="stat-val" id="statFound" style="color: #4ade80;">0</span>
           <span class="stat-lbl">Found</span>
         </button>
-        <button type="button" class="stat-box" data-filter="claimed" aria-label="Show claimed items" aria-pressed="false" onclick="setFilter('claimed', this)">
+        <button type="button" class="stat-box" data-filter="claimed" aria-label="Show claimed items" aria-pressed="false" data-action="setFilter" data-args='["claimed", "$el"]'>
           <span class="stat-val" id="statClaimed" style="color: var(--blue-main);">0</span>
           <span class="stat-lbl">Claimed</span>
         </button>
@@ -86,14 +89,14 @@
     <!-- Search & Filter Controls -->
     <div class="filter-row">
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search by item name, reference code, location, or details..." oninput="fetchAndRenderItems()" />
+        <input type="text" id="searchInput" placeholder="Search by item name, reference code, location, or details..." data-input="scheduleItemsSearch" aria-label="Search items" />
       </div>
-      <div class="filter-chips">
-        <button class="chip active" data-filter="all" onclick="setFilter('all', this)">All</button>
-        <button class="chip" data-filter="lost" onclick="setFilter('lost', this)">Lost</button>
-        <button class="chip" data-filter="found" onclick="setFilter('found', this)">Found</button>
-        <button class="chip" data-filter="claimed" onclick="setFilter('claimed', this)">Claimed</button>
-        <button class="chip chip-my-vault" data-filter="registered" id="chipMyBelongings" onclick="setFilter('registered', this)" style="display: none;"><span class="my-belongings-icon" aria-hidden="true">🔒</span> My Belongings<span class="my-belongings-count"> (<span id="myBelongingsCount">0</span>)</span></button>
+      <div class="filter-chips" role="group" aria-label="Filter items">
+        <button class="chip active" data-filter="all" data-action="setFilter" data-args='["all", "$el"]'>All</button>
+        <button class="chip" data-filter="lost" data-action="setFilter" data-args='["lost", "$el"]'>Lost</button>
+        <button class="chip" data-filter="found" data-action="setFilter" data-args='["found", "$el"]'>Found</button>
+        <button class="chip" data-filter="claimed" data-action="setFilter" data-args='["claimed", "$el"]'>Claimed</button>
+        <button class="chip chip-my-vault" data-filter="registered" id="chipMyBelongings" data-action="setFilter" data-args='["registered", "$el"]' style="display: none;"><span class="my-belongings-icon" aria-hidden="true">🔒</span> My Belongings<span class="my-belongings-count"> (<span id="myBelongingsCount">0</span>)</span></button>
       </div>
     </div>
 
@@ -101,7 +104,7 @@
     <div class="hotspots-row">
       <label for="locationFilterSelect">CSPC Offices &amp; Areas:</label>
       <div class="location-filter-wrap">
-        <select id="locationFilterSelect" class="location-filter-select" onchange="setLocationFilter(this.value)">
+        <select id="locationFilterSelect" class="location-filter-select" data-change="setLocationFilter" data-args='["$value"]'>
           <option value="">All Offices</option>
           <option value="College of Computer Studies (CCS)">College of Computer Studies (CCS)</option>
           <option value="College of Engineering and Architecture (CEA)">College of Engineering and Architecture (CEA)</option>
@@ -113,10 +116,18 @@
           <option value="Buhi Campus">Buhi Campus</option>
         </select>
       </div>
+      <div class="sort-filter-wrap">
+        <label for="sortSelect">Sort:</label>
+        <select id="sortSelect" class="location-filter-select" data-change="setSortOrder" data-args='["$value"]'>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="title">Name (A–Z)</option>
+        </select>
+      </div>
     </div>
 
     <!-- Items Grid -->
-    <div class="projects-grid" id="itemsGrid" style="min-height: 0; height: auto; align-content: start; grid-auto-rows: min-content;">
+    <div class="projects-grid items-grid" id="itemsGrid">
       <!-- Loaded dynamically via Express API -->
     </div>
     <div class="items-pagination" id="itemsPagination" aria-label="Items pagination"></div>
@@ -129,18 +140,18 @@
     <h2>Report an Item</h2>
 
     <div class="simple-card">
-      <form id="itemForm" class="report-item-form" onsubmit="handleFormSubmit(event)">
+      <form id="itemForm" class="report-item-form" data-submit="handleFormSubmit">
         
         <!-- Type Selection -->
         <div class="input-field report-type-selection" style="margin-bottom: 1.25rem;">
           <label>What are you reporting?</label>
           <div class="type-switcher">
             <label class="type-option active-lost" id="lblLost">
-              <input type="radio" name="itemType" value="lost" checked onchange="updateTypeRadio()" />
+              <input type="radio" name="itemType" value="lost" checked data-change="updateTypeRadio" />
               I Lost Something
             </label>
             <label class="type-option" id="lblFound">
-              <input type="radio" name="itemType" value="found" onchange="updateTypeRadio()" />
+              <input type="radio" name="itemType" value="found" data-change="updateTypeRadio" />
               I Found Something
             </label>
           </div>
@@ -154,7 +165,7 @@
           <div class="input-field">
             <label for="itemCategory">Category *</label>
             <input type="hidden" id="itemCategory" />
-            <button type="button" class="category-picker" id="itemCategoryPicker" onclick="openCategoryPicker('itemCategory')">Select category...</button>
+            <button type="button" class="category-picker" id="itemCategoryPicker" data-action="openCategoryPicker" data-args='["itemCategory"]'>Select category...</button>
           </div>
         </div>
 
@@ -245,7 +256,7 @@
 
         <div class="input-field" style="margin-bottom: 1rem;">
           <label for="itemPhotoInput">Upload Photo (Optional)</label>
-          <div class="photo-upload-area" role="button" tabindex="0" onclick="document.getElementById('itemPhotoInput').click()" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); document.getElementById('itemPhotoInput').click(); }" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handlePhotoDrop(event)">
+          <div class="photo-upload-area" id="photoUploadArea" role="button" tabindex="0" data-action="openPhotoPicker" data-activate>
             <div class="photo-upload-icon" aria-hidden="true">
               <svg viewBox="0 0 40 32" focusable="false">
                 <path d="M11 27h19a9 9 0 0 0 1-18A13 13 0 0 0 7 12a8 8 0 0 0 4 15z" fill="currentColor"/>
@@ -255,11 +266,11 @@
             <strong>Choose a photo or drag it here</strong>
             <small>PNG, JPG, or WEBP · maximum 5MB</small>
           </div>
-          <input type="file" id="itemPhotoInput" accept="image/*" onchange="handlePhotoSelect(event)" style="display: none;" />
+          <input type="file" id="itemPhotoInput" accept="image/*" data-change="handlePhotoSelect" data-args='["$event"]' style="display: none;" />
           <div id="photoPreviewBox" class="photo-preview-box" style="display: none;">
             <img id="photoPreviewImg" class="photo-preview-image" src="" alt="Photo Preview" />
             <div id="photoPreviewMeta" class="photo-preview-meta"></div>
-            <button type="button" onclick="removePhoto()" style="position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; padding: 0.25rem 0.55rem; font-size: 0.72rem; cursor: pointer; font-weight: 700;">✕ Remove Photo</button>
+            <button type="button" data-action="removePhoto" style="position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 4px; padding: 0.25rem 0.55rem; font-size: 0.72rem; cursor: pointer; font-weight: 700;">✕ Remove Photo</button>
           </div>
         </div>
 
@@ -269,7 +280,7 @@
         </div>
 
         <div style="display: flex; gap: 0.75rem; margin-top: 0.25rem;">
-          <button type="button" class="btn btn-outline" onclick="resetItemForm()" style="flex: 1; border: 1px solid var(--border); cursor: pointer;">Cancel</button>
+          <button type="button" class="btn btn-outline" data-action="resetItemForm" style="flex: 1; border: 1px solid var(--border); cursor: pointer;">Cancel</button>
           <button type="submit" class="btn btn-primary" style="flex: 1; border: none; cursor: pointer;">
             Submit Report
           </button>
@@ -279,180 +290,180 @@
   </section>
 
   <!-- DIGITAL "FOUND" QR CODE STICKERS (PREVENTIVE ADD-ON FEATURE) -->
-  <div class="slip-overlay" id="qrModal" onclick="if(event.target===this) closeQrModal()">
-    <div class="qr-modal-card" style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; max-width: 520px; width: 92%; padding: 1.75rem; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
-      
+  <div class="slip-overlay" id="qrModal" data-close="closeQrModal">
+    <div class="qr-modal-card modal-card modal-card--lg">
+
       <!-- Feature Header -->
-      <div class="qr-modal-header" style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.9rem; margin-bottom: 1.1rem;">
+      <div class="qr-modal-header modal-header">
         <div>
-          <h2 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0.4rem 0 0.2rem;">Digital &ldquo;Found&rdquo; QR Code Stickers</h2>
-          <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">A preventive feature allowing students to register their personal belongings before they even get lost.</p>
+          <h2 class="modal-heading modal-heading--plain">Digital &ldquo;Found&rdquo; QR Code Stickers</h2>
+          <p class="modal-subtitle">A preventive feature allowing students to register their personal belongings before they even get lost.</p>
         </div>
-        <button onclick="closeQrModal()" style="background: none; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; line-height: 1;">&times;</button>
+        <button type="button" class="modal-close" data-action="closeQrModal" aria-label="Close">&times;</button>
       </div>
 
       <!-- Printable Sticker Preview Box -->
-      <div id="qrPrintArea" style="background: #ffffff; color: #0f172a; border-radius: 12px; padding: 1.4rem; border: 2px dashed #3b82f6; text-align: center; margin-bottom: 1.25rem; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin-bottom: 0.5rem;">
-          <img src="cspc-logo.png" alt="CSPC Logo" style="width: 28px; height: 28px; object-fit: contain;" />
-          <span style="font-weight: 900; font-size: 0.82rem; letter-spacing: 0.04em; color: #0f172a; text-transform: uppercase;">CSPC Campus Lost &amp; Found</span>
+      <div id="qrPrintArea" class="print-sticker">
+        <div class="print-sticker-brand">
+          <img src="cspc-logo.png" alt="CSPC Logo" class="print-logo" />
+          <span class="print-brand-text">CSPC Campus Lost &amp; Found</span>
         </div>
-        
-        <div style="font-weight: 800; font-size: 1.05rem; color: #0f172a; margin-bottom: 0.15rem;" id="qrItemTitle">Personal Item</div>
-        <div style="font-family: monospace; font-size: 0.78rem; color: #475569; font-weight: 700; margin-bottom: 0.75rem;" id="qrRefCode">CSPC-LF-QR-000</div>
+
+        <div class="print-title" id="qrItemTitle">Personal Item</div>
+        <div class="print-ref" id="qrRefCode">CSPC-LF-QR-000</div>
 
         <!-- Scannable QR Code -->
-        <div style="display: inline-block; padding: 0.6rem; background: #f8fafc; border: 1.5px solid #0f172a; border-radius: 10px; margin-bottom: 0.6rem;">
-          <img id="qrCodeImage" src="" alt="Found Item QR Code" style="width: 140px; height: 140px; display: block;" />
+        <div class="print-qr-frame">
+          <img id="qrCodeImage" src="" alt="Found Item QR Code" class="print-qr-img" />
         </div>
 
-        <div style="font-size: 0.8rem; font-weight: 900; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.06em;">SCAN WITH PHONE IF FOUND</div>
-        <div style="font-size: 0.72rem; color: #64748b; margin-top: 0.2rem;">Paste onto laptops, tumblers, notebooks, or binder folders.</div>
+        <div class="print-cta">SCAN WITH PHONE IF FOUND</div>
+        <div class="print-hint">Paste onto laptops, tumblers, notebooks, or binder folders.</div>
       </div>
 
       <!-- Feature Details (How it works & Why it's useful) -->
-      <div class="qr-feature-details" style="display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.25rem; font-size: 0.8rem;">
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.75rem;">
-          <strong style="color: var(--blue-main); display: block; margin-bottom: 0.25rem;">📌 How it works:</strong>
-          <span style="color: var(--text-muted); line-height: 1.45;">Generate an anonymous QR sticker for your belongings. If found, someone can scan it and message you without seeing your contact details.</span>
+      <div class="qr-feature-details feature-notes">
+        <div class="feature-note">
+          <strong class="feature-note-title">📌 How it works:</strong>
+          <span class="feature-note-text">Generate an anonymous QR sticker for your belongings. If found, someone can scan it and message you without seeing your contact details.</span>
         </div>
-        
-        <div style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); border-radius: 8px; padding: 0.75rem;">
-          <strong style="color: #4ade80; display: block; margin-bottom: 0.25rem;">🔒 Why it&rsquo;s useful:</strong>
-          <span style="color: #86efac; line-height: 1.45;">It enables instant, direct contact between finder and owner while protecting student privacy.</span>
+
+        <div class="feature-note feature-note--success">
+          <strong class="feature-note-title">🔒 Why it&rsquo;s useful:</strong>
+          <span class="feature-note-text">It enables instant, direct contact between finder and owner while protecting student privacy.</span>
         </div>
       </div>
 
       <!-- Live Interactive Demo: Test Anonymous Finder Screen -->
-      <div id="anonymousDemoBox" style="display: none; background: #27272a; border: 1px solid rgba(59,130,246,0.4); border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem; text-align: left;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span style="font-size: 0.78rem; font-weight: 700; color: var(--blue-main);">📱 Finder's Screen (Simulated Live Preview)</span>
-          <span style="font-size: 0.68rem; color: #4ade80; background: rgba(34,197,94,0.15); padding: 0.15rem 0.5rem; border-radius: 4px;">Anonymous Mode Active</span>
+      <div id="anonymousDemoBox" class="demo-box" style="display: none;">
+        <div class="demo-box-header">
+          <span class="demo-box-title">📱 Finder's Screen (Simulated Live Preview)</span>
+          <span class="demo-box-badge">Anonymous Mode Active</span>
         </div>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 0.6rem;">Finder does not see owner's contact number or social media accounts. Type a recovery message:</p>
-        <textarea id="anonymousMsgInput" class="form-control" rows="2" style="font-size: 0.8rem; margin-bottom: 0.5rem; resize: none; background: #18181b; border: 1px solid #3f3f46; color: #fff; width: 100%; border-radius: 6px; padding: 0.5rem;" placeholder="e.g. Hi! Found this item at Library 2nd floor desk. Left it with the front librarian."></textarea>
-        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-          <button type="button" class="btn-sm btn-outline" style="border: 1px solid #71717a; color: #d4d4d8; background: transparent; padding: 0.3rem 0.75rem; border-radius: 6px; cursor: pointer;" onclick="toggleAnonymousDemo(false)">Cancel</button>
-          <button type="button" class="btn-sm btn-primary" style="background: var(--blue-main); color: #fff; border: none; font-weight: 700; padding: 0.3rem 0.85rem; border-radius: 6px; cursor: pointer;" onclick="sendAnonymousNotification()">Send to Owner</button>
+        <p class="demo-box-text">Finder does not see owner's contact number or social media accounts. Type a recovery message:</p>
+        <textarea id="anonymousMsgInput" class="form-control demo-box-input" rows="2" aria-label="Recovery message" placeholder="e.g. Hi! Found this item at Library 2nd floor desk. Left it with the front librarian."></textarea>
+        <div class="modal-actions modal-actions--tight">
+          <button type="button" class="btn btn-outline btn-compact" data-action="toggleAnonymousDemo" data-args='[false]'>Cancel</button>
+          <button type="button" class="btn btn-primary btn-compact" data-action="sendAnonymousNotification">Send to Owner</button>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="qr-actions no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end; flex-wrap: wrap;">
-        <button class="btn btn-outline" style="padding: 0.45rem 1rem;" onclick="closeQrModal()">Close</button>
-        <button class="btn btn-outline inline-flex items-center justify-center gap-2" id="demoToggleBtn" style="padding: 0.45rem 1rem; border-color: rgba(59,130,246,0.4); color: var(--blue-light);" onclick="toggleAnonymousDemo(true)"><span class="shrink-0" aria-hidden="true">💬</span><span class="flex items-center">Test Finder Screen</span></button>
-        <button class="btn btn-primary" style="padding: 0.45rem 1.25rem;" onclick="printQrSticker()">🖨️ Print Sticker</button>
+      <div class="qr-actions no-print modal-actions">
+        <button type="button" class="btn btn-outline btn-compact" data-action="closeQrModal">Close</button>
+        <button type="button" class="btn btn-outline btn-compact btn-outline-accent inline-flex items-center justify-center gap-2" id="demoToggleBtn" data-action="toggleAnonymousDemo" data-args='[true]'><span class="shrink-0" aria-hidden="true">💬</span><span class="flex items-center">Test Finder Screen</span></button>
+        <button type="button" class="btn btn-primary btn-compact" data-action="printQrSticker">🖨️ Print Sticker</button>
       </div>
 
     </div>
   </div>
 
   <!-- FULL IMAGE VIEWER LIGHTBOX MODAL -->
-  <div class="slip-overlay" id="imageModal" onclick="if(event.target===this) closeImageModal()">
-    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; max-width: 650px; width: 92%; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid rgba(59,130,246,0.15); padding-bottom: 0.75rem;">
-        <h3 id="imageModalTitle" style="font-size: 1.05rem; font-weight: 700; color: var(--blue-main); margin: 0; text-align: left;">Item Photo View</h3>
-        <button type="button" onclick="closeImageModal()" aria-label="Close image preview" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 0.3rem 0.55rem; font-size: 0.9rem; cursor: pointer; font-weight: 700;">✕</button>
+  <div class="slip-overlay" id="imageModal" data-close="closeImageModal">
+    <div class="modal-card modal-card--xl modal-card--neutral modal-card--center">
+      <div class="modal-header modal-header--center">
+        <h3 id="imageModalTitle" class="modal-heading--accent">Item Photo View</h3>
+        <button type="button" class="modal-close modal-close--boxed" data-action="closeImageModal" aria-label="Close image preview">✕</button>
       </div>
-      <div style="min-height: 180px; max-height: 70vh; overflow: auto; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2); background: #000; display: flex; align-items: center; justify-content: center; position: relative;">
-        <img id="imageModalImg" src="" alt="Full Item View" style="display: block; width: auto; height: auto; max-width: 100%; max-height: 70vh; object-fit: contain;" />
-        <p id="imageModalFallback" hidden style="margin: 1.5rem; color: var(--text-muted);">This photo could not be loaded.</p>
+      <div class="image-viewer">
+        <img id="imageModalImg" src="" alt="Full Item View" />
+        <p id="imageModalFallback" hidden>This photo could not be loaded.</p>
       </div>
     </div>
   </div>
 
   <!-- DELETE CONFIRMATION MODAL -->
-  <div class="slip-overlay" id="deleteConfirmModal" onclick="if(event.target===this) closeDeleteModal()">
-    <div style="background: #18181b; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 1.75rem; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
-      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🗑️</div>
-      <h3 style="font-size: 1.15rem; font-weight: 800; color: #fca5a5; margin-bottom: 0.5rem;">Remove Item Report?</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;" id="deleteConfirmText">Are you sure you want to permanently delete this report from campus records?</p>
-      <div style="display: flex; gap: 0.75rem; justify-content: center;">
-        <button type="button" class="btn btn-outline" onclick="closeDeleteModal()" style="padding: 0.5rem 1.25rem;">Cancel</button>
-        <button type="button" class="btn" onclick="executeDelete()" style="background: #ef4444; color: white; border: none; padding: 0.5rem 1.25rem; font-weight: 700; border-radius: 8px; cursor: pointer;">Remove Report</button>
+  <div class="slip-overlay" id="deleteConfirmModal" data-close="closeDeleteModal">
+    <div class="modal-card modal-card--sm modal-card--danger modal-card--center">
+      <div class="modal-icon" aria-hidden="true">🗑️</div>
+      <h3 class="modal-confirm-title modal-confirm-title--danger">Remove Item Report?</h3>
+      <p class="modal-confirm-text" id="deleteConfirmText">Are you sure you want to permanently delete this report from campus records?</p>
+      <div class="modal-actions modal-actions--center">
+        <button type="button" class="btn btn-outline btn-compact" data-action="closeDeleteModal">Cancel</button>
+        <button type="button" class="btn btn-danger" data-action="executeDelete">Remove Report</button>
       </div>
     </div>
   </div>
 
   <!-- CLAIM / UNCLAIM CONFIRMATION MODAL -->
-  <div class="slip-overlay" id="claimConfirmModal" onclick="if(event.target===this) closeClaimModal()">
-    <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 16px; padding: 1.75rem; max-width: 440px; width: 90%; text-align: left; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid rgba(59,130,246,0.15); padding-bottom: 0.5rem;">
-        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--blue-main); margin: 0;" id="claimModalTitle">Confirm Item Claim</h3>
-        <button type="button" onclick="closeClaimModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.1rem; cursor: pointer;">✕</button>
+  <div class="slip-overlay" id="claimConfirmModal" data-close="closeClaimModal">
+    <div class="modal-card modal-card--md">
+      <div class="modal-header modal-header--center">
+        <h3 class="modal-heading modal-heading--sm modal-confirm-title" id="claimModalTitle">Confirm Item Claim</h3>
+        <button type="button" class="modal-close" data-action="closeClaimModal" aria-label="Close">✕</button>
       </div>
-      <p style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 1rem;" id="claimModalSubtitle">Mark this item as successfully returned to owner or finder.</p>
-      
-      <div id="claimVerificationBox" style="display: none; background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;">
-        <div style="font-size: 0.76rem; font-weight: 700; color: var(--blue-light); margin-bottom: 0.25rem;">Verification Hint from Reporter:</div>
-        <div style="font-size: 0.82rem; color: var(--text-main); font-style: italic;" id="claimModalHint">"Hint text"</div>
+      <p class="modal-body-text" id="claimModalSubtitle">Mark this item as successfully returned to owner or finder.</p>
+
+      <div id="claimVerificationBox" class="info-panel info-panel--hint" style="display: none;">
+        <div class="info-panel-label info-panel-label--accent">Verification Hint from Reporter:</div>
+        <div class="info-panel-quote" id="claimModalHint">"Hint text"</div>
       </div>
 
-      <div class="input-field" id="claimProofGroup" style="margin-bottom: 1.25rem;">
+      <div class="input-field modal-field modal-field--last modal-field--boxed" id="claimProofGroup">
         <label for="claimProofInput">Claimant Proof / Verification Answer</label>
-        <input type="text" id="claimProofInput" maxlength="500" aria-invalid="false" aria-describedby="claimProofError" placeholder="Enter proof, ID details, or verification answer..." style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 0.6rem; color: var(--text-main);" />
-        <p id="claimProofError" style="display:none;color:#f87171;font-size:.76rem;margin-top:.35rem;" role="alert"></p>
+        <input type="text" id="claimProofInput" maxlength="500" aria-invalid="false" aria-describedby="claimProofError" placeholder="Enter proof, ID details, or verification answer..." />
+        <p id="claimProofError" class="field-error" style="display: none;" role="alert"></p>
       </div>
-      <div id="claimantDetailsGroup" style="display:none;margin-bottom:1.25rem;">
-        <div class="input-field" style="margin-bottom:.75rem;">
+      <div id="claimantDetailsGroup" class="modal-field--last" style="display: none;">
+        <div class="input-field modal-field modal-field--boxed">
           <label for="claimantCourseYearInput">Course &amp; Year</label>
-          <input type="text" id="claimantCourseYearInput" maxlength="100" aria-invalid="false" aria-describedby="claimCourseYearError" placeholder="e.g., BS Information Technology, 3rd Year" style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 0.6rem; color: var(--text-main);" />
-          <p id="claimCourseYearError" style="display:none;color:#f87171;font-size:.76rem;margin-top:.35rem;" role="alert"></p>
+          <input type="text" id="claimantCourseYearInput" maxlength="100" aria-invalid="false" aria-describedby="claimCourseYearError" placeholder="e.g., BS Information Technology, 3rd Year" />
+          <p id="claimCourseYearError" class="field-error" style="display: none;" role="alert"></p>
         </div>
-        <div class="input-field">
+        <div class="input-field modal-field modal-field--boxed">
           <label for="claimantContactInput">Contact Number (Optional)</label>
-          <input type="tel" id="claimantContactInput" maxlength="50" autocomplete="tel" placeholder="Best number to reach you" style="width: 100%; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 0.6rem; color: var(--text-main);" />
+          <input type="tel" id="claimantContactInput" maxlength="50" autocomplete="tel" placeholder="Best number to reach you" />
         </div>
       </div>
 
-      <div id="claimModalError" role="alert" aria-live="assertive" style="display:none;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);border-radius:6px;color:#fca5a5;font-size:.8rem;line-height:1.45;padding:.65rem .75rem;margin-bottom:1rem;"></div>
-      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-        <button type="button" class="btn btn-outline" onclick="closeClaimModal()" style="padding: 0.5rem 1rem;">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="executeClaimToggle()" style="padding: 0.5rem 1.25rem;" id="claimModalBtn">Confirm Claim</button>
+      <div id="claimModalError" class="modal-alert" role="alert" aria-live="assertive" style="display: none;"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline btn-compact" data-action="closeClaimModal">Cancel</button>
+        <button type="button" class="btn btn-primary btn-compact" data-action="executeClaimToggle" id="claimModalBtn">Confirm Claim</button>
       </div>
     </div>
   </div>
 
   <!-- LOGOUT CONFIRMATION MODAL -->
-  <div class="slip-overlay" id="logoutConfirmModal" onclick="if(event.target===this) closeLogoutModal()">
-    <div style="background: #18181b; border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
-      <div style="font-size: 2.2rem; font-weight: 700; color: var(--blue-main); margin-bottom: 0.5rem;">↪</div>
-      <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">Confirm Sign Out</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">You are about to end your current session.</p>
-      <div style="display: flex; gap: 0.75rem; justify-content: center;">
-        <button type="button" class="btn btn-outline" onclick="closeLogoutModal()" style="padding: 0.5rem 1.25rem;">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="executeLogout()" style="padding: 0.5rem 1.25rem;">Sign Out</button>
+  <div class="slip-overlay" id="logoutConfirmModal" data-close="closeLogoutModal">
+    <div class="modal-card modal-card--sm modal-card--neutral modal-card--center">
+      <div class="modal-icon modal-icon--accent" aria-hidden="true">↪</div>
+      <h3 class="modal-confirm-title modal-confirm-title--neutral">Confirm Sign Out</h3>
+      <p class="modal-confirm-text">You are about to end your current session.</p>
+      <div class="modal-actions modal-actions--center">
+        <button type="button" class="btn btn-outline btn-compact" data-action="closeLogoutModal">Cancel</button>
+        <button type="button" class="btn btn-primary btn-compact" data-action="executeLogout">Sign Out</button>
       </div>
     </div>
   </div>
 
   <!-- CHANGE PASSWORD MODAL -->
-  <div class="slip-overlay" id="changePasswordModal" onclick="if(event.target===this) closeChangePasswordModal()">
-    <div class="modal-card" style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 2rem; max-width: 420px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
+  <div class="slip-overlay" id="changePasswordModal" data-close="closeChangePasswordModal">
+    <div class="modal-card modal-card--sm">
+      <div class="modal-header">
         <div>
-          <h2 class="modal-title" style="font-size: 1.25rem; font-weight: 800; margin: 0 0 0.2rem;">Change Password</h2>
-          <p class="modal-subtitle" id="changePasswordEmail" style="font-size: 0.78rem; color: var(--text-muted); margin: 0;"></p>
+          <h2 class="modal-title modal-heading modal-heading--flush">Change Password</h2>
+          <p class="modal-subtitle" id="changePasswordEmail"></p>
         </div>
-        <button type="button" onclick="closeChangePasswordModal()" aria-label="Close" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
+        <button type="button" class="modal-close" data-action="closeChangePasswordModal" aria-label="Close">&times;</button>
       </div>
-      <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
-        <div class="input-field" style="margin-bottom: 0.9rem;">
+      <form id="changePasswordForm" data-submit="handleChangePassword">
+        <div class="input-field modal-field">
           <label for="currentPassword">Current Password</label>
-          <input type="password" id="currentPassword" autocomplete="current-password" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+          <input type="password" id="currentPassword" autocomplete="current-password" required />
         </div>
-        <div class="input-field" style="margin-bottom: 0.9rem;">
+        <div class="input-field modal-field">
           <label for="newPassword">New Password</label>
-          <input type="password" id="newPassword" autocomplete="new-password" minlength="8" maxlength="128" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+          <input type="password" id="newPassword" autocomplete="new-password" minlength="8" maxlength="128" required aria-describedby="newPasswordHint" />
         </div>
-        <div class="input-field" style="margin-bottom: 0.6rem;">
+        <div class="input-field modal-field">
           <label for="newPasswordConfirm">Confirm New Password</label>
-          <input type="password" id="newPasswordConfirm" autocomplete="new-password" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+          <input type="password" id="newPasswordConfirm" autocomplete="new-password" required />
         </div>
-        <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.75rem;">At least 8 characters, with an uppercase letter, a lowercase letter, a number, and one of ! @ # $ % ? &amp; *</p>
-        <p id="changePasswordError" role="alert" style="display: none; font-size: 0.78rem; color: #f87171; margin: 0 0 0.75rem;"></p>
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-          <button type="button" class="btn btn-outline" onclick="closeChangePasswordModal()">Cancel</button>
+        <p class="modal-hint" id="newPasswordHint">At least 8 characters, with an uppercase letter, a lowercase letter, a number, and one of ! @ # $ % ? &amp; *</p>
+        <p id="changePasswordError" class="modal-error" role="alert" style="display: none;"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" data-action="closeChangePasswordModal">Cancel</button>
           <button type="submit" class="btn btn-primary" id="changePasswordSubmit">Save Password</button>
         </div>
       </form>
@@ -460,59 +471,59 @@
   </div>
 
   <!-- REPORT SUCCESS CONFIRMATION MODAL -->
-  <div class="slip-overlay" id="reportSuccessModal" onclick="if(event.target===this) closeReportSuccessModal()">
-    <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 2rem; max-width: 460px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
-      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✅</div>
-      <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--blue-main); margin-bottom: 0.4rem;">Report Submitted Successfully!</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Your report has been saved into official CSPC campus records.</p>
-      
-      <div style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.3); border-radius: 10px; padding: 0.85rem; margin-bottom: 1.25rem;">
-        <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Tracking Reference Code</div>
-        <div style="font-family: monospace; font-size: 1.35rem; font-weight: 900; color: var(--blue-main); margin-top: 0.2rem;" id="successRefCode">CSPC-LF-2026-000</div>
+  <div class="slip-overlay" id="reportSuccessModal" data-close="closeReportSuccessModal">
+    <div class="modal-card modal-card--md modal-card--center">
+      <div class="modal-icon" aria-hidden="true">✅</div>
+      <h3 class="modal-confirm-title">Report Submitted Successfully!</h3>
+      <p class="modal-confirm-text modal-confirm-text--tight">Your report has been saved into official CSPC campus records.</p>
+
+      <div class="info-panel">
+        <div class="info-panel-label">Tracking Reference Code</div>
+        <div class="info-panel-code" id="successRefCode">CSPC-LF-2026-000</div>
       </div>
 
-      <div id="successMatchAlert" style="display: none; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.35); border-radius: 8px; padding: 0.75rem; margin-bottom: 1.25rem; text-align: left; font-size: 0.8rem; color: #86efac;">
+      <div id="successMatchAlert" class="success-panel" style="display: none;">
         🎯 <strong>Potential Smart Match Detected!</strong> A matching item report was found in campus records.
       </div>
 
-      <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-        <button type="button" class="btn btn-outline" onclick="closeReportSuccessModal()">Close</button>
-        <button type="button" class="btn btn-primary" id="successPrintBtn" onclick="openQrFromSuccessModal()">Get QR Sticker</button>
+      <div class="modal-actions modal-actions--center">
+        <button type="button" class="btn btn-outline" data-action="closeReportSuccessModal">Close</button>
+        <button type="button" class="btn btn-primary" id="successPrintBtn" data-action="openQrFromSuccessModal">Get QR Sticker</button>
       </div>
     </div>
   </div>
 
   <!-- REGISTER VALUABLE BELONGING MODAL (AUTH REQUIRED) -->
-  <div class="slip-overlay" id="registerBelongingModal" onclick="if(event.target===this) closeRegisterBelongingModal()">
-    <div class="modal-card" style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 2rem; max-width: 500px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
+  <div class="slip-overlay" id="registerBelongingModal" data-close="closeRegisterBelongingModal">
+    <div class="modal-card">
+      <div class="modal-header">
         <div>
-          <span class="modal-badge-pill" style="font-size: 0.68rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">Preventive Student Vault</span>
-          <h2 class="modal-title" id="registerModalTitle" style="font-size: 1.25rem; font-weight: 800; margin: 0.4rem 0 0.2rem;">Register Valuable Belonging</h2>
-          <p class="modal-subtitle" id="registerModalSubtitle" style="font-size: 0.78rem; color: var(--text-muted); margin: 0;">Register your laptop, tumbler, or binder before it gets lost to generate an anonymous recovery QR sticker.</p>
+          <span class="modal-badge-pill">Preventive Student Vault</span>
+          <h2 class="modal-title modal-heading" id="registerModalTitle">Register Valuable Belonging</h2>
+          <p class="modal-subtitle" id="registerModalSubtitle">Register your laptop, tumbler, or binder before it gets lost to generate an anonymous recovery QR sticker.</p>
         </div>
-        <button onclick="closeRegisterBelongingModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
+        <button type="button" class="modal-close" data-action="closeRegisterBelongingModal" aria-label="Close">&times;</button>
       </div>
 
-      <div class="modal-notice-box" style="border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 1.2rem; font-size: 0.78rem;">
+      <div class="modal-notice-box">
         🔒 <strong>Private to Your Account:</strong> Only you have access to your registered belongings. They are stored in your personal vault and never displayed on the public feed.
       </div>
 
-      <form id="registerBelongingForm" onsubmit="handleRegisterBelongingSubmit(event)">
-        <div class="input-field" style="margin-bottom: 0.9rem;">
+      <form id="registerBelongingForm" data-submit="handleRegisterBelongingSubmit">
+        <div class="input-field modal-field">
           <label for="regTitle">Belonging Name / Model <span class="required">*</span></label>
-          <input type="text" id="regTitle" placeholder="e.g. Acer Aspire 5 Laptop / AquaFlask 32oz Mustard" required minlength="3" maxlength="100" style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+          <input type="text" id="regTitle" placeholder="e.g. Acer Aspire 5 Laptop / AquaFlask 32oz Mustard" required minlength="3" maxlength="100" />
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.9rem;">
-          <div class="input-field">
-            <label for="regCategory">Category <span class="required">*</span></label>
+        <div class="modal-grid-2">
+          <div class="input-field modal-field">
+            <label for="regCategoryPicker">Category <span class="required">*</span></label>
             <input type="hidden" id="regCategory" />
-            <button type="button" class="category-picker" id="regCategoryPicker" onclick="openCategoryPicker('regCategory')">Select category...</button>
+            <button type="button" class="category-picker" id="regCategoryPicker" data-action="openCategoryPicker" data-args='["regCategory"]'>Select category...</button>
           </div>
-          <div class="input-field">
+          <div class="input-field modal-field">
             <label for="regLocation">Primary Building</label>
-            <select id="regLocation" style="width: 100%; border-radius: 8px; padding: 0.6rem;">
+            <select id="regLocation">
               <option value="Campus-wide">Campus-wide</option>
               <option value="Engineering (CEA)">CEA (Engineering)</option>
               <option value="Computer Studies (CCS)">CCS (Computer)</option>
@@ -523,29 +534,29 @@
           </div>
         </div>
 
-        <div class="input-field" style="margin-bottom: 0.9rem;">
+        <div class="input-field modal-field">
           <label for="regIdentifiers">Distinguishing Marks / Serial No. (Optional)</label>
-          <input type="text" id="regIdentifiers" placeholder="e.g. Anime sticker on lid, engraved initials" maxlength="150" style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+          <input type="text" id="regIdentifiers" placeholder="e.g. Anime sticker on lid, engraved initials" maxlength="150" />
         </div>
 
-        <div class="input-field" style="margin-bottom: 1.25rem;">
+        <div class="input-field modal-field modal-field--last">
           <label for="regInstructions">Default Note for Finder</label>
-          <textarea id="regInstructions" rows="2" style="width: 100%; border-radius: 8px; padding: 0.6rem; font-size: 0.8rem; resize: none;" placeholder="e.g. If found, please scan this QR to notify me or leave with the library front counter."></textarea>
+          <textarea id="regInstructions" rows="2" placeholder="e.g. If found, please scan this QR to notify me or leave with the library front counter."></textarea>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-          <button type="button" class="btn btn-outline" onclick="closeRegisterBelongingModal()">Cancel</button>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" data-action="closeRegisterBelongingModal">Cancel</button>
           <button type="submit" class="btn btn-primary" id="regSubmitBtn">Register &amp; Generate QR Sticker</button>
         </div>
       </form>
     </div>
   </div>
 
-  <div class="slip-overlay" id="categoryPickerModal" onclick="if(event.target===this) closeCategoryPicker()">
+  <div class="slip-overlay" id="categoryPickerModal" data-close="closeCategoryPicker">
     <div class="category-picker-modal" role="dialog" aria-modal="true" aria-labelledby="categoryPickerTitle">
       <div class="category-picker-header">
         <div><span class="category-picker-eyebrow">Item classification</span><h2 id="categoryPickerTitle">Select a Category</h2></div>
-        <button type="button" class="category-picker-close" onclick="closeCategoryPicker()" aria-label="Close category picker">&times;</button>
+        <button type="button" class="category-picker-close" data-action="closeCategoryPicker" aria-label="Close category picker">&times;</button>
       </div>
       <svg class="category-icon-defs" aria-hidden="true" focusable="false">
         <symbol id="category-icon-electronics" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M10 5h4M11 18.5h2"/></symbol>
@@ -561,162 +572,161 @@
         <symbol id="category-icon-other" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4zM3 7v10l9 4 9-4V7M12 11v10"/></symbol>
       </svg>
       <div class="category-grid">
-        <button type="button" class="category-option" onclick="selectCategory('Electronics', 'electronics')"><svg aria-hidden="true"><use href="#category-icon-electronics"></use></svg>Electronics</button>
-        <button type="button" class="category-option" onclick="selectCategory('Water Bottles/Tumblers', 'bottle')"><svg aria-hidden="true"><use href="#category-icon-bottle"></use></svg>Water Bottles / Tumblers</button>
-        <button type="button" class="category-option" onclick="selectCategory('Clothing & Accessories', 'clothing')"><svg aria-hidden="true"><use href="#category-icon-clothing"></use></svg>Clothing &amp; Accessories</button>
-        <button type="button" class="category-option" onclick="selectCategory('Books & Documents', 'books')"><svg aria-hidden="true"><use href="#category-icon-books"></use></svg>Books &amp; Documents</button>
-        <button type="button" class="category-option" onclick="selectCategory('Bags & Wallets', 'bag')"><svg aria-hidden="true"><use href="#category-icon-bag"></use></svg>Bags &amp; Wallets</button>
-        <button type="button" class="category-option" onclick="selectCategory('Keys', 'key')"><svg aria-hidden="true"><use href="#category-icon-key"></use></svg>Keys</button>
-        <button type="button" class="category-option" onclick="selectCategory('Jewelry', 'jewelry')"><svg aria-hidden="true"><use href="#category-icon-jewelry"></use></svg>Jewelry</button>
-        <button type="button" class="category-option" onclick="selectCategory('Sports Equipment', 'sports')"><svg aria-hidden="true"><use href="#category-icon-sports"></use></svg>Sports Equipment</button>
-        <button type="button" class="category-option" onclick="selectCategory('School Supplies', 'school')"><svg aria-hidden="true"><use href="#category-icon-school"></use></svg>School Supplies</button>
-        <button type="button" class="category-option" onclick="selectCategory('ID / Cards', 'id')"><svg aria-hidden="true"><use href="#category-icon-id"></use></svg>ID / Cards</button>
-        <button type="button" class="category-option" onclick="selectCategory('Others', 'other')"><svg aria-hidden="true"><use href="#category-icon-other"></use></svg>Others</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["Electronics", "electronics"]'><svg aria-hidden="true"><use href="#category-icon-electronics"></use></svg>Electronics</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["Water Bottles/Tumblers", "bottle"]'><svg aria-hidden="true"><use href="#category-icon-bottle"></use></svg>Water Bottles / Tumblers</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["Clothing &amp; Accessories", "clothing"]'><svg aria-hidden="true"><use href="#category-icon-clothing"></use></svg>Clothing &amp; Accessories</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["Books &amp; Documents", "books"]'><svg aria-hidden="true"><use href="#category-icon-books"></use></svg>Books &amp; Documents</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["Bags &amp; Wallets", "bag"]'><svg aria-hidden="true"><use href="#category-icon-bag"></use></svg>Bags &amp; Wallets</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["Keys", "key"]'><svg aria-hidden="true"><use href="#category-icon-key"></use></svg>Keys</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["Jewelry", "jewelry"]'><svg aria-hidden="true"><use href="#category-icon-jewelry"></use></svg>Jewelry</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["Sports Equipment", "sports"]'><svg aria-hidden="true"><use href="#category-icon-sports"></use></svg>Sports Equipment</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["School Supplies", "school"]'><svg aria-hidden="true"><use href="#category-icon-school"></use></svg>School Supplies</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["ID / Cards", "id"]'><svg aria-hidden="true"><use href="#category-icon-id"></use></svg>ID / Cards</button>
+        <button type="button" class="category-option" data-action="selectCategory" data-args='["Others", "other"]'><svg aria-hidden="true"><use href="#category-icon-other"></use></svg>Others</button>
       </div>
     </div>
   </div>
 
   <!-- AUTH REQUIRED MODAL -->
-  <div class="slip-overlay" id="authRequiredModal" onclick="if(event.target===this) closeAuthRequiredModal()">
-    <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 2rem; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
-      <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔒</div>
-      <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--blue-main); margin-bottom: 0.5rem;">Registered Account Required</h3>
-      <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">
+  <div class="slip-overlay" id="authRequiredModal" data-close="closeAuthRequiredModal">
+    <div class="modal-card modal-card--md modal-card--center">
+      <div class="modal-icon" aria-hidden="true">🔒</div>
+      <h3 class="modal-confirm-title">Registered Account Required</h3>
+      <p class="modal-confirm-text">
         Belonging Registration is a <strong>preventive feature</strong> available exclusively to authenticated CSPC students and admins. This guarantees that <strong>only you have access</strong> to your registered belongings and notification alerts.
       </p>
-      <div style="display: flex; gap: 0.75rem; justify-content: center; align-items: stretch;">
-        <button type="button" class="btn btn-outline" onclick="closeAuthRequiredModal()" style="height: 3.25rem; flex: 1; display: inline-flex; align-items: center; justify-content: center; text-align: center;">Cancel</button>
-        <a href="/login" class="btn btn-primary" style="height: 3.25rem; flex: 1; display: inline-flex; align-items: center; justify-content: center; text-align: center; padding: 0.7rem 1.5rem; text-decoration: none;">Sign In / Register</a>
+      <div class="modal-actions modal-actions--center modal-actions--stretch">
+        <button type="button" class="btn btn-outline" data-action="closeAuthRequiredModal">Cancel</button>
+        <a href="/login" class="btn btn-primary">Sign In / Register</a>
       </div>
     </div>
   </div>
 
   <!-- ANONYMOUS FINDER RECOVERY SCREEN MODAL -->
-  <div class="slip-overlay" id="anonymousFinderModal" onclick="if(event.target===this) closeAnonymousFinderModal()">
-    <div class="modal-card" style="background: #18181b; border: 1.5px solid #22c55e; border-radius: 18px; padding: 1.8rem; max-width: 490px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(34,197,94,0.3); padding-bottom: 0.8rem; margin-bottom: 1rem;">
-        <div style="display: flex; align-items: center; gap: 0.6rem;">
-          <img src="cspc-logo.png" alt="CSPC Logo" style="width: 32px; height: 32px; object-fit: contain;" />
+  <div class="slip-overlay" id="anonymousFinderModal" data-close="closeAnonymousFinderModal">
+    <div class="modal-card modal-card--success">
+      <div class="modal-header modal-header--center modal-header--success">
+        <div class="modal-header-group">
+          <img src="cspc-logo.png" alt="CSPC Logo" class="modal-header-logo" />
           <div>
-            <span class="modal-green-badge" style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase;">Anonymous Recovery Portal</span>
-            <h3 class="modal-title" style="font-size: 1.05rem; font-weight: 800; margin: 0;">Found Item Notification</h3>
+            <span class="modal-green-badge">Anonymous Recovery Portal</span>
+            <h3 class="modal-title modal-heading modal-heading--xs">Found Item Notification</h3>
           </div>
         </div>
-        <button onclick="closeAnonymousFinderModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
+        <button type="button" class="modal-close" data-action="closeAnonymousFinderModal" aria-label="Close">&times;</button>
       </div>
 
       <!-- Item Card for Finder -->
-      <div class="modal-item-preview" style="border-radius: 10px; padding: 0.85rem; margin-bottom: 1rem;">
-        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">You Found:</div>
-        <div style="font-size: 1.05rem; font-weight: 800; color: var(--blue-main);" id="finderScreenItemTitle">MacBook Air M2</div>
-        <div style="font-family: monospace; font-size: 0.72rem; color: #94a3b8;" id="finderScreenRefCode">CSPC-REG-QR-001</div>
-        <div class="preview-instructions" style="font-size: 0.75rem; margin-top: 0.4rem;" id="finderScreenInstructions">Please leave with the library front desk.</div>
+      <div class="modal-item-preview">
+        <div class="finder-item-label">You Found:</div>
+        <div class="finder-item-title" id="finderScreenItemTitle">MacBook Air M2</div>
+        <div class="finder-item-ref" id="finderScreenRefCode">CSPC-REG-QR-001</div>
+        <div class="preview-instructions" id="finderScreenInstructions">Please leave with the library front desk.</div>
       </div>
 
       <!-- Privacy Notice -->
-      <div class="modal-green-notice" style="border-radius: 8px; padding: 0.7rem; margin-bottom: 1.1rem; font-size: 0.76rem; line-height: 1.45;">
+      <div class="modal-green-notice">
         🛡️ <strong>Student Privacy Protected:</strong> The owner's phone number, email, and social media are completely private. Your message below will be routed straight to their CSPC account dashboard.
       </div>
 
-      <form id="anonymousFinderForm" onsubmit="handleAnonymousFinderSubmit(event)">
+      <form id="anonymousFinderForm" data-submit="handleAnonymousFinderSubmit">
         <input type="hidden" id="finderRefCodeInput" />
         <input type="hidden" id="finderMatchTokenInput" />
         <input type="hidden" id="finderSubmissionKeyInput" />
-        <div class="input-field" style="margin-bottom: 0.85rem;">
+        <div class="input-field modal-field">
           <label for="finderLocationInput">Where is the item right now? <span class="required">*</span></label>
-          <input type="text" id="finderLocationInput" placeholder="e.g. Left with Ms. Santos at Library 2nd floor desk" required style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+          <input type="text" id="finderLocationInput" placeholder="e.g. Left with Ms. Santos at Library 2nd floor desk" required />
         </div>
 
-        <div class="input-field" style="margin-bottom: 0.85rem;">
+        <div class="input-field modal-field">
           <label for="finderMessageInput">Message for the Owner <span class="required">*</span></label>
-          <textarea id="finderMessageInput" rows="2" required placeholder="e.g. Hi! Found your item near table 5. Handed it over to campus security desk." style="width: 100%; border-radius: 8px; padding: 0.6rem; font-size: 0.8rem; resize: none;"></textarea>
+          <textarea id="finderMessageInput" rows="2" required placeholder="e.g. Hi! Found your item near table 5. Handed it over to campus security desk."></textarea>
         </div>
 
-        <div class="input-field" style="margin-bottom: 1.25rem;">
+        <div class="input-field modal-field modal-field--last">
           <label for="finderContactInput">Your Name or Department (Optional - leave blank for 100% anonymity)</label>
-          <input type="text" id="finderContactInput" placeholder="e.g. BSIT student / Security Post 2" style="width: 100%; border-radius: 8px; padding: 0.6rem;" />
+          <input type="text" id="finderContactInput" placeholder="e.g. BSIT student / Security Post 2" />
         </div>
 
-        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-          <button type="button" class="btn btn-outline" onclick="closeAnonymousFinderModal()">Cancel</button>
-          <button type="submit" class="btn" id="finderSendBtn" style="background: #22c55e; color: #000; font-weight: 800; border: none; padding: 0.5rem 1.25rem; border-radius: 8px; cursor: pointer;">🚀 Send Alert to Owner</button>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" data-action="closeAnonymousFinderModal">Cancel</button>
+          <button type="submit" class="btn btn-success" id="finderSendBtn">🚀 Send Alert to Owner</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- NOTIFICATIONS INBOX MODAL (FOR LOGGED-IN USERS) -->
-  <div class="slip-overlay" id="notificationsModal" onclick="if(event.target===this) closeNotificationsModal()">
-    <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 1.8rem; max-width: 500px; width: 92%; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.3rem;">🔔</span>
+  <div class="slip-overlay" id="notificationsModal" data-close="closeNotificationsModal">
+    <div class="modal-card">
+      <div class="modal-header modal-header--center">
+        <div class="modal-header-group">
+          <span class="modal-header-icon" aria-hidden="true">🔔</span>
           <div>
-            <h3 style="font-size: 1.1rem; font-weight: 800; color: #ffffff; margin: 0;">Account Notifications</h3>
-            <span style="font-size: 0.72rem; color: var(--text-muted);">Finder alerts and claim request updates</span>
+            <h3 class="modal-heading modal-heading--sm modal-heading--plain">Account Notifications</h3>
+            <span class="modal-subtitle">Finder alerts and claim request updates</span>
           </div>
         </div>
-        <button type="button" class="notifications-modal-close" onclick="closeNotificationsModal()" aria-label="Close notifications">&times;</button>
+        <button type="button" class="notifications-modal-close" data-action="closeNotificationsModal" aria-label="Close notifications">&times;</button>
       </div>
 
       <div id="notificationSelectionToolbar" class="notification-selection-toolbar" hidden>
         <label class="notification-select-all">
-          <input id="selectAllNotifications" type="checkbox" onchange="selectAllNotifications(this.checked)">
+          <input id="selectAllNotifications" type="checkbox" data-change="selectAllNotifications" data-args='["$checked"]'>
           <span>Select all</span>
         </label>
         <span id="selectedNotificationCount" aria-live="polite">0 selected</span>
-        <button id="deleteSelectedNotifications" type="button" class="btn-delete-notifications" onclick="deleteSelectedNotifications()" disabled>Delete selected</button>
+        <button id="deleteSelectedNotifications" type="button" class="btn-delete-notifications" data-action="deleteSelectedNotifications" disabled>Delete selected</button>
       </div>
-      <div id="notificationsList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <div id="notificationsList" class="notifications-list">
         <!-- Filled dynamically -->
       </div>
     </div>
   </div>
 
-  <!-- SMART MATCH HANDOVER QR MODAL -->
   <!-- MATCH REFERENCE QR MODAL -->
-  <div class="slip-overlay" id="matchQrModal" onclick="if(event.target===this) closeMatchQrModal()">
-    <div style="background: #18181b; border: 1.5px solid var(--blue-main); border-radius: 18px; padding: 1.8rem; max-width: 520px; width: 92%; box-sizing: border-box; box-shadow: 0 10px 45px rgba(0,0,0,0.85); color: var(--text-main); position: relative; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
-      <div style="display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(59,130,246,0.25); padding-bottom: 0.8rem; margin-bottom: 1rem;">
+  <div class="slip-overlay" id="matchQrModal" data-close="closeMatchQrModal">
+    <div class="modal-card modal-card--lg">
+      <div class="modal-header">
         <div>
-          <span style="font-size: 0.68rem; font-weight: 800; background: rgba(59,130,246,0.18); color: var(--blue-main); padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase;">Match Reference</span>
-          <h2 style="font-size: 1.25rem; font-weight: 800; color: #ffffff; margin: 0.4rem 0 0.2rem;">🤝 Match Reference QR</h2>
-          <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">Automated reconciliation between Lost and Found reports.</p>
+          <span class="modal-pill">Match Reference</span>
+          <h2 class="modal-heading modal-heading--plain">🤝 Match Reference QR</h2>
+          <p class="modal-subtitle">Automated reconciliation between Lost and Found reports.</p>
         </div>
-        <button onclick="closeMatchQrModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.3rem; cursor:pointer;">&times;</button>
+        <button type="button" class="modal-close" data-action="closeMatchQrModal" aria-label="Close">&times;</button>
       </div>
 
-      <div id="matchPrintArea" style="background: #ffffff; color: #0f172a; border-radius: 12px; padding: 1.25rem; text-align: center; border: 2px dashed #0f172a; margin-bottom: 1.2rem;">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.4rem;">
-          <img src="cspc-logo.png" alt="CSPC Logo" style="width: 26px; height: 26px; object-fit: contain;" />
-          <span style="font-weight: 900; font-size: 0.8rem; text-transform: uppercase;">CSPC Lost &amp; Found Match References</span>
+      <div id="matchPrintArea" class="print-sticker print-sticker--match">
+        <div class="print-sticker-brand">
+          <img src="cspc-logo.png" alt="CSPC Logo" class="print-logo" />
+          <span class="print-brand-text">CSPC Lost &amp; Found Match References</span>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem; margin: 0.6rem 0; text-align: left; font-size: 0.75rem;">
+        <div class="match-columns">
           <div>
-            <span style="color: #ef4444; font-weight: 800; font-size: 0.68rem; text-transform: uppercase;">Lost Report</span>
-            <div style="font-weight: 800; color: #0f172a;" id="matchLostTitle">Lost Item</div>
-            <div style="font-family: monospace; color: #64748b; font-size: 0.68rem;" id="matchLostRef">CSPC-LF-000</div>
-            <div style="color: #64748b; font-size: 0.68rem;" id="matchLostLocation">Location unavailable</div>
+            <span class="match-column-label match-column-label--lost">Lost Report</span>
+            <div class="match-column-title" id="matchLostTitle">Lost Item</div>
+            <div class="match-column-meta match-column-meta--mono" id="matchLostRef">CSPC-LF-000</div>
+            <div class="match-column-meta" id="matchLostLocation">Location unavailable</div>
           </div>
           <div>
-            <span style="color: #22c55e; font-weight: 800; font-size: 0.68rem; text-transform: uppercase;">Found Report</span>
-            <div style="font-weight: 800; color: #0f172a;" id="matchFoundTitle">Found Item</div>
-            <div style="font-family: monospace; color: #64748b; font-size: 0.68rem;" id="matchFoundRef">CSPC-LF-000</div>
-            <div style="color: #64748b; font-size: 0.68rem;" id="matchFoundLocation">Location unavailable</div>
+            <span class="match-column-label match-column-label--found">Found Report</span>
+            <div class="match-column-title" id="matchFoundTitle">Found Item</div>
+            <div class="match-column-meta match-column-meta--mono" id="matchFoundRef">CSPC-LF-000</div>
+            <div class="match-column-meta" id="matchFoundLocation">Location unavailable</div>
           </div>
         </div>
 
-         <div style="display: block; width: max-content; margin: 0 auto 0.5rem; padding: 0.5rem; background: #ffffff; border: 1.5px solid #0f172a; border-radius: 8px;">
-          <img id="matchQrImage" src="" alt="Match Verification QR" style="width: 130px; height: 130px; display: block;" />
-         </div>
-        <div style="margin-top:0.45rem; font-size:0.68rem; color:#64748b;">Scan this QR code to view the match status.</div>
-        <div id="matchQrAccessNote" style="display:none; margin-top:0.55rem; font-size:0.75rem; color:#475569;">Read-only status view. CSPC Admin verification details are restricted.</div>
-        <div style="font-size: 0.75rem; font-weight: 800; color: #0f172a; text-transform: uppercase;">Reference lookup only — not handover approval</div>
+        <div class="print-qr-frame print-qr-frame--block">
+          <img id="matchQrImage" src="" alt="Match Verification QR" class="print-qr-img print-qr-img--sm" />
+        </div>
+        <div class="print-hint print-hint--spaced">Scan this QR code to view the match status.</div>
+        <div id="matchQrAccessNote" class="print-note" style="display: none;">Read-only status view. CSPC Admin verification details are restricted.</div>
+        <div class="print-disclaimer">Reference lookup only — not handover approval</div>
       </div>
 
-      <div class="no-print" style="display: flex; gap: 0.65rem; justify-content: flex-end;">
-        <button class="btn btn-primary" onclick="printMatchQr()">🖨️ Print Match Reference</button>
+      <div class="no-print modal-actions">
+        <button type="button" class="btn btn-primary" data-action="printMatchQr">🖨️ Print Match Reference</button>
       </div>
     </div>
   </div>
@@ -737,1416 +747,7 @@
     </div>
   </footer>
 
-  <!-- SCRIPT -->
-  <script>
-    let currentUser = null;
-    let currentFilter = 'all';
-    let currentLocationFilter = '';
-    let currentPage = 1;
-    const itemsPerPage = 6;
-    let loadedItems = [];
-
-    function clearStoredAuth() {
-      ['adminToken', 'currentUser', 'userRole'].forEach(key => {
-        localStorage.removeItem(key);
-        sessionStorage.removeItem(key);
-      });
-    }
-
-    function renderGuestHeader() {
-      currentUser = null;
-      const slot = document.getElementById('userNavSlot');
-      const chipVault = document.getElementById('chipMyBelongings');
-      const mobileLogout = document.getElementById('mobileMenuLogout');
-      if (slot) slot.innerHTML = '<a href="/login" class="btn btn-primary nav-signin-btn">Sign In</a>';
-      if (chipVault) chipVault.style.display = 'none';
-      if (mobileLogout) mobileLogout.classList.remove('visible');
-    }
-
-    function renderAuthenticatedHeader(user) {
-      currentUser = user;
-      const isAdmin = user.role === 'admin';
-      const slot = document.getElementById('userNavSlot');
-      const mobileLogout = document.getElementById('mobileMenuLogout');
-      const chipVault = document.getElementById('chipMyBelongings');
-      if (mobileLogout) mobileLogout.classList.add('visible');
-      if (slot) {
-        slot.innerHTML = `
-          <button type="button" id="notifBellBtn" onclick="openNotificationsModal()" class="notif-bell-btn" title="View QR Recovery Alerts">
-            <span class="notif-icon" aria-hidden="true">🔔</span><span id="notifCountBadge" class="notif-badge" style="display:none;">0</span>
-          </button>
-          <div class="user-pill">
-            <button type="button" class="user-name user-name-btn" onclick="openChangePasswordModal()" title="Account settings: change password">${escapeHtml(isAdmin ? 'Admin' : user.fullName)}</button>
-            ${isAdmin ? '' : '<span class="role-badge">Student</span>'}
-            <button type="button" onclick="handleLogout()" class="user-pill-logout" title="Sign out of account">Logout</button>
-          </div>
-        `;
-      }
-      if (chipVault) chipVault.style.display = 'inline-block';
-    }
-
-    async function checkAuthSession() {
-      try {
-        const res = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' });
-        if (!res.ok) throw new Error('Unable to verify the current session.');
-        const data = await res.json();
-
-        if (data.authenticated && data.user && ['admin', 'student'].includes(data.user.role)) {
-          currentUser = data.user;
-          if (currentUser.role === 'student') installDashboardBackGuard();
-          if (currentUser.role === 'admin' && window.location.pathname === '/') {
-            window.location.replace('/admin.html');
-            return;
-          }
-          sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-          sessionStorage.setItem('userRole', currentUser.role);
-          renderAuthenticatedHeader(currentUser);
-          fetchMyBelongingsCount();
-          loadMyNotifications();
-          fetchAndRenderItems();
-
-          if (currentUser.role !== 'admin' && !document.getElementById('itemContact').value) {
-            document.getElementById('itemContact').value = `${currentUser.fullName} (${currentUser.email})`;
-          }
-        } else {
-          clearStoredAuth();
-          renderGuestHeader();
-        }
-      } catch (err) {
-        try {
-          const cachedUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-          if (cachedUser && ['admin', 'student'].includes(cachedUser.role)
-            && sessionStorage.getItem('userRole') === cachedUser.role) {
-            renderAuthenticatedHeader(cachedUser);
-            if (cachedUser.role === 'student') installDashboardBackGuard();
-            return;
-          }
-        } catch (storageError) {
-          // Ignore unreadable cached state and leave authentication to the next request.
-        }
-      }
-    }
-
-    function openChangePasswordModal() {
-      if (!currentUser) return;
-      document.getElementById('changePasswordEmail').textContent = currentUser.email || '';
-      document.getElementById('changePasswordError').style.display = 'none';
-      document.getElementById('changePasswordModal').classList.add('open');
-      document.getElementById('currentPassword').focus();
-    }
-
-    function closeChangePasswordModal() {
-      document.getElementById('changePasswordModal').classList.remove('open');
-      document.getElementById('changePasswordForm').reset();
-    }
-
-    async function handleChangePassword(event) {
-      event.preventDefault();
-      const errorBox = document.getElementById('changePasswordError');
-      const showChangeError = message => {
-        errorBox.textContent = message;
-        errorBox.style.display = 'block';
-      };
-      errorBox.style.display = 'none';
-      const newPassword = document.getElementById('newPassword').value;
-      if (newPassword !== document.getElementById('newPasswordConfirm').value) {
-        showChangeError('The two new passwords do not match.');
-        return;
-      }
-      const button = document.getElementById('changePasswordSubmit');
-      button.disabled = true;
-      try {
-        const res = await fetch('/api/auth/change-password', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({ currentPassword: document.getElementById('currentPassword').value, newPassword })
-        });
-        const data = await res.json();
-        if (data.success) {
-          closeChangePasswordModal();
-          showToast(data.message);
-        } else {
-          showChangeError(data.message || 'Could not change the password.');
-        }
-      } catch (err) {
-        showChangeError('Network error. Please try again.');
-      } finally {
-        button.disabled = false;
-      }
-    }
-
-    function openLogoutModal() {
-      document.getElementById('logoutConfirmModal').classList.add('open');
-    }
-    function closeLogoutModal() {
-      document.getElementById('logoutConfirmModal').classList.remove('open');
-    }
-    async function executeLogout() {
-      try {
-        const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
-        if (!response.ok) throw new Error('Logout request failed.');
-        clearStoredAuth();
-        renderGuestHeader();
-        closeLogoutModal();
-        fetchAndRenderItems();
-        showToast('Signed out successfully.');
-      } catch (err) {
-        showToast('Unable to sign out. Please try again.', true);
-      }
-    }
-    function handleLogout() {
-      openLogoutModal();
-    }
-
-    async function fetchStats() {
-      try {
-        let res = await fetch('/api/items/stats');
-        if (!res.ok) res = await fetch('/api/stats');
-        const data = await res.json();
-        if (data.success && data.stats) {
-          document.getElementById('statTotal').innerText = data.stats.total;
-          document.getElementById('statLost').innerText = data.stats.lost;
-          document.getElementById('statFound').innerText = data.stats.found;
-          document.getElementById('statClaimed').innerText = data.stats.claimed;
-        }
-      } catch (err) {
-        if (typeof loadedItems !== 'undefined' && loadedItems && loadedItems.length > 0) {
-          document.getElementById('statTotal').innerText = loadedItems.length;
-          document.getElementById('statLost').innerText = loadedItems.filter(i => i.type === 'lost').length;
-          document.getElementById('statFound').innerText = loadedItems.filter(i => i.type === 'found').length;
-          document.getElementById('statClaimed').innerText = loadedItems.filter(i => i.claimed || i.status === 'claimed').length;
-        }
-      }
-    }
-
-    async function fetchMyBelongingsCount() {
-      if (!currentUser) return;
-      try {
-        const res = await fetch('/api/items?type=registered');
-        const data = await res.json();
-        if (data.success) {
-          const el = document.getElementById('myBelongingsCount');
-          if (el) el.innerText = data.items.length;
-        }
-      } catch (e) {}
-    }
-
-    async function fetchAndRenderItems() {
-      currentPage = 1;
-      const search = document.getElementById('searchInput').value.trim();
-      const matchItemId = new URLSearchParams(window.location.search).get('matchItemId');
-      const params = new URLSearchParams();
-
-      if (currentFilter === 'lost') params.append('type', 'lost');
-      if (currentFilter === 'found') params.append('type', 'found');
-      if (currentFilter === 'claimed') params.append('status', 'claimed');
-      if (currentFilter === 'registered') params.append('type', 'registered');
-      if (currentLocationFilter) params.append('location', currentLocationFilter);
-      if (search) params.append('search', search);
-
-      try {
-        const res = await fetch(`/api/items?${params.toString()}`);
-        const data = await res.json();
-        if (data.success) {
-          loadedItems = data.items;
-          renderItemsGrid(loadedItems);
-          if (matchItemId) {
-            const matchCard = document.getElementById(`item-card-${matchItemId}`);
-            if (matchCard) matchCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-          fetchStats();
-        }
-      } catch (err) {
-        document.getElementById('itemsGrid').innerHTML = `
-          <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #f87171;">
-            Failed to connect to campus records server.
-          </div>
-        `;
-      }
-    }
-
-    function renderItemsGrid(items) {
-      const grid = document.getElementById('itemsGrid');
-      const pagination = document.getElementById('itemsPagination');
-      grid.classList.toggle('registered-belongings-grid', currentFilter === 'registered');
-
-      if (!items || items.length === 0) {
-        pagination.innerHTML = '';
-        if (currentFilter === 'registered') {
-          grid.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 3.5rem 1rem; background: rgba(59,130,246,0.06); border: 1.5px dashed rgba(59,130,246,0.35); border-radius: 16px;">
-              <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏷️</div>
-              <h3 style="font-size: 1.15rem; font-weight: 800; color: #93c5fd; margin-bottom: 0.4rem;">Your Belongings Vault is Empty</h3>
-              <p style="font-size: 0.84rem; color: var(--text-muted); max-width: 480px; margin: 0 auto 1.25rem; line-height: 1.5;">
-                Register your personal laptops, tumblers, water bottles, and binder folders before they get lost to generate your unique, anonymous QR recovery sticker!
-              </p>
-              <button class="btn btn-primary" onclick="handleOpenRegisterBelonging()">+ Register a Belonging Now</button>
-            </div>
-          `;
-          return;
-        }
-
-        grid.innerHTML = `
-          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-            <p style="font-size: 1.1rem; font-weight: 600;">No items found</p>
-          </div>
-        `;
-        return;
-      }
-
-      const totalPages = Math.ceil(items.length / itemsPerPage);
-      if (currentPage > totalPages) currentPage = totalPages;
-      const pageItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-      grid.innerHTML = pageItems.map((item, itemIndex) => {
-        // Special render for personal preventive registered belongings
-        if (item.type === 'registered') {
-          return `
-            <div class="project-card registered-belonging-card" id="item-card-${item.id}">
-              <div class="project-card-header registered-card-header" style="position: relative;">
-                <div class="item-card-header-content registered-card-header-content">
-                  <div class="item-card-meta-row registered-card-meta-row">
-                    <div class="item-card-category-ref">
-                      <span class="project-type registered-belonging-category" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
-                      <span class="ref-code registered-belonging-ref" title="${escapeHtml(item.refCode || '')}">${escapeHtml(item.refCode || '')}</span>
-                    </div>
-                    <span class="item-badge badge-registered">🔒 Registered Belonging</span>
-                  </div>
-                  <h3 class="registered-belonging-title" style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
-                </div>
-                <div class="belonging-menu-wrap">
-                  <button type="button" class="belonging-menu-button" aria-label="More options for ${escapeHtml(item.title)}" aria-haspopup="menu" aria-expanded="false" onclick="toggleBelongingMenu(event, '${escapeHtml(item.id)}')">&#8942;</button>
-                  <div class="belonging-menu" id="belonging-menu-${escapeHtml(item.id)}" role="menu">
-                    <button type="button" role="menuitem" onclick="editRegisteredBelonging(event, '${escapeHtml(item.id)}')"><svg class="belonging-menu-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg><span>Edit Details</span></button>
-                    <button type="button" role="menuitem" class="danger" onclick="deleteRegisteredBelonging(event, '${escapeHtml(item.id)}')"><svg class="belonging-menu-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg><span>Delete Item</span></button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="registered-belonging-protection">
-                🛡️ <strong>Preventive Protection Active:</strong> Paste QR sticker onto this item. If someone scans it, an anonymous notification goes straight to your account.
-              </div>
-
-              <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
-
-              <div class="card-meta-line">
-                <span><strong>Primary Building:</strong> ${escapeHtml(item.location)}</span>
-                <span><strong>Registered:</strong> ${formatTimestamp(item.createdAt || item.date)}</span>
-                ${cleanFinderInstructions(item.instructions) ? `<span><strong>Finder Instructions:</strong> ${escapeHtml(cleanFinderInstructions(item.instructions))}</span>` : ''}
-              </div>
-
-              <div class="card-actions" style="margin-top: 1rem;">
-                <button class="btn-sm btn-qr" onclick="openQrStickerModal(${item.id})">QR Sticker</button>
-                <button class="btn-sm btn-outline" style="border-color: rgba(34,197,94,0.4); color: #86efac;" onclick="openAnonymousFinderModal('${escapeHtml(item.refCode)}')">Test Finder Screen</button>
-              </div>
-            </div>
-          `;
-        }
-
-        let badgeHtml = '';
-        if (item.claimed) {
-          badgeHtml = '<span class="item-badge badge-claimed">Claimed</span>';
-        } else if (item.type === 'lost') {
-          badgeHtml = '<span class="item-badge badge-lost">Lost</span>';
-        } else {
-          badgeHtml = '<span class="item-badge badge-found">Found</span>';
-        }
-
-        const canManageStatus = item.canResolve === true || currentUser?.role === 'admin';
-        const claimBtnText = item.claimed ? 'Mark Unclaimed' : 'Mark Claimed';
-
-        let matchBadgeHtml = '';
-        if (item.potentialMatch && currentUser) {
-          matchBadgeHtml = `<button type="button" class="btn-match-qr potential-match-badge" onclick="openMatchQrModal(${item.id}, ${item.potentialMatch.id})"><span class="potential-match-shimmer" aria-hidden="true"></span><svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fde68a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="m19 14 .9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z"/></svg><span class="potential-match-label">Potential Match</span></button>`;
-        }
-
-        const canDelete = currentUser?.role === 'admin';
-        const delBtnHtml = canDelete
-          ? `<button class="btn-sm btn-del" onclick="deleteItem(${item.id})">Remove</button>`
-          : '';
-        const claimBtnHtml = canManageStatus
-            ? `<button class="btn-sm btn-claim" onclick="toggleClaim(${item.id})">${item.claimed ? 'Restore Item' : 'Resolve Item'}</button>`
-            : '';
-
-        const photoUrl = getItemPhotoUrl(item);
-        const photoInteraction = photoUrl
-          ? `role="button" tabindex="0" onclick="openImageModal('${escapeHtml(photoUrl)}', '${escapeHtml(item.title)}')" onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openImageModal('${escapeHtml(photoUrl)}', '${escapeHtml(item.title)}'); }"`
-          : '';
-        const photoHtml = `
-          <div class="item-photo-container">
-            <div class="item-photo-frame" data-photo-state="${photoUrl ? 'loading' : 'empty'}" ${photoInteraction}>
-            ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(item.title)}" loading="${itemIndex < 2 ? 'eager' : 'lazy'}" fetchpriority="${itemIndex === 0 ? 'high' : 'auto'}" decoding="async" onload="setItemPhotoState(this, 'loaded')" onerror="setItemPhotoState(this, 'error')" />` : ''}
-            <div class="item-photo-status" role="status" aria-live="polite">
-              ${photoUrl ? '<span class="item-photo-spinner" aria-hidden="true"></span>' : ''}
-              <span class="item-photo-status-text">${photoUrl ? 'Loading photo...' : 'No photo uploaded'}</span>
-            </div>
-            </div>
-            ${matchBadgeHtml}
-          </div>
-        `;
-
-        return `
-          <div class="project-card" id="item-card-${item.id}">
-            <div class="project-card-header">
-              <div class="item-card-header-content">
-                <div class="item-card-meta-row">
-                  <div class="item-card-category-ref">
-                    <span class="project-type" title="${escapeHtml(item.category)}">${escapeHtml(item.category)}</span>
-                    <span class="ref-code" title="${escapeHtml(item.refCode || '')}">${escapeHtml(item.refCode || '')}</span>
-                  </div>
-                  ${badgeHtml}
-                </div>
-                <h3 style="margin-top: 0.35rem;">${escapeHtml(item.title)}</h3>
-              </div>
-            </div>
-
-            ${photoHtml}
-
-            <p class="item-card-description" style="margin-top: 0.25rem;">${escapeHtml(item.desc)}</p>
-
-            <div class="card-meta-line">
-              <span><strong>Location:</strong> ${escapeHtml(item.location)}</span>
-              <span><strong>Reported:</strong> ${formatTimestamp(item.createdAt || item.date)}</span>
-              ${item.claimedAt ? `<span><strong>Claimed:</strong> ${formatTimestamp(item.claimedAt)}</span>` : ''}
-            </div>
-
-            <div class="card-actions">
-
-              ${delBtnHtml}
-            </div>
-          </div>
-        `;
-      }).join('');
-      renderItemsPagination(totalPages);
-    }
-
-    function renderItemsPagination(totalPages) {
-      const pagination = document.getElementById('itemsPagination');
-      if (!pagination || totalPages <= 1) {
-        if (pagination) pagination.innerHTML = '';
-        return;
-      }
-
-      let controls = `<button class="pagination-btn" onclick="goToItemsPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>`;
-      for (let page = 1; page <= totalPages; page++) {
-        controls += `<button class="pagination-btn ${page === currentPage ? 'active' : ''}" onclick="goToItemsPage(${page})" aria-label="Page ${page}">${page}</button>`;
-      }
-      controls += `<button class="pagination-btn" onclick="goToItemsPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
-      pagination.innerHTML = controls;
-    }
-
-    function goToItemsPage(page) {
-      currentPage = page;
-      renderItemsGrid(loadedItems);
-      document.getElementById('items').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function formatTimestamp(isoOrDateStr) {
-      if (!isoOrDateStr) return 'Recently';
-      const d = new Date(isoOrDateStr);
-      if (isNaN(d.getTime())) return escapeHtml(isoOrDateStr);
-
-      const dateFormatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      const timeFormatted = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-      const diffMs = Date.now() - d.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
-
-      let relative = 'Just now';
-      if (diffMins >= 1 && diffMins < 60) relative = `${diffMins}m ago`;
-      else if (diffHours >= 1 && diffHours < 24) relative = `${diffHours}h ago`;
-      else if (diffDays >= 1) relative = `${diffDays}d ago`;
-
-      return `${dateFormatted} at ${timeFormatted} (${relative})`;
-    }
-
-    function updateTypeRadio() {
-      const isLost = document.querySelector('input[name="itemType"]:checked').value === 'lost';
-      const lblLost = document.getElementById('lblLost');
-      const lblFound = document.getElementById('lblFound');
-
-      if (isLost) {
-        lblLost.className = 'type-option active-lost';
-        lblFound.className = 'type-option';
-      } else {
-        lblLost.className = 'type-option';
-        lblFound.className = 'type-option active-found';
-      }
-    }
-
-    function setFilter(filter, el) {
-      currentFilter = filter;
-      currentPage = 1;
-      document.querySelectorAll('.filter-chips .chip').forEach(chip => {
-        chip.classList.toggle('active', chip.dataset.filter === filter);
-      });
-      document.querySelectorAll('.hero-stats .stat-box').forEach(stat => {
-        const active = stat.dataset.filter === filter;
-        stat.classList.toggle('active', active);
-        stat.setAttribute('aria-pressed', String(active));
-      });
-      fetchAndRenderItems();
-    }
-
-    function setLocationFilter(loc) {
-      currentLocationFilter = (loc || '').toLowerCase();
-      fetchAndRenderItems();
-    }
-
-    // FEATURE: Digital "Found" QR Code Stickers (Preventive Add-on Feature)
-    async function openQrStickerModal(id) {
-      let item = loadedItems.find(i => String(i.id) === String(id));
-      if (!item) {
-        try {
-          const res = await fetch(`/api/items/${id}`);
-          const data = await res.json();
-          if (data.success) item = data.item;
-        } catch (e) {}
-      }
-      if (!item) return;
-
-      document.getElementById('qrItemTitle').innerText = item.title;
-      const refCode = item.refCode || `CSPC-LF-QR-${item.id}`;
-      document.getElementById('qrRefCode').innerText = refCode;
-
-      // Keep the sticker on the same host serving this app.
-      const finderUrl = new URL('/found', window.location.origin);
-      finderUrl.searchParams.set('ref', refCode);
-      const qrData = encodeURIComponent(finderUrl.toString());
-      document.getElementById('qrCodeImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${qrData}`;
-
-      toggleAnonymousDemo(false);
-      document.getElementById('qrModal').classList.add('open');
-    }
-
-    function closeQrModal() {
-      document.getElementById('qrModal').classList.remove('open');
-    }
-
-    function printQrSticker() {
-      window.print();
-    }
-
-    function toggleAnonymousDemo(show) {
-      const box = document.getElementById('anonymousDemoBox');
-      const btn = document.getElementById('demoToggleBtn');
-      if (box) box.style.display = show ? 'block' : 'none';
-      if (btn) btn.style.display = show ? 'none' : 'inline-flex';
-    }
-
-    function sendAnonymousNotification() {
-      const input = document.getElementById('anonymousMsgInput');
-      if (!input || !input.value.trim()) {
-        showToast('Please enter a message to notify the owner.', 'error');
-        return;
-      }
-      showToast('Anonymous notification delivered to the owner\'s account! 📲');
-      input.value = '';
-      toggleAnonymousDemo(false);
-    }
-
-    // ── Register Belonging Modal ──────────────────────────────────────────────
-    function handleOpenRegisterBelonging() {
-      if (!currentUser) {
-        document.getElementById('authRequiredModal').classList.add('open');
-      } else {
-        document.getElementById('registerBelongingModal').classList.add('open');
-      }
-    }
-
-    let editingBelongingId = null;
-
-    function closeRegisterBelongingModal() {
-      document.getElementById('registerBelongingModal').classList.remove('open');
-      const form = document.getElementById('registerBelongingForm');
-      if (form) form.reset();
-      resetCategoryPicker('regCategory');
-      editingBelongingId = null;
-      document.getElementById('registerModalTitle').textContent = 'Register Valuable Belonging';
-      document.getElementById('registerModalSubtitle').textContent = 'Register your laptop, tumbler, or binder before it gets lost to generate an anonymous recovery QR sticker.';
-      document.getElementById('regSubmitBtn').textContent = 'Register & Generate QR Sticker';
-    }
-
-    let activeCategoryField = '';
-
-    function openCategoryPicker(fieldId) {
-      activeCategoryField = fieldId;
-      document.getElementById('categoryPickerModal').classList.add('open');
-    }
-
-    function closeCategoryPicker() {
-      document.getElementById('categoryPickerModal').classList.remove('open');
-      activeCategoryField = '';
-    }
-
-    function selectCategory(value, icon) {
-      if (!activeCategoryField) return;
-      document.getElementById(activeCategoryField).value = value;
-      const picker = document.getElementById(`${activeCategoryField}Picker`);
-      picker.innerHTML = `<svg class="category-picker-selected-icon" aria-hidden="true"><use href="#category-icon-${icon}"></use></svg>${value}`;
-      picker.classList.add('selected');
-      closeCategoryPicker();
-    }
-
-    function resetCategoryPicker(fieldId) {
-      const field = document.getElementById(fieldId);
-      const picker = document.getElementById(`${fieldId}Picker`);
-      if (field) field.value = '';
-      if (picker) {
-        picker.textContent = 'Select category...';
-        picker.classList.remove('selected');
-      }
-    }
-
-    function closeAuthRequiredModal() {
-      document.getElementById('authRequiredModal').classList.remove('open');
-    }
-
-    function closeBelongingMenus() {
-      document.querySelectorAll('.belonging-menu.open').forEach(menu => {
-        menu.classList.remove('open');
-        menu.parentElement?.classList.remove('menu-open');
-        menu.previousElementSibling?.setAttribute('aria-expanded', 'false');
-      });
-    }
-
-    function toggleBelongingMenu(event, id) {
-      event.stopPropagation();
-      const menu = document.getElementById(`belonging-menu-${id}`);
-      if (!menu) return;
-      const wasOpen = menu.classList.contains('open');
-      closeBelongingMenus();
-      if (!wasOpen) {
-        menu.classList.add('open');
-        menu.parentElement?.classList.add('menu-open');
-        menu.previousElementSibling?.setAttribute('aria-expanded', 'true');
-      }
-    }
-
-    function editRegisteredBelonging(event, id) {
-      event.stopPropagation();
-      closeBelongingMenus();
-      const item = loadedItems.find(entry => String(entry.id) === String(id));
-      if (!item) return showToast('Belonging details are unavailable. Please refresh and try again.', true);
-      editingBelongingId = item.id;
-      document.getElementById('regTitle').value = item.title || '';
-      document.getElementById('regCategory').value = item.category || '';
-      const categoryPicker = document.getElementById('regCategoryPicker');
-      categoryPicker.textContent = item.category || 'Select category...';
-      categoryPicker.classList.toggle('selected', Boolean(item.category));
-      document.getElementById('regLocation').value = item.location || 'Campus-wide';
-      document.getElementById('regIdentifiers').value = item.locationDetails || item.verification || '';
-      document.getElementById('regInstructions').value = item.instructions || '';
-      document.getElementById('registerModalTitle').textContent = 'Edit Registered Belonging';
-      document.getElementById('registerModalSubtitle').textContent = 'Update the details for this registered belonging.';
-      document.getElementById('regSubmitBtn').textContent = 'Save Changes';
-      document.getElementById('registerBelongingModal').classList.add('open');
-    }
-
-    function deleteRegisteredBelonging(event, id) {
-      event.stopPropagation();
-      closeBelongingMenus();
-      openDeleteModal(id);
-    }
-
-    async function handleRegisterBelongingSubmit(e) {
-      e.preventDefault();
-      const title        = document.getElementById('regTitle').value.trim();
-      const category     = document.getElementById('regCategory').value;
-      const location     = document.getElementById('regLocation') ? document.getElementById('regLocation').value : 'Campus-wide';
-      const identifiers  = document.getElementById('regIdentifiers').value.trim();
-      const instructions = document.getElementById('regInstructions').value.trim();
-
-      if (!title || !category) {
-        showToast('Please fill in the item name and category.', 'error');
-        return;
-      }
-
-      try {
-        const isEditing = Boolean(editingBelongingId);
-        const res = await fetch(isEditing ? `/api/items/${encodeURIComponent(editingBelongingId)}/registered` : '/api/items/register-belonging', {
-          method: isEditing ? 'PATCH' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, category, location, identifiers, instructions })
-        });
-        const data = await res.json();
-        if (!data.success) {
-          showToast(data.message || 'Registration failed.', 'error');
-          return;
-        }
-
-        closeRegisterBelongingModal();
-        showToast('✅ Belonging registered! Your QR sticker is ready.');
-
-        if (isEditing) showToast('Belonging details updated.');
-
-        // Open QR sticker modal for the newly registered item
-        if (!isEditing) openQrStickerModal(data.item.id);
-
-        // Refresh belonging count chip
-        fetchMyBelongingsCount();
-
-        // Refresh feed if currently showing registered items
-        if (currentFilter === 'registered') fetchAndRenderItems();
-
-      } catch (err) {
-        showToast('Server error. Please try again.', 'error');
-      }
-    }
-
-    // ── Anonymous Finder Modal ────────────────────────────────────────────────
-    function showAnonymousFinderForItem(item, matchToken = '') {
-      const safeItem = item || {};
-      document.getElementById('finderScreenItemTitle').textContent = safeItem.title || 'Found Item';
-      document.getElementById('finderScreenRefCode').textContent = safeItem.refCode || '—';
-      const instructions = String(safeItem.instructions || '')
-        .replace(/If found, please (notify owner via QR or )?leave with CSPC SASO \/ Campus Security(?: Desk)?\.?/gi, '')
-        .trim();
-      const instructionsElement = document.getElementById('finderScreenInstructions');
-      instructionsElement.textContent = instructions;
-      instructionsElement.style.display = instructions ? '' : 'none';
-      document.getElementById('finderRefCodeInput').value = safeItem.refCode || '';
-      document.getElementById('finderMatchTokenInput').value = matchToken || '';
-      document.getElementById('finderSubmissionKeyInput').value =
-        window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      document.getElementById('finderMessageInput').value = '';
-      document.getElementById('finderLocationInput').value = '';
-      document.getElementById('finderContactInput').value = '';
-      const form = document.getElementById('anonymousFinderForm');
-      form.querySelectorAll('input:not([type="hidden"]), textarea').forEach(field => { field.disabled = false; });
-      const sendButton = document.getElementById('finderSendBtn');
-      sendButton.disabled = false;
-      sendButton.textContent = '🚀 Send Alert to Owner';
-      document.getElementById('anonymousFinderModal').classList.add('open');
-    }
-
-    async function openAnonymousFinderModal(refCode) {
-      try {
-        const res = await fetch(`/api/items/qr-lookup/${encodeURIComponent(refCode)}`);
-        const data = await res.json();
-        if (!data.success) {
-          showToast('Could not load item info. Invalid QR code.', 'error');
-          return;
-        }
-        const item = data.item;
-        showAnonymousFinderForItem(item);
-      } catch (err) {
-        showToast('Failed to load item info.', 'error');
-      }
-    }
-
-    function closeAnonymousFinderModal() {
-      document.getElementById('anonymousFinderModal').classList.remove('open');
-    }
-
-    async function handleAnonymousFinderSubmit(e) {
-      e.preventDefault();
-      const refCode       = document.getElementById('finderRefCodeInput').value;
-      const matchToken    = document.getElementById('finderMatchTokenInput').value;
-      const message       = document.getElementById('finderMessageInput').value.trim();
-      const locationFound = document.getElementById('finderLocationInput').value.trim();
-      const finderContact = document.getElementById('finderContactInput').value.trim();
-      const submissionKey = document.getElementById('finderSubmissionKeyInput').value;
-      const sendButton = document.getElementById('finderSendBtn');
-
-      if (sendButton.disabled) return;
-      if (!message) {
-        showToast('Please describe where and how you found the item.', 'error');
-        return;
-      }
-
-      sendButton.disabled = true;
-      sendButton.textContent = 'Sending Alert...';
-      try {
-        const endpoint = matchToken ? '/api/items/match-reference-notify' : '/api/items/anonymous-notify';
-        const body = matchToken
-          ? { token: matchToken, message, locationFound, finderContact }
-          : { refCode, message, locationFound, finderContact };
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Idempotency-Key': submissionKey },
-          body: JSON.stringify(body)
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(data.message || 'Finder alert submitted.');
-          loadMyNotifications();
-          sendButton.textContent = 'Alert Sent';
-          document.getElementById('anonymousFinderForm')
-            .querySelectorAll('input:not([type="hidden"]), textarea')
-            .forEach(field => { field.disabled = true; });
-        } else {
-          sendButton.disabled = false;
-          sendButton.textContent = '🚀 Send Alert to Owner';
-          showToast(data.message || 'Failed to send notification.', 'error');
-        }
-      } catch (err) {
-        sendButton.disabled = false;
-        sendButton.textContent = '🚀 Send Alert to Owner';
-        showToast('Server error. Please try again.', 'error');
-      }
-    }
-
-    // ── Match QR Modal ────────────────────────────────────────────────────────
-    async function openMatchQrModal(lostId, foundId) {
-      try {
-        const response = await fetch(`/api/items/match-reference-token?lostId=${encodeURIComponent(lostId)}&foundId=${encodeURIComponent(foundId)}`);
-        const data = await response.json();
-        if (!response.ok || !data.success) throw new Error(data.message || 'Could not create match reference.');
-        const statusOnly = data.view === 'status-only';
-        const lost = data.lost || { title: '—', refCode: '—' };
-        const found = data.found || { title: '—', refCode: '—' };
-        document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
-        document.getElementById('matchLostRef').style.display = '';
-        document.getElementById('matchFoundRef').style.display = '';
-        const printAction = document.querySelector('button[onclick="printMatchQr()"]');
-        if (printAction) printAction.style.display = statusOnly ? 'none' : '';
-
-        document.getElementById('matchLostTitle').textContent  = lost.title  || '—';
-        document.getElementById('matchFoundTitle').textContent = found.title || '—';
-        document.getElementById('matchLostRef').textContent    = lost.refCode  || '—';
-        document.getElementById('matchFoundRef').textContent   = found.refCode || '—';
-
-
-        document.getElementById('matchLostLocation').textContent = lost.location || 'Location unavailable';
-        document.getElementById('matchFoundLocation').textContent = found.location || 'Location unavailable';
-
-        const legacyMatchPayload = encodeURIComponent(
-          `CSPC Match Reference | Lost: ${lost.refCode} | Found: ${found.refCode} | Reference only—not handover authorization`
-        );
-        const matchPayload = encodeURIComponent(data.url);
-        document.getElementById('matchQrImage').src =
-          `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${matchPayload}`;
-
-        document.getElementById('matchQrModal').classList.add('open');
-      } catch (err) {
-        showToast(err.message || 'Could not generate match QR. Please try again.', 'error');
-      }
-    }
-
-    function closeMatchQrModal() {
-      document.getElementById('matchQrModal').classList.remove('open');
-    }
-
-    function printMatchQr() {
-      window.print();
-    }
-
-    async function openMatchReferenceFromQr(token) {
-      if (!token) return;
-      try {
-        const response = await fetch(`/api/items/match-reference/${encodeURIComponent(token)}`, { cache: 'no-store' });
-        const data = await response.json();
-        if (!response.ok || !data.success) {
-          if (response.status === 401 || response.status === 403) {
-            showToast('CSPC Admin sign-in is required to open this verification reference.', 'error');
-            return;
-          }
-          if (response.status === 410) {
-            showToast('This QR reference expired. Generate a new QR code.', 'error');
-            return;
-          }
-          throw new Error(data.message || 'This match reference is unavailable.');
-        }
-        const statusOnly = data.view === 'status-only';
-        data.lost = data.lost || { title: '—', refCode: '—' };
-        data.found = data.found || { title: '—', refCode: '—' };
-        document.getElementById('matchQrAccessNote').style.display = statusOnly ? 'block' : 'none';
-        document.getElementById('matchLostRef').style.display = '';
-        document.getElementById('matchFoundRef').style.display = '';
-        const printAction = document.querySelector('button[onclick="printMatchQr()"]');
-        if (printAction) printAction.style.display = statusOnly ? 'none' : '';
-        document.getElementById('matchLostTitle').textContent = data.lost.title || '—';
-        document.getElementById('matchFoundTitle').textContent = data.found.title || '—';
-        document.getElementById('matchLostRef').textContent = data.lost.refCode || '—';
-        document.getElementById('matchFoundRef').textContent = data.found.refCode || '—';
-        document.getElementById('matchLostLocation').textContent = data.lost.location || 'Location unavailable';
-        document.getElementById('matchFoundLocation').textContent = data.found.location || 'Location unavailable';
-        document.getElementById('matchQrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`;
-        document.getElementById('matchQrModal').classList.remove('open');
-        showAnonymousFinderForItem(data.found, token);
-      } catch (error) {
-        showToast(error.message || 'Could not open match verification.', 'error');
-      }
-    }
-
-    // ── Notifications Modal ───────────────────────────────────────────────────
-    async function openNotificationsModal() {
-      document.getElementById('notificationsModal').classList.add('open');
-      await loadNotificationsIntoModal();
-    }
-
-    function closeNotificationsModal() {
-      document.getElementById('notificationsModal').classList.remove('open');
-    }
-
-    async function loadNotificationsIntoModal() {
-      const list = document.getElementById('notificationsList');
-      list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Loading…</p>';
-      try {
-        const res = await fetch('/api/items/my-notifications');
-        const data = await res.json();
-        if (!data.success) {
-          document.getElementById('notificationSelectionToolbar').hidden = true;
-          list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Could not load notifications.</p>';
-          return;
-        }
-        if (!data.notifications.length) {
-          document.getElementById('notificationSelectionToolbar').hidden = true;
-          list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">No account notifications yet.</p>';
-          return;
-        }
-
-        document.getElementById('notificationSelectionToolbar').hidden = false;
-        document.getElementById('selectAllNotifications').checked = false;
-        list.innerHTML = data.notifications.map(n => `
-          <div class="notif-item${n.read ? '' : ' unread'}" data-id="${escapeHtml(String(n.id))}">
-            <label class="notification-select-control">
-              <input class="notification-select" type="checkbox" value="${escapeHtml(JSON.stringify({
-                kind: n.notificationType === 'claim' ? 'claim' : 'item',
-                recordId: String(n.notificationType === 'claim' ? n.claimId : n.itemId),
-                id: String(n.id)
-              }))}" onchange="updateNotificationSelection()">
-              <span>Select notification</span>
-            </label>
-            <div class="notif-header">
-              <strong>🏷️ ${n.itemTitle || n.refCode}</strong>
-              <span class="notif-time">${new Date(n.timestamp).toLocaleString()}</span>
-            </div>
-            ${n.notificationType === 'match'
-              ? `<p class="notif-msg"><strong>Possible match—not confirmed</strong></p>
-                 <p class="notif-msg">Found item: ${escapeHtml(n.matchItemTitle || n.matchRefCode || 'Found item')} ${n.matchRefCode ? `(${escapeHtml(n.matchRefCode)})` : ''}</p>
-                 ${n.matchLocation ? `<p class="notif-msg">Reported location: ${escapeHtml(n.matchLocation)}</p>` : ''}
-                 <p class="notif-msg">${escapeHtml(n.message)}</p>
-                 <a class="btn-mark-read" style="display:inline-block;text-decoration:none;" href="/?search=${encodeURIComponent(n.matchRefCode || '')}&amp;matchItemId=${encodeURIComponent(n.matchItemId || '')}#items">Review possible match</a>`
-              : n.notificationType === 'claim'
-                ? `<p class="notif-msg">Claim request update</p><p class="notif-msg">${n.message}</p>`
-                : `<p class="notif-msg">📍 <em>${n.locationFound || 'Location not specified'}</em></p>
-                 <p class="notif-msg">💬 ${n.message}</p>
-                 ${n.finderContact && n.finderContact !== 'Anonymous Student / Finder'
-                   ? `<p class="notif-contact">📞 Finder left optional contact: ${n.finderContact}</p>`
-                   : '<p class="notif-contact">🔒 Finder remained anonymous</p>'}`}
-            ${!n.read ? `<button class="btn-mark-read" onclick="markNotifRead('${n.id}', this)">Mark as read</button>` : ''}
-          </div>
-        `).join('');
-        updateNotificationSelection();
-
-        // Update badge
-        const badge = document.getElementById('notifCountBadge');
-        if (badge) {
-          const unread = data.unreadCount || 0;
-          badge.textContent = unread;
-          badge.style.display = unread > 0 ? 'inline-flex' : 'none';
-        }
-      } catch (err) {
-        document.getElementById('notificationSelectionToolbar').hidden = true;
-        list.innerHTML = '<p style="text-align:center;color:#888;padding:24px;">Failed to load notifications.</p>';
-      }
-    }
-
-    function selectAllNotifications(checked) {
-      document.querySelectorAll('#notificationsList .notification-select').forEach(input => {
-        input.checked = checked;
-      });
-      updateNotificationSelection();
-    }
-
-    function updateNotificationSelection() {
-      const checkboxes = [...document.querySelectorAll('#notificationsList .notification-select')];
-      const selectedCount = checkboxes.filter(input => input.checked).length;
-      const selectAll = document.getElementById('selectAllNotifications');
-      selectAll.checked = checkboxes.length > 0 && selectedCount === checkboxes.length;
-      selectAll.indeterminate = selectedCount > 0 && selectedCount < checkboxes.length;
-      document.getElementById('selectedNotificationCount').textContent = `${selectedCount} selected`;
-      document.getElementById('deleteSelectedNotifications').disabled = selectedCount === 0;
-    }
-
-    async function deleteSelectedNotifications() {
-      const notificationIds = [...document.querySelectorAll('#notificationsList .notification-select:checked')]
-        .map(input => JSON.parse(input.value));
-      if (!notificationIds.length || !window.confirm(`Delete ${notificationIds.length} selected notification${notificationIds.length === 1 ? '' : 's'}?`)) return;
-
-      const button = document.getElementById('deleteSelectedNotifications');
-      button.disabled = true;
-      try {
-        const res = await fetch('/api/items/notifications', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ notificationIds })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.message || 'Could not delete notifications.');
-        showToast(`${data.deletedCount} notification${data.deletedCount === 1 ? '' : 's'} deleted.`);
-        await loadNotificationsIntoModal();
-        await loadMyNotifications();
-      } catch (err) {
-        button.disabled = false;
-        showToast(err.message || 'Could not delete notifications.', 'error');
-      }
-    }
-
-    async function markNotifRead(notifId, btn) {
-      try {
-        const res = await fetch(`/api/items/notifications/${notifId}/read`, { method: 'PATCH' });
-        const data = await res.json();
-        if (data.success) {
-          const item = btn.closest('.notif-item');
-          if (item) item.classList.remove('unread');
-          btn.remove();
-          await loadMyNotifications(); // refresh badge
-        }
-      } catch (err) {
-        showToast('Could not mark as read.', 'error');
-      }
-    }
-
-    async function loadMyNotifications() {
-      if (!currentUser) return;
-      try {
-        const res = await fetch('/api/items/my-notifications');
-        if (!res.ok) throw new Error('Notification refresh request failed.');
-        const data = await res.json();
-        if (!data.success) throw new Error(data.message || 'Notification refresh failed.');
-        const badge = document.getElementById('notifCountBadge');
-        if (badge) {
-          const unread = data.unreadCount || 0;
-          badge.textContent = unread;
-          badge.style.display = unread > 0 ? 'inline-flex' : 'none';
-        }
-      } catch (error) {
-        console.error('Could not refresh notification count:', error);
-      }
-    }
-
-    function getItemPhotoUrl(item) {
-      if (!item || !item.photo) return '';
-      if (item.id && /^\/?uploads\//i.test(item.photo)) {
-        return `/api/items/${encodeURIComponent(item.id)}/photo`;
-      }
-      return item.photo;
-    }
-
-    function setItemPhotoState(image, state) {
-      const frame = image.closest('.item-photo-frame');
-      if (!frame) return;
-      frame.dataset.photoState = state;
-      if (state === 'error') image.hidden = true;
-      const statusText = frame.querySelector('.item-photo-status-text');
-      if (statusText && state === 'error') statusText.textContent = 'Photo unavailable';
-    }
-
-    function openImageModal(photoSrc, title) {
-      if (!photoSrc) return;
-      const image = document.getElementById('imageModalImg');
-      const fallback = document.getElementById('imageModalFallback');
-      image.hidden = false;
-      fallback.hidden = true;
-      image.onload = () => { image.hidden = false; fallback.hidden = true; };
-      image.onerror = () => { image.hidden = true; fallback.hidden = false; };
-      image.src = photoSrc;
-      document.getElementById('imageModalTitle').innerText = title || 'Item Photo View';
-      document.getElementById('imageModal').classList.add('open');
-    }
-
-    function closeImageModal() {
-      document.getElementById('imageModal').classList.remove('open');
-    }
-
-    let selectedPhotoFile = null;
-    let currentPhotoPreviewUrl = '';
-
-    function handlePhotoSelect(e) {
-      handlePhotoFile(e.target.files[0]);
-    }
-
-    function handlePhotoDrop(e) {
-      e.preventDefault();
-      e.currentTarget.classList.remove('dragover');
-      handlePhotoFile(e.dataTransfer.files[0]);
-    }
-
-    function handlePhotoFile(file) {
-      if (!file) return;
-
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('Image file size must be 5 MB or smaller.', true);
-        removePhoto();
-        return;
-      }
-      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
-        showToast('Choose a JPEG, PNG, GIF, or WebP image.', true);
-        removePhoto();
-        return;
-      }
-
-      removePhoto();
-      selectedPhotoFile = file;
-      currentPhotoPreviewUrl = URL.createObjectURL(file);
-      document.getElementById('photoPreviewImg').src = currentPhotoPreviewUrl;
-      document.getElementById('photoPreviewMeta').textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
-      document.getElementById('photoPreviewBox').style.display = 'flex';
-    }
-
-    function removePhoto() {
-      selectedPhotoFile = null;
-      if (currentPhotoPreviewUrl) URL.revokeObjectURL(currentPhotoPreviewUrl);
-      currentPhotoPreviewUrl = '';
-      const input = document.getElementById('itemPhotoInput');
-      if (input) input.value = '';
-      document.getElementById('photoPreviewBox').style.display = 'none';
-      document.getElementById('photoPreviewImg').src = '';
-      document.getElementById('photoPreviewMeta').textContent = '';
-    }
-
-    function resetItemForm() {
-      document.getElementById('itemForm').reset();
-      rotateReportSubmissionKey();
-      removePhoto();
-      resetCategoryPicker('itemCategory');
-      updateTypeRadio();
-    }
-
-    const reportSubmissionKeyStorage = 'back2you.reportSubmissionKey';
-    function createReportSubmissionKey() {
-      return window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    }
-    function rotateReportSubmissionKey() {
-      reportSubmissionKey = createReportSubmissionKey();
-      sessionStorage.setItem(reportSubmissionKeyStorage, reportSubmissionKey);
-    }
-    let reportSubmissionKey = sessionStorage.getItem(reportSubmissionKeyStorage) || createReportSubmissionKey();
-    sessionStorage.setItem(reportSubmissionKeyStorage, reportSubmissionKey);
-    let reportSubmissionInProgress = false;
-
-    async function handleFormSubmit(e) {
-      e.preventDefault();
-      if (reportSubmissionInProgress) return;
-      reportSubmissionInProgress = true;
-      const submitButton = document.querySelector('#itemForm button[type="submit"]');
-      const originalSubmitLabel = submitButton ? submitButton.textContent : '';
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = 'Submitting...';
-      }
-
-      const type = document.querySelector('input[name="itemType"]:checked').value;
-      const title = document.getElementById('itemTitle').value.trim();
-      const category = document.getElementById('itemCategory').value;
-      const officeLocation = document.getElementById('itemLocation').value;
-      const locationDetails = document.getElementById('itemLocationDetails').value.trim();
-      const location = locationDetails ? `${officeLocation} (${locationDetails})` : officeLocation;
-      const contact = document.getElementById('itemContact').value.trim();
-      const desc = document.getElementById('itemDesc').value.trim();
-      const verification = document.getElementById('itemVerification').value.trim();
-
-      const payload = new FormData();
-      payload.append('title', title);
-      payload.append('category', category);
-      payload.append('type', type);
-      payload.append('location', location);
-      payload.append('locationDetails', locationDetails);
-      payload.append('contact', contact);
-      payload.append('desc', desc);
-      payload.append('verification', verification);
-      if (selectedPhotoFile) payload.append('photo', selectedPhotoFile);
-
-      try {
-        const res = await fetch('/api/items', {
-          method: 'POST',
-          headers: { 'Idempotency-Key': reportSubmissionKey },
-          body: payload
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          rotateReportSubmissionKey();
-          document.getElementById('itemForm').reset();
-          removePhoto();
-          updateTypeRadio();
-          fetchStats();
-          fetchAndRenderItems();
-
-          if (false && data.potentialMatch) {
-            showToast(`Report saved (${data.item.refCode})! Potential matching ${data.potentialMatch.type} item detected.`);
-          } else {
-            showToast(`Report saved with Tracking Code: ${data.item.refCode}`);
-          }
-          openReportSuccessModal(data.item.refCode, data.item.id, data.potentialMatch);
-          document.getElementById('items').scrollIntoView({ behavior: 'smooth' });
-        } else {
-          const message = Array.isArray(data.errors) && data.errors.length
-            ? data.errors.join(' ')
-            : data.message || 'Validation error';
-          showToast(message, true);
-        }
-      } catch (err) {
-        showToast('Network error while saving report.', true);
-      } finally {
-        reportSubmissionInProgress = false;
-        if (submitButton) {
-          submitButton.disabled = false;
-          submitButton.textContent = originalSubmitLabel;
-        }
-      }
-    }
-
-    let targetDeleteId = null;
-    let targetClaimId = null;
-    let lastCreatedItemId = null;
-
-    function openReportSuccessModal(refCode, itemId, potentialMatch) {
-      lastCreatedItemId = itemId;
-      document.getElementById('successRefCode').innerText = refCode || 'CSPC-LF-2026';
-      
-      const matchAlert = document.getElementById('successMatchAlert');
-      if (false && potentialMatch) {
-        matchAlert.style.display = 'block';
-        matchAlert.innerHTML = `🎯 <strong>Potential Smart Match Detected!</strong> Matching ${potentialMatch.type} item "${escapeHtml(potentialMatch.title)}" (${escapeHtml(potentialMatch.location)}) found.`;
-      } else {
-        matchAlert.style.display = 'none';
-      }
-
-      document.getElementById('reportSuccessModal').classList.add('open');
-    }
-
-    function closeReportSuccessModal() {
-      document.getElementById('reportSuccessModal').classList.remove('open');
-    }
-
-    function openQrFromSuccessModal() {
-      closeReportSuccessModal();
-      if (lastCreatedItemId) {
-        openQrStickerModal(lastCreatedItemId);
-      }
-    }
-
-    function openDeleteModal(id) {
-      const item = loadedItems.find(i => String(i.id) === String(id));
-      targetDeleteId = id;
-      const textEl = document.getElementById('deleteConfirmText');
-      if (item) {
-        textEl.innerText = `Are you sure you want to permanently delete "${item.title}" (${item.refCode || ''}) from campus records?`;
-      } else {
-        textEl.innerText = `Are you sure you want to permanently delete this report from campus records?`;
-      }
-      document.getElementById('deleteConfirmModal').classList.add('open');
-    }
-
-    function closeDeleteModal() {
-      document.getElementById('deleteConfirmModal').classList.remove('open');
-      targetDeleteId = null;
-    }
-
-    async function executeDelete() {
-      if (!targetDeleteId) return;
-      const id = targetDeleteId;
-      closeDeleteModal();
-
-      try {
-        const response = await fetch(`/api/items/${id}`, { method: 'DELETE' });
-        const data = await response.json();
-        if (!response.ok || !data.success) throw new Error(data.message || 'Permission denied.');
-        fetchStats();
-        fetchAndRenderItems();
-        showToast('Report permanently removed.');
-      } catch (err) {
-        showToast(err.message || 'Error removing report.', true);
-      }
-    }
-
-    function deleteItem(id) {
-      openDeleteModal(id);
-    }
-
-    function openClaimModal(id) {
-      const item = loadedItems.find(i => String(i.id) === String(id));
-      if (!item) return;
-      targetClaimId = id;
-
-      const titleEl = document.getElementById('claimModalTitle');
-      const subtitleEl = document.getElementById('claimModalSubtitle');
-      const hintBox = document.getElementById('claimVerificationBox');
-      const hintText = document.getElementById('claimModalHint');
-      const proofGroup = document.getElementById('claimProofGroup');
-      const proofInput = document.getElementById('claimProofInput');
-      const btnEl = document.getElementById('claimModalBtn');
-      const proofLabel = document.querySelector('label[for="claimProofInput"]');
-
-      proofInput.value = '';
-      proofLabel.textContent = 'Claimant Proof / Verification Answer';
-      proofInput.placeholder = 'Enter proof, ID details, or verification answer...';
-
-      if (item.claimed) {
-        titleEl.innerText = 'Restore Item to Active Status';
-        subtitleEl.innerText = `Restore "${item.title}" (${item.refCode || ''}) back to active lost/found listings?`;
-        hintBox.style.display = 'none';
-        proofGroup.style.display = 'none';
-        btnEl.innerText = 'Restore Item';
-      } else {
-        titleEl.innerText = 'Confirm Item Claim';
-        subtitleEl.innerText = `Mark "${item.title}" (${item.refCode || ''}) as successfully claimed/returned.`;
-        proofGroup.style.display = 'block';
-        btnEl.innerText = 'Confirm Claim';
-
-        if (item.verification) {
-          hintBox.style.display = 'block';
-          hintText.innerText = `"${item.verification}"`;
-        } else {
-          hintBox.style.display = 'none';
-        }
-      }
-
-      document.getElementById('claimConfirmModal').classList.add('open');
-    }
-
-    function closeClaimModal() {
-      document.getElementById('claimConfirmModal').classList.remove('open');
-      document.getElementById('claimantDetailsGroup').style.display = 'none';
-      targetClaimId = null;
-    }
-
-    async function executeClaimToggle() {
-      if (!targetClaimId) return;
-      const id = targetClaimId;
-      const proof = document.getElementById('claimProofInput').value.trim();
-      closeClaimModal();
-
-      try {
-        const response = await fetch(`/api/items/${id}/claim`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ proof })
-        });
-        const data = await response.json();
-        if (!response.ok || !data.success) throw new Error(data.message || 'Unable to update item status.');
-        fetchStats();
-        fetchAndRenderItems();
-        showToast(data.message);
-      } catch (error) {
-        showToast(error.message || 'Failed to update status.', true);
-      }
-    }
-
-    function toggleClaim(id) {
-      openClaimModal(id);
-    }
-
-    function cleanFinderInstructions(value) {
-      return String(value || '')
-        .replace(/\s*If found, please (notify owner via QR or )?leave with CSPC SASO \/ Campus Security(?: Desk)?\.?/gi, '')
-        .trim();
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>'"]/g, tag => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
-      }[tag] || tag));
-    }
-
-    function showToast(msg, isError = false) {
-      const old = document.querySelector('.toast');
-      if (old) old.remove();
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      if (isError) toast.style.borderColor = '#ef4444';
-      toast.innerText = msg;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3200);
-    }
-
-    // Mobile nav toggle
-    function toggleMobileNav(e) {
-      if (e) e.stopPropagation();
-      const links = document.getElementById('navLinks');
-      const navbar = document.querySelector('.navbar');
-      const toggle = document.getElementById('menuToggle');
-      if (!links) return;
-      const isOpen = links.classList.toggle('open');
-      navbar?.classList.toggle('mobile-drawer-active', isOpen);
-      toggle?.classList.toggle('open', isOpen);
-      toggle?.setAttribute('aria-expanded', String(isOpen));
-    }
-
-    // Theme toggle
-    function toggleTheme() {
-      const html = document.documentElement;
-      const current = html.getAttribute('data-theme') || 'dark';
-      const next = current === 'light' ? 'dark' : 'light';
-      html.setAttribute('data-theme', next);
-      localStorage.setItem('cspc_theme', next);
-      updateThemeIcon();
-    }
-
-    function updateThemeIcon() {
-      const theme = document.documentElement.getAttribute('data-theme') || 'dark';
-      document.querySelectorAll('.theme-toggle').forEach(btn => {
-        btn.innerHTML = `<span class="theme-toggle-icon">${theme === 'light' ? '☀️' : '🌙'}</span>`;
-        btn.setAttribute('title', theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode');
-        btn.setAttribute('aria-label', theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode');
-      });
-    }
-
-    function loadTheme() {
-      const saved = localStorage.getItem('cspc_theme') || 'dark';
-      document.documentElement.setAttribute('data-theme', saved);
-      updateThemeIcon();
-    }
-
-    // Initial load
-    document.addEventListener('DOMContentLoaded', () => {
-      loadTheme();
-      const matchParams = new URLSearchParams(window.location.search);
-      checkAuthSession().then(() => {
-        if (matchParams.get('action') === 'register-belonging') {
-          window.history.replaceState(window.history.state, '', '/');
-          handleOpenRegisterBelonging();
-        }
-      });
-      fetchStats();
-      window.setInterval(loadMyNotifications, 30000);
-      openMatchReferenceFromQr(matchParams.get('token'));
-      const finderRef = window.location.pathname === '/found' ? matchParams.get('ref') : null;
-      if (finderRef) openAnonymousFinderModal(finderRef);
-      if (matchParams.get('matchItemId') && matchParams.get('search')) {
-        document.getElementById('searchInput').value = matchParams.get('search');
-      }
-      fetchAndRenderItems();
-
-      const reportType = new URLSearchParams(window.location.search).get('report');
-      if (reportType === 'lost' || reportType === 'found') {
-        const typeInput = document.querySelector(`input[name="itemType"][value="${reportType}"]`);
-        if (typeInput) typeInput.checked = true;
-        updateTypeRadio();
-        document.getElementById('itemForm').scrollIntoView({ behavior: 'smooth' });
-      }
-
-      // Close mobile menu on outside click or nav link click
-      const links = document.getElementById('navLinks');
-      const toggle = document.getElementById('menuToggle');
-      document.addEventListener('click', (e) => {
-        if (!e.target.closest('.belonging-menu-wrap')) closeBelongingMenus();
-        if (links && toggle && !links.contains(e.target) && !toggle.contains(e.target)) {
-          links.classList.remove('open');
-          document.querySelector('.navbar')?.classList.remove('mobile-drawer-active');
-          toggle.classList.remove('open');
-          toggle.setAttribute('aria-expanded', 'false');
-        }
-      });
-      if (links) {
-        links.querySelectorAll('a, button').forEach(el => {
-          el.addEventListener('click', () => links.classList.remove('open'));
-        });
-      }
-    });
-  </script>
+  <script src="/js/home-page.js"></script>
   <script src="/icons.js"></script>
 </body>
 </html>

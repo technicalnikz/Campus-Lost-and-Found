@@ -129,7 +129,7 @@ body.auth-checking > .site-footer {
       border-radius: 8px;
       padding: 0.75rem;
       margin-top: 1.25rem;
-      font-size: 0.74rem;
+      font-size: .75rem;
       color: var(--text-muted);
       line-height: 1.5;
     }
@@ -164,7 +164,9 @@ body.auth-checking > .site-footer {
 
     .auth-link-btn {
       display: block;
-      margin: 0.85rem auto 0;
+      min-height: 32px;
+      padding: 0.35rem 0.6rem;
+      margin: 0.5rem auto 0;
       background: none;
       border: none;
       color: var(--blue-light, #60a5fa);
@@ -180,7 +182,7 @@ body.auth-checking > .site-footer {
       margin-bottom: 1rem;
     }
     .auth-form-hint {
-      font-size: 0.72rem;
+      font-size: .75rem;
       margin: -0.25rem 0 0.75rem;
     }
 
