@@ -418,7 +418,7 @@ let restoreTarget = null;
         <tr>
           <td title="${rowNumber}"><span class="table-select-cell"><input class="admin-checkbox item-select" type="checkbox" data-item-id="${escHtml(item.id)}" ${selectedItemIds.has(String(item.id)) ? 'checked' : ''} aria-label="Select ${escHtml(item.title)}" /><span>${rowNumber}</span></span></td>
           <td class="td-title item-title-cell" title="${escHtml(item.title)}">
-            <a href="item-detail.html?id=${encodeURIComponent(item.id)}" target="_blank" title="${escHtml(item.title)}">${escHtml(item.title)}</a>
+            ${escHtml(item.title)}
           </td>
           <td title="${escHtml(item.type)}"><span class="badge ${item.type === 'lost' ? 'badge-lost' : 'badge-found'}">${escHtml(item.type)}</span></td>
           <td title="${escHtml(item.category)}">${escHtml(item.category)}</td>
