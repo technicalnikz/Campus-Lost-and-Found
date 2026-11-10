@@ -580,6 +580,25 @@
   :root .browse-report-layout > .tools-section .form-row {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  /* Tighter spacing so the whole sticky form fits below the navbar on a 1080p
+     screen. Text and field sizes stay the same; only the gaps shrink.
+     !important where the spacing comes from inline styles or glass.css's
+     !important panel padding. */
+  :root .browse-report-layout > .tools-section {
+    padding: 1.5rem !important;
+  }
+  :root #report .section-head { margin-bottom: 1rem; }
+  :root #report .report-type-selection { margin-bottom: 0.9rem !important; }
+  :root #report .type-switcher .type-option { min-height: 2.6rem; }
+  :root #report .form-row {
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  :root #report #itemForm > .input-field { margin-bottom: 0.9rem !important; }
+  :root #report #itemDesc { min-height: 4rem; }
+  :root #report .report-more { margin-bottom: 0.9rem; }
+  :root #report .report-more > summary { padding-block: 0.6rem; }
 }
 
 /* Large screens: 1320px content gives the items three cards per row. */
