@@ -204,7 +204,9 @@
 
 /* ── Home: item cards ───────────────────────────────────────────────────── */
 :root #items .projects-grid.items-grid:not(.registered-belongings-grid) {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr)) !important;
+  /* At most three cards per row: each track is at least a third of the row
+     (minus the two 1.25rem gaps), and at least 15.5rem where the row is wider. */
+  grid-template-columns: repeat(auto-fill, minmax(max(min(100%, 15.5rem), calc((100% - 2.5rem) / 3)), 1fr)) !important;
   grid-auto-rows: auto !important;
   align-items: stretch !important;
   gap: 1.25rem !important;
@@ -602,11 +604,20 @@
 }
 
 /* Large screens: the content follows the window (2rem margin each side) up to
-   1760px, so items get three to five cards per row. Widths elsewhere are
+   1760px; items keep three cards per row and the form takes the rest. Widths elsewhere are
    percentage-based, so this only caps them and never causes sideways scroll. */
 @media (min-width: 1440px) {
   body:has(.browse-report-layout) {
     --home-content-width: min(calc(100vw - 4rem), 1760px);
+  }
+  /* Items stop at three cards per row, so the extra width goes to the form. */
+  .browse-report-layout {
+    grid-template-columns: minmax(0, 1fr) clamp(420px, 32%, 560px);
+  }
+  /* A wide form puts two short fields side by side again (auto-fit keeps one
+     per row until each can be 220px). */
+  :root .browse-report-layout > .tools-section .form-row {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
   /* The content width plus the bars' 1.25rem side padding. */
   body:has(.browse-report-layout) .navbar-container,
