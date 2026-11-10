@@ -1,4 +1,29 @@
 const THEME_STORAGE_KEY = 'cspc_theme';
+
+// Intro screen on the home page (css/splash.css): shown once per browser session.
+// This file loads in <head>, so a repeat visit hides it before anything is drawn.
+const SPLASH_SEEN_KEY = 'back2you.splashSeen';
+(function setupSplash() {
+  let seen = false;
+  try { seen = sessionStorage.getItem(SPLASH_SEEN_KEY) === '1'; } catch { /* storage blocked: show it */ }
+  if (seen) {
+    document.documentElement.classList.add('skip-splash');
+    return;
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const splash = document.getElementById('appSplash');
+    if (!splash) return;
+    try { sessionStorage.setItem(SPLASH_SEEN_KEY, '1'); } catch { /* ignore */ }
+    const leave = () => splash.classList.add('is-leaving');
+    splash.addEventListener('click', leave);
+    document.addEventListener('keydown', leave, { once: true });
+    // Remove it once its own fade-out ends (letters fire animationend too).
+    splash.addEventListener('animationend', event => {
+      if (event.target === splash && event.animationName === 'splash-out') splash.remove();
+    });
+  });
+})();
+
 let dashboardBackPrompted = false;
 let dashboardBackGuardInstalled = false;
 

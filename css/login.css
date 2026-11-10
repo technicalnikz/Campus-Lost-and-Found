@@ -147,6 +147,10 @@ body.auth-checking > .site-footer {
       margin-bottom: 1rem;
       display: none;
     }
+    /* The pale red above is for dark mode; light mode needs a darker red to read. */
+    [data-theme='light'] .error-msg {
+      color: #b91c1c;
+    }
 
     .notice-msg {
       background: rgba(34, 197, 94, 0.15);

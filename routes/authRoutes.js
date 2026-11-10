@@ -5,7 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const { validateUserAuth, sanitizeString, passwordStrengthErrors, STUDENT_EMAIL, STAFF_EMAIL } = require('../middleware/validate');
-const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/email');
+const { sendVerificationCodeEmail, sendPasswordResetEmail } = require('../services/email');
 const { readJsonArray, writeJsonArray } = require('../services/jsonStore');
 const postgresStore = require('../services/postgresStore');
 const { requireAuth, requireRole } = require('../middleware/auth');
@@ -21,8 +21,11 @@ const STUDENT_DEPARTMENTS = new Set([
   'College of Arts and Sciences (CAS)'
 ]);
 
-const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 const VERIFICATION_RESEND_MS = 2 * 60 * 1000;
+// Emailed one-time codes (sign-up confirmation and every sign-in).
+const OTP_TTL_MS = 10 * 60 * 1000;
+const OTP_RESEND_MS = 60 * 1000;
+const OTP_MAX_ATTEMPTS = 5;
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 const LOGIN_LIMIT = { max: 8, windowMs: 15 * 60 * 1000 };
 const REGISTRATION_LIMIT = { max: 5, windowMs: 60 * 60 * 1000 };
@@ -55,20 +58,6 @@ function recordAttempt(store, key, limit) {
 
 function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
-}
-
-// Only the hash is stored, so a leaked users table cannot be used to verify accounts.
-function issueVerificationToken() {
-  const value = crypto.randomBytes(32).toString('hex');
-  const now = Date.now();
-  return {
-    value,
-    fields: {
-      verificationTokenHash: hashToken(value),
-      verificationExpiresAt: new Date(now + VERIFICATION_TTL_MS).toISOString(),
-      verificationSentAt: new Date(now).toISOString()
-    }
-  };
 }
 
 function issuePasswordResetToken() {
@@ -109,12 +98,80 @@ async function deliverAccountEmail(send, user, token, devPath) {
   }
 }
 
-function deliverVerificationEmail(user, token) {
-  return deliverAccountEmail(sendVerificationEmail, user, token, '/api/auth/verify-email?token=');
-}
-
 function deliverPasswordResetEmail(user, token) {
   return deliverAccountEmail(sendPasswordResetEmail, user, token, '/login?reset=');
+}
+
+// ── One-time codes ──────────────────────────────────────────────────────────
+// A pending code lives in the visitor's (server-side) session, so it only works in
+// the browser that entered the password. Only its hash is kept.
+let generateOtpCode = () => String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+
+// Tests make codes predictable; this refuses to run anywhere else.
+function setOtpCodeGeneratorForTests(generator) {
+  if (process.env.NODE_ENV !== 'test') throw new Error('OTP code generator can only be replaced in tests.');
+  generateOtpCode = generator;
+}
+
+// Changes when the password does, so a pending code dies if the password changes
+// or an unconfirmed sign-up is re-registered by someone else.
+function accountFingerprint(user) {
+  return hashToken(`${user.id}|${user.passwordHash}`);
+}
+
+async function deliverOtpEmail(user, code, purpose) {
+  try {
+    await sendVerificationCodeEmail(user, code, purpose, OTP_TTL_MS / 60000);
+    return true;
+  } catch (error) {
+    console.error('Verification code email could not be sent:', error.message);
+    if (process.env.NODE_ENV !== 'production') {
+      // Local development without SMTP: print the code so the flow can still be completed.
+      console.info(`Development ${purpose} code for ${user.email}: ${code}`);
+    }
+    return false;
+  }
+}
+
+// Issues a new code for this session and emails it. purpose: 'signup' | 'login'.
+async function startOtp(req, user, purpose) {
+  const code = generateOtpCode();
+  const now = Date.now();
+  req.session.otp = {
+    purpose,
+    userId: user.id,
+    fingerprint: accountFingerprint(user),
+    codeHash: hashToken(code),
+    expiresAt: now + OTP_TTL_MS,
+    sentAt: now,
+    attempts: 0
+  };
+  return deliverOtpEmail(user, code, purpose);
+}
+
+function otpResponse(user, purpose, emailSent) {
+  const resendAfter = Math.ceil(OTP_RESEND_MS / 1000);
+  return {
+    otpRequired: true,
+    purpose,
+    email: user.email,
+    emailSent,
+    resendAfter,
+    message: emailSent
+      ? `We sent a 6-digit code to ${user.email}.`
+      : `We could not send the code to ${user.email}. Try "Resend code" in ${resendAfter} seconds.`
+  };
+}
+
+function sessionUserFor(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    role: user.role,
+    department: user.department,
+    studentId: user.studentId
+  };
 }
 
 function authenticateSession(req, user) {
@@ -204,8 +261,8 @@ router.post('/register', validateUserAuth, async (req, res) => {
     }
     const users = getUsers();
 
-    // An unconfirmed registration can be replaced: whoever owns the inbox
-    // confirms the newest link, so squatting on someone's address achieves nothing.
+    // An unconfirmed registration can be replaced: only whoever owns the inbox can
+    // enter the emailed code, so squatting on someone's address achieves nothing.
     const existingIndex = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
     if (existingIndex !== -1 && users[existingIndex].emailVerified !== false) {
       return res.status(409).json({
@@ -216,7 +273,6 @@ router.post('/register', validateUserAuth, async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
-    const token = issueVerificationToken();
 
     const newUser = {
       id: existingIndex === -1 ? 'usr-' + Date.now() : users[existingIndex].id,
@@ -228,7 +284,6 @@ router.post('/register', validateUserAuth, async (req, res) => {
       role: 'student', // default self-registration is student role
       department: '',
       emailVerified: false,
-      ...token.fields,
       createdAt: new Date().toISOString()
     };
 
@@ -237,15 +292,11 @@ router.post('/register', validateUserAuth, async (req, res) => {
     saveUsers(users);
     recordAttempt(registrationAttempts, req.ip, REGISTRATION_LIMIT);
 
-    const emailSent = await deliverVerificationEmail(newUser, token.value);
-
+    const emailSent = await startOtp(req, newUser, 'signup');
     res.status(201).json({
       success: true,
       verificationRequired: true,
-      message: emailSent
-        ? `Almost done! We sent a confirmation link to ${email}. Open it to activate your account, then sign in.`
-        : 'Your account was created, but the confirmation email could not be sent. Try signing in later to receive a new confirmation link.',
-      emailSent
+      ...otpResponse(newUser, 'signup', emailSent)
     });
   } catch (error) {
     res.status(500).json({
@@ -255,7 +306,8 @@ router.post('/register', validateUserAuth, async (req, res) => {
   }
 });
 
-// GET /api/auth/verify-email?token=... - Link opened from the confirmation email.
+// GET /api/auth/verify-email?token=... - Confirmation links emailed before sign-up
+// switched to codes. New accounts get a code instead; this keeps older links working.
 router.get('/verify-email', (req, res) => {
   const token = typeof req.query.token === 'string' ? req.query.token : '';
   if (!/^[a-f0-9]{64}$/.test(token)) return res.redirect(302, '/login?verified=invalid');
@@ -303,44 +355,116 @@ router.post('/login', validateUserAuth, async (req, res) => {
     }
     loginFailures.delete(attemptKey);
 
-    if (user.emailVerified === false) {
-      let emailSent = false;
-      const lastSent = Date.parse(user.verificationSentAt) || 0;
-      if (Date.now() - lastSent > VERIFICATION_RESEND_MS) {
-        const token = issueVerificationToken();
-        Object.assign(user, token.fields);
-        saveUsers(users);
-        emailSent = await deliverVerificationEmail(user, token.value);
-      }
-      return res.status(403).json({
-        success: false,
-        code: 'EMAIL_NOT_VERIFIED',
-        message: emailSent
-          ? `Please confirm your email first. We sent a new confirmation link to ${user.email}.`
-          : `Please confirm your email first using the link sent to ${user.email}. You can request a new link by signing in again in a few minutes.`
-      });
+    // Correct password: the emailed code is the second step. An unconfirmed account
+    // gets a sign-up code instead, which confirms the email and signs in at once.
+    // A code sent to this browser in the last minute is reused instead of re-sent.
+    const purpose = user.emailVerified === false ? 'signup' : 'login';
+    const pending = req.session.otp;
+    const reusable = pending && pending.userId === user.id && pending.purpose === purpose &&
+      pending.fingerprint === accountFingerprint(user) &&
+      Date.now() - pending.sentAt < OTP_RESEND_MS && pending.attempts < OTP_MAX_ATTEMPTS;
+    const emailSent = reusable ? true : await startOtp(req, user, purpose);
+    const body = otpResponse(user, purpose, emailSent);
+
+    if (purpose === 'signup') {
+      return res.status(403).json({ success: false, code: 'EMAIL_NOT_VERIFIED', ...body,
+        message: `Please confirm your email first. ${body.message}` });
     }
-
-    const sessionUser = {
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      role: user.role,
-      department: user.department,
-      studentId: user.studentId
-    };
-    await authenticateSession(req, sessionUser);
-
-    res.json({
-      success: true,
-      message: 'Login successful.',
-      user: sessionUser
-    });
+    res.json({ success: true, ...body });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Internal server error during login.'
     });
+  }
+});
+
+// POST /api/auth/verify-code - Second step: the 6-digit code emailed by /register or /login.
+router.post('/verify-code', async (req, res) => {
+  try {
+    const pending = req.session.otp;
+    if (!pending) {
+      return res.status(400).json({ success: false, code: 'OTP_MISSING',
+        message: 'This code is no longer valid. Go back and sign in again to get a new one.' });
+    }
+    if (Date.now() > pending.expiresAt || pending.attempts >= OTP_MAX_ATTEMPTS) {
+      return res.status(400).json({ success: false, code: 'OTP_EXPIRED',
+        message: 'This code has expired. Tap "Resend code" to get a new one.' });
+    }
+    const code = typeof req.body.code === 'string' ? req.body.code.trim() : '';
+    if (!/^\d{6}$/.test(code)) {
+      return res.status(400).json({ success: false, code: 'OTP_FORMAT', message: 'Enter the 6-digit code from the email.' });
+    }
+
+    const users = getUsers();
+    const user = users.find(u => u.id === pending.userId);
+    if (!user || accountFingerprint(user) !== pending.fingerprint) {
+      delete req.session.otp;
+      return res.status(400).json({ success: false, code: 'OTP_MISSING',
+        message: 'This code is no longer valid. Go back and sign in again to get a new one.' });
+    }
+
+    pending.attempts += 1;
+    const matches = crypto.timingSafeEqual(Buffer.from(hashToken(code), 'hex'), Buffer.from(pending.codeHash, 'hex'));
+    if (!matches) {
+      const attemptsLeft = OTP_MAX_ATTEMPTS - pending.attempts;
+      return res.status(400).json({
+        success: false,
+        code: attemptsLeft > 0 ? 'OTP_INVALID' : 'OTP_EXPIRED',
+        attemptsLeft,
+        message: attemptsLeft > 0
+          ? `That code is not right. ${attemptsLeft} ${attemptsLeft === 1 ? 'try' : 'tries'} left.`
+          : 'Too many wrong codes. Tap "Resend code" to get a new one.'
+      });
+    }
+
+    if (pending.purpose === 'signup' && user.emailVerified === false) {
+      user.emailVerified = true;
+      user.emailVerifiedAt = new Date().toISOString();
+      delete user.verificationTokenHash;
+      delete user.verificationExpiresAt;
+      delete user.verificationSentAt;
+      saveUsers(users);
+    }
+
+    // A new session id for the signed-in session; the pending code goes with the old one.
+    const sessionUser = sessionUserFor(user);
+    await authenticateSession(req, sessionUser);
+    res.json({
+      success: true,
+      message: pending.purpose === 'signup' ? 'Your email is confirmed. Welcome to Back2You!' : 'Login successful.',
+      user: sessionUser
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Internal server error during verification.' });
+  }
+});
+
+// POST /api/auth/resend-code - New code for the sign-up or sign-in waiting in this session.
+router.post('/resend-code', async (req, res) => {
+  try {
+    const pending = req.session.otp;
+    if (!pending) {
+      return res.status(400).json({ success: false, code: 'OTP_MISSING',
+        message: 'Go back and sign in again to get a new code.' });
+    }
+    const waitMs = OTP_RESEND_MS - (Date.now() - pending.sentAt);
+    if (waitMs > 0) {
+      const retryAfter = Math.ceil(waitMs / 1000);
+      return res.status(429).json({ success: false, retryAfter,
+        message: `Please wait ${retryAfter} seconds before requesting another code.` });
+    }
+    const user = getUsers().find(u => u.id === pending.userId);
+    if (!user || accountFingerprint(user) !== pending.fingerprint) {
+      delete req.session.otp;
+      return res.status(400).json({ success: false, code: 'OTP_MISSING',
+        message: 'Go back and sign in again to get a new code.' });
+    }
+    const emailSent = await startOtp(req, user, pending.purpose);
+    res.json({ success: true, ...otpResponse(user, pending.purpose, emailSent),
+      message: emailSent ? `We sent a new code to ${user.email}.` : 'We could not send a new code. Please try again in a minute.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Internal server error while sending the code.' });
   }
 });
 
@@ -548,5 +672,6 @@ router.delete('/users/:id', requireRole('admin'), (req, res) => {
 });
 
 router.ensureDefaultAdminAccount = ensureDefaultAdminAccount;
+router.setOtpCodeGeneratorForTests = setOtpCodeGeneratorForTests;
 
 module.exports = router;

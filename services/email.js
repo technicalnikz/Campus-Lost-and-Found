@@ -53,25 +53,26 @@ function getAppUrl(pathname) {
   return new URL(pathname, parsedBaseUrl).toString();
 }
 
-function getVerificationUrl(token) {
-  const url = new URL(getAppUrl('/api/auth/verify-email'));
-  url.searchParams.set('token', token);
-  return url.toString();
-}
-
-// Proves the student owns their @my.cspc.edu.ph inbox before the account can sign in.
-async function sendVerificationEmail(user, token) {
+// One-time 6-digit code: confirms a new account's inbox ('signup') or completes a
+// sign-in ('login'). The code is only valid in the browser that asked for it.
+async function sendVerificationCodeEmail(user, code, purpose, minutesValid) {
   const transport = createTransport();
   const name = user.fullName || 'there';
   const safeName = escapeHtml(name);
-  const verifyUrl = getVerificationUrl(token);
+  const isSignup = purpose === 'signup';
+  const reason = isSignup
+    ? 'Welcome to Back2You! Enter this code to confirm your CSPC email address and activate your account:'
+    : 'Enter this code to finish signing in to Back2You:';
+  const ignore = isSignup
+    ? 'If you did not create this account, you can ignore this email.'
+    : 'If you did not try to sign in, someone may know your password. Change it after you sign in.';
 
   await transport.sendMail({
     from: process.env.SMTP_FROM,
     to: user.email,
-    subject: 'Confirm your Back2You account',
-    text: `Hi ${name},\n\nWelcome to Back2You! Please confirm that this is your CSPC email address to activate your account:\n\n${verifyUrl}\n\nThis link expires in 24 hours. You cannot sign in until your email is confirmed.\n\nOnce confirmed, you can report a lost item, report an item you found, and receive alerts if a found item may match your lost-item report. You can also register personal belongings to create QR recovery stickers.\n\nIf you did not create this account, you can ignore this email.\n\nBest,\nThe Back2You Team`,
-    html: `<p>Hi ${safeName},</p><p>Welcome to Back2You! Please confirm that this is your CSPC email address to activate your account:</p><p><a href="${escapeHtml(verifyUrl)}">Confirm my email address</a></p><p>This link expires in 24 hours. You cannot sign in until your email is confirmed.</p><p>Once confirmed, you can report a lost item, report an item you found, and receive alerts if a found item may match your lost-item report. You can also register personal belongings to create QR recovery stickers.</p><p>If you did not create this account, you can ignore this email.</p><p>Best,<br>The Back2You Team</p>`
+    subject: `${code} is your Back2You ${isSignup ? 'verification' : 'sign-in'} code`,
+    text: `Hi ${name},\n\n${reason}\n\n${code}\n\nThe code expires in ${minutesValid} minutes and only works in the browser where you requested it. Never share it with anyone.\n\n${ignore}\n\nBack2You – CSPC Lost & Found`,
+    html: `<p>Hi ${safeName},</p><p>${escapeHtml(reason)}</p><p style="font-size:28px;font-weight:700;letter-spacing:8px;margin:16px 0">${escapeHtml(code)}</p><p>The code expires in ${minutesValid} minutes and only works in the browser where you requested it. Never share it with anyone.</p><p>${escapeHtml(ignore)}</p><p>Back2You – CSPC Lost &amp; Found</p>`
   });
 }
 
@@ -199,7 +200,7 @@ async function sendBroadcastEmail(user, subject, message) {
 }
 
 module.exports = {
-  sendVerificationEmail,
+  sendVerificationCodeEmail,
   sendPasswordResetEmail,
   sendPossibleMatchEmail,
   sendClaimStatusEmail,

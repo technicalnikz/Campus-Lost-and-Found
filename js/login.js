@@ -71,9 +71,11 @@ function togglePasswordVisibility(inputId, btn) {
     // Theme initialization and click handling are provided by the shared main.js.
 
     function showAuthForm(formId) {
-      ['loginForm', 'registerForm', 'forgotForm', 'resetForm'].forEach(id => {
+      ['loginForm', 'registerForm', 'forgotForm', 'resetForm', 'otpForm'].forEach(id => {
         document.getElementById(id).style.display = id === formId ? 'block' : 'none';
       });
+      // The code step has its own header and back button instead of the tabs.
+      document.querySelector('.auth-tabs').style.display = formId === 'otpForm' ? 'none' : '';
       document.getElementById('tabLogin').classList.toggle('active', formId !== 'registerForm');
       document.getElementById('tabRegister').classList.toggle('active', formId === 'registerForm');
       hideError();
@@ -185,8 +187,8 @@ function togglePasswordVisibility(inputId, btn) {
       const result = params.get('verified');
       if (!result) return;
       if (result === 'success') showNotice('Your email is confirmed. You can now sign in.');
-      else if (result === 'expired') showError('That confirmation link has expired. Sign in with your email and password to receive a new one.');
-      else showError('That confirmation link is invalid or was already used. Sign in to receive a new one if needed.');
+      else if (result === 'expired') showError('That confirmation link has expired. Sign in with your email and password to get a verification code instead.');
+      else showError('That confirmation link is invalid or was already used. Sign in to get a verification code if needed.');
       params.delete('verified');
       const query = params.toString();
       window.history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
@@ -227,15 +229,216 @@ function togglePasswordVisibility(inputId, btn) {
         });
 
         const data = await res.json();
-        if (data.success) {
-          sessionStorage.setItem('currentUser', JSON.stringify(data.user));
-          sessionStorage.setItem('userRole', data.user.role);
-          window.location.replace(getPostLoginUrl(data.user));
+        // A correct password always leads to the emailed code (a sign-up code if the
+        // email is not confirmed yet).
+        if (data.otpRequired) {
+          showOtpStep(data, 'loginForm');
+          document.getElementById('loginPassword').value = '';
+        } else if (data.success && data.user) {
+          finishSignIn(data.user);
         } else {
           showError(data.message || 'Login failed. Please check your credentials.');
         }
       } catch (err) {
         showError('Network error connecting to authentication service.');
+      }
+    }
+
+    function finishSignIn(user) {
+      sessionStorage.setItem('currentUser', JSON.stringify(user));
+      sessionStorage.setItem('userRole', user.role);
+      window.location.replace(getPostLoginUrl(user));
+    }
+
+    // ── Email code step ─────────────────────────────────────────────────────
+    let otpReturnForm = 'loginForm';
+    let otpCountdownTimer = null;
+    let otpVerifying = false;
+
+    function otpBoxes() {
+      return [...document.querySelectorAll('#otpBoxes .otp-box')];
+    }
+
+    function restartAnimation(element, className) {
+      element.classList.remove(className);
+      void element.offsetWidth; // reflow so the animation plays again
+      element.classList.add(className);
+    }
+
+    function showOtpStep(data, returnForm) {
+      otpReturnForm = returnForm;
+      const form = document.getElementById('otpForm');
+      const isSignup = data.purpose === 'signup';
+      document.getElementById('otpTitle').textContent = isSignup ? 'Email Verification' : 'OTP Verification';
+      document.getElementById('otpEmail').textContent = data.email || 'your CSPC email';
+      document.querySelector('#otpForm .otp-back').setAttribute('aria-label', returnForm === 'registerForm' ? 'Back to registration' : 'Back to sign in');
+      form.classList.remove('is-success');
+      clearOtpBoxes();
+      showAuthForm('otpForm');
+      restartAnimation(form, 'is-entering');
+      if (data.emailSent === false) showError(data.message);
+      else if (isSignup && returnForm === 'loginForm') showNotice(data.message);
+      startResendCountdown(data.resendAfter || 60);
+      otpBoxes()[0].focus();
+    }
+
+    function leaveOtpStep() {
+      clearInterval(otpCountdownTimer);
+      showAuthForm(otpReturnForm);
+    }
+
+    function clearOtpBoxes() {
+      otpBoxes().forEach(box => {
+        box.value = '';
+        box.classList.remove('is-filled', 'is-pop');
+      });
+      document.getElementById('otpBoxes').classList.remove('is-error');
+    }
+
+    function setOtpBox(box, digit) {
+      box.value = digit;
+      box.classList.toggle('is-filled', Boolean(digit));
+      if (digit) restartAnimation(box, 'is-pop');
+    }
+
+    // Puts digits into the boxes from `index` on (typing, paste or phone autofill),
+    // then submits once all six are in.
+    function fillOtpFrom(index, digits) {
+      const boxes = otpBoxes();
+      for (const digit of digits) {
+        if (index >= boxes.length) break;
+        setOtpBox(boxes[index], digit);
+        index += 1;
+      }
+      boxes[Math.min(index, boxes.length - 1)].focus();
+      if (boxes.every(box => box.value)) {
+        setTimeout(() => document.getElementById('otpForm').requestSubmit(), 180);
+      }
+    }
+
+    function setupOtpBoxes() {
+      const boxes = otpBoxes();
+      boxes.forEach((box, index) => {
+        box.addEventListener('input', () => {
+          const digits = box.value.replace(/\D/g, '');
+          document.getElementById('otpBoxes').classList.remove('is-error');
+          if (!digits) {
+            setOtpBox(box, '');
+            return;
+          }
+          fillOtpFrom(index, digits);
+        });
+        box.addEventListener('keydown', event => {
+          if (event.key === 'Backspace' && !box.value && index > 0) {
+            event.preventDefault();
+            setOtpBox(boxes[index - 1], '');
+            boxes[index - 1].focus();
+          } else if (event.key === 'ArrowLeft' && index > 0) {
+            event.preventDefault();
+            boxes[index - 1].focus();
+          } else if (event.key === 'ArrowRight' && index < boxes.length - 1) {
+            event.preventDefault();
+            boxes[index + 1].focus();
+          }
+        });
+        box.addEventListener('paste', event => {
+          const digits = (event.clipboardData?.getData('text') || '').replace(/\D/g, '');
+          if (!digits) return;
+          event.preventDefault();
+          fillOtpFrom(digits.length >= boxes.length ? 0 : index, digits);
+        });
+        box.addEventListener('focus', () => box.select());
+      });
+    }
+
+    function showOtpError(message) {
+      const row = document.getElementById('otpBoxes');
+      restartAnimation(row, 'is-error');
+      showError(message);
+      setTimeout(() => {
+        clearOtpBoxes();
+        otpBoxes()[0].focus();
+      }, 650);
+    }
+
+    async function handleVerifyCode(e) {
+      e.preventDefault();
+      if (otpVerifying) return;
+      const code = otpBoxes().map(box => box.value).join('');
+      if (!/^\d{6}$/.test(code)) {
+        showOtpError('Enter all 6 digits of the code.');
+        return;
+      }
+      hideError();
+      otpVerifying = true;
+      const button = document.getElementById('otpSubmit');
+      button.classList.add('is-busy');
+      button.textContent = 'Verifying…';
+      try {
+        const res = await fetch('/api/auth/verify-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+        if (data.success && data.user) {
+          clearInterval(otpCountdownTimer);
+          document.activeElement?.blur();
+          document.getElementById('otpForm').classList.add('is-success');
+          button.textContent = 'Verified';
+          showNotice(data.message);
+          setTimeout(() => finishSignIn(data.user), 1100);
+          return;
+        }
+        showOtpError(data.message || 'That code did not work. Please try again.');
+      } catch (err) {
+        showOtpError('Network error while checking the code.');
+      }
+      otpVerifying = false;
+      button.classList.remove('is-busy');
+      button.textContent = 'Verify';
+    }
+
+    function startResendCountdown(seconds) {
+      const button = document.getElementById('otpResend');
+      clearInterval(otpCountdownTimer);
+      let remaining = Math.max(0, Math.ceil(seconds));
+      const render = () => {
+        button.disabled = remaining > 0;
+        button.textContent = remaining > 0
+          ? `Resend in ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`
+          : 'Resend code';
+      };
+      render();
+      otpCountdownTimer = setInterval(() => {
+        remaining -= 1;
+        render();
+        if (remaining <= 0) clearInterval(otpCountdownTimer);
+      }, 1000);
+    }
+
+    async function resendCode() {
+      hideError();
+      const button = document.getElementById('otpResend');
+      button.disabled = true;
+      try {
+        const res = await fetch('/api/auth/resend-code', { method: 'POST', credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.success) {
+          clearOtpBoxes();
+          restartAnimation(document.querySelector('#otpForm .otp-mail'), 'is-resent');
+          if (data.emailSent === false) showError(data.message);
+          else showNotice(data.message);
+          startResendCountdown(data.resendAfter || 60);
+          otpBoxes()[0].focus();
+        } else {
+          showError(data.message || 'Could not send a new code.');
+          startResendCountdown(data.retryAfter || 0);
+        }
+      } catch (err) {
+        showError('Network error while sending a new code.');
+        button.disabled = false;
       }
     }
 
@@ -263,13 +466,11 @@ function togglePasswordVisibility(inputId, btn) {
 
         const data = await res.json();
         if (data.success) {
-          // New accounts stay locked until the emailed confirmation link is opened.
+          // The new account is confirmed with the emailed code, which also signs in.
           document.getElementById('registerForm').reset();
           updatePasswordRequirements();
-          switchTab('login');
           document.getElementById('loginEmail').value = email;
-          if (data.emailSent === false) showError(data.message);
-          else showNotice(data.message);
+          showOtpStep(data, 'registerForm');
         } else {
           showError(data.message || (data.errors ? data.errors.join(' ') : 'Registration failed.'));
         }
@@ -280,6 +481,7 @@ function togglePasswordVisibility(inputId, btn) {
 
     document.getElementById('regPassword').addEventListener('input', updatePasswordRequirements);
     updatePasswordRequirements();
+    setupOtpBoxes();
     showVerificationResult();
     if (openResetFromLink()) document.body.classList.remove('auth-checking');
     else redirectAuthenticatedUser();

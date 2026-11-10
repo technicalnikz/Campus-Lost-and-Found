@@ -14,6 +14,8 @@ let createApp;
 
 const adminPassword = 'AdminPass1!';
 const studentPassword = 'StudentPass1!';
+// Emailed sign-in and sign-up codes are fixed in tests (see test.before).
+const TEST_OTP = '246810';
 const smtpEnvironmentKeys = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'APP_BASE_URL'];
 const originalSmtpEnvironment = Object.fromEntries(
   smtpEnvironmentKeys.map(key => [key, process.env[key]])
@@ -32,6 +34,16 @@ function fixtureUser(id, email, password, role) {
   };
 }
 
+// Enters the emailed code for the sign-in or sign-up waiting in this session.
+function verifyCode(cookie, code = TEST_OTP, headers = {}) {
+  return fetch(`${baseUrl}/api/auth/verify-code`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie, ...headers },
+    body: JSON.stringify({ code })
+  });
+}
+
+// Password, then the emailed code; returns the signed-in session cookie.
 async function login(email, password) {
   const response = await fetch(`${baseUrl}/api/auth/login`, {
     method: 'POST',
@@ -39,7 +51,17 @@ async function login(email, password) {
     body: JSON.stringify({ email, password })
   });
   assert.equal(response.status, 200);
-  const cookie = response.headers.get('set-cookie').split(';')[0];
+  const passwordStep = await response.json();
+  assert.equal(passwordStep.otpRequired, true);
+  assert.equal(passwordStep.user, undefined, 'the password alone does not sign in');
+  const pendingCookie = response.headers.get('set-cookie').split(';')[0];
+  const pendingSession = await fetch(`${baseUrl}/api/auth/me`, { headers: { Cookie: pendingCookie } });
+  assert.equal((await pendingSession.json()).authenticated, false);
+
+  const verified = await verifyCode(pendingCookie);
+  assert.equal(verified.status, 200);
+  const cookie = verified.headers.get('set-cookie').split(';')[0];
+  assert.notEqual(cookie, pendingCookie, 'signing in issues a new session id');
   const sessionResponse = await fetch(`${baseUrl}/api/auth/me`, { headers: { Cookie: cookie } });
   assert.equal((await sessionResponse.json()).authenticated, true);
   return cookie;
@@ -235,6 +257,7 @@ test.before(async () => {
   ]));
 
   ({ createApp } = require('../server'));
+  require('../routes/authRoutes').setOtpCodeGeneratorForTests(() => TEST_OTP);
   appServer = createApp().listen(0);
   await new Promise(resolve => appServer.once('listening', resolve));
   baseUrl = `http://127.0.0.1:${appServer.address().port}`;
@@ -281,7 +304,7 @@ test('registration accepts only @my.cspc.edu.ph student addresses', async () => 
   assert.equal(loginResponse.status, 400);
 });
 
-test('new accounts cannot sign in until the emailed confirmation link is opened', async t => {
+test('new accounts are confirmed with the emailed code before they can sign in', async t => {
   const smtp = await startSmtpCaptureServer();
   const mailEnvironment = Object.fromEntries(smtpEnvironmentKeys.map(key => [key, process.env[key]]));
   t.after(async () => {
@@ -302,15 +325,20 @@ test('new accounts cannot sign in until the emailed confirmation link is opened'
   // Someone without access to the inbox registers the address first.
   const squatterResponse = await postJson(`${baseUrl}/api/auth/register`, registrationBody({ password: 'Squatter1!pass' }));
   assert.equal(squatterResponse.status, 201);
+  assert.equal((await squatterResponse.json()).otpRequired, true);
+  const squatterCookie = squatterResponse.headers.get('set-cookie').split(';')[0];
 
   const response = await postJson(`${baseUrl}/api/auth/register`, registrationBody());
   assert.equal(response.status, 201);
   const result = await response.json();
   assert.equal(result.success, true);
-  assert.equal(result.verificationRequired, true);
+  assert.equal(result.otpRequired, true);
+  assert.equal(result.purpose, 'signup');
   assert.equal(result.emailSent, true);
   assert.equal(result.user, undefined);
-  assert.equal(response.headers.get('set-cookie'), null);
+  const pendingCookie = response.headers.get('set-cookie').split(';')[0];
+  const pendingSession = await fetch(`${baseUrl}/api/auth/me`, { headers: { Cookie: pendingCookie } });
+  assert.equal((await pendingSession.json()).authenticated, false);
 
   const users = JSON.parse(fs.readFileSync(path.join(dataDir, 'users.json'), 'utf8'));
   const pending = users.filter(user => user.email === 'new.student@my.cspc.edu.ph');
@@ -318,32 +346,39 @@ test('new accounts cannot sign in until the emailed confirmation link is opened'
   assert.equal(pending[0].emailVerified, false);
   assert.equal(pending[0].department, '');
   assert.equal(pending[0].studentId, 'N/A');
-  assert.match(pending[0].verificationTokenHash, /^[a-f0-9]{64}$/);
-
-  const blockedLogin = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'new.student@my.cspc.edu.ph', password: 'StudentPass1!' }));
-  assert.equal(blockedLogin.status, 403);
-  assert.equal((await blockedLogin.json()).code, 'EMAIL_NOT_VERIFIED');
-  assert.equal(blockedLogin.headers.get('set-cookie'), null);
-
-  const forgedLink = await fetch(`${baseUrl}/api/auth/verify-email?token=${'0'.repeat(64)}`, { redirect: 'manual' });
-  assert.equal(forgedLink.headers.get('location'), '/login?verified=invalid');
-
-  const squatterEmail = smtp.messages[0].content.replace(/=\r\n/g, '').replace(/=3D/g, '=');
-  const squatterToken = squatterEmail.match(/verify-email\?token=([a-f0-9]{64})/)[1];
-  const supersededLink = await fetch(`${baseUrl}/api/auth/verify-email?token=${squatterToken}`, { redirect: 'manual' });
-  assert.equal(supersededLink.headers.get('location'), '/login?verified=invalid');
+  assert.equal(pending[0].verificationTokenHash, undefined, 'no confirmation link is issued any more');
 
   const latestEmail = smtp.messages.at(-1);
   assert.match(latestEmail.recipient, /new\.student@my\.cspc\.edu\.ph/);
   const emailContent = latestEmail.content.replace(/=\r\n/g, '').replace(/=3D/g, '=');
-  assert.match(emailContent, /Confirm your Back2You account/);
-  const token = emailContent.match(/verify-email\?token=([a-f0-9]{64})/)[1];
-  const verifyResponse = await fetch(`${baseUrl}/api/auth/verify-email?token=${token}`, { redirect: 'manual' });
-  assert.equal(verifyResponse.status, 302);
-  assert.equal(verifyResponse.headers.get('location'), '/login?verified=success');
+  assert.match(emailContent, new RegExp(`${TEST_OTP} is your Back2You verification code`));
 
-  const reusedLink = await fetch(`${baseUrl}/api/auth/verify-email?token=${token}`, { redirect: 'manual' });
-  assert.equal(reusedLink.headers.get('location'), '/login?verified=invalid');
+  // The squatter's session code died when the real owner registered with a new password.
+  const squatterVerify = await verifyCode(squatterCookie);
+  assert.equal(squatterVerify.status, 400);
+  assert.equal((await squatterVerify.json()).code, 'OTP_MISSING');
+
+  // A code is only good in the browser that asked for it.
+  const noSession = await postJson(`${baseUrl}/api/auth/verify-code`, JSON.stringify({ code: TEST_OTP }));
+  assert.equal(noSession.status, 400);
+
+  const wrong = await verifyCode(pendingCookie, '000000');
+  assert.equal(wrong.status, 400);
+  assert.equal((await wrong.json()).attemptsLeft, 4);
+
+  const verified = await verifyCode(pendingCookie);
+  assert.equal(verified.status, 200);
+  const verifiedBody = await verified.json();
+  assert.equal(verifiedBody.user.email, 'new.student@my.cspc.edu.ph');
+  const signedInCookie = verified.headers.get('set-cookie').split(';')[0];
+  const session = await fetch(`${baseUrl}/api/auth/me`, { headers: { Cookie: signedInCookie } });
+  assert.equal((await session.json()).authenticated, true);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dataDir, 'users.json'), 'utf8'))
+    .find(user => user.email === 'new.student@my.cspc.edu.ph').emailVerified, true);
+
+  // The code is spent: the old pending session cannot use it again.
+  const reused = await verifyCode(pendingCookie);
+  assert.equal(reused.status, 400);
 
   const squatterLogin = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'new.student@my.cspc.edu.ph', password: 'Squatter1!pass' }));
   assert.equal(squatterLogin.status, 401);
@@ -356,6 +391,50 @@ test('new accounts cannot sign in until the emailed confirmation link is opened'
   assert.equal(duplicateResponse.status, 409);
   assert.equal(JSON.parse(fs.readFileSync(path.join(dataDir, 'users.json'), 'utf8'))
     .filter(user => user.email === 'new.student@my.cspc.edu.ph').length, 1);
+});
+
+test('unconfirmed accounts get a sign-up code when they try to sign in', async () => {
+  const register = await postJson(`${baseUrl}/api/auth/register`, registrationBody({ email: 'late.confirmer@my.cspc.edu.ph' }));
+  assert.equal(register.status, 201);
+
+  const blockedLogin = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'late.confirmer@my.cspc.edu.ph', password: 'StudentPass1!' }));
+  assert.equal(blockedLogin.status, 403);
+  const blocked = await blockedLogin.json();
+  assert.equal(blocked.code, 'EMAIL_NOT_VERIFIED');
+  assert.equal(blocked.otpRequired, true);
+  assert.equal(blocked.purpose, 'signup');
+
+  const cookie = blockedLogin.headers.get('set-cookie').split(';')[0];
+  const verified = await verifyCode(cookie);
+  assert.equal(verified.status, 200);
+  assert.equal((await verified.json()).user.email, 'late.confirmer@my.cspc.edu.ph');
+});
+
+test('sign-in codes allow five tries, expire with the session and resend at most once a minute', async () => {
+  const start = await postJson(`${baseUrl}/api/auth/login`, JSON.stringify({ email: 'student@my.cspc.edu.ph', password: studentPassword }));
+  assert.equal(start.status, 200);
+  // Read the whole response: the session is saved before the response finishes.
+  assert.equal((await start.json()).otpRequired, true);
+  const cookie = start.headers.get('set-cookie').split(';')[0];
+
+  const badFormat = await verifyCode(cookie, '12ab');
+  assert.equal((await badFormat.json()).code, 'OTP_FORMAT');
+
+  const resendTooSoon = await fetch(`${baseUrl}/api/auth/resend-code`, { method: 'POST', headers: { Cookie: cookie } });
+  assert.equal(resendTooSoon.status, 429);
+  assert.ok((await resendTooSoon.json()).retryAfter > 0);
+
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    const response = await verifyCode(cookie, '111111');
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).attemptsLeft, 5 - attempt);
+  }
+  // Even the right code is refused once the tries are used up.
+  const locked = await verifyCode(cookie);
+  assert.equal(locked.status, 400);
+  assert.equal((await locked.json()).code, 'OTP_EXPIRED');
+  const session = await fetch(`${baseUrl}/api/auth/me`, { headers: { Cookie: cookie } });
+  assert.equal((await session.json()).authenticated, false);
 });
 
 test('student accounts cannot sign in with the staff domain and repeated failures are throttled', async () => {
@@ -1082,7 +1161,14 @@ test('production requires a secret and persists secure sessions', async () => {
       body: JSON.stringify({ email: 'admin@cspc.edu.ph', password: adminPassword })
     });
     assert.equal(loginResponse.status, 200, await loginResponse.clone().text());
-    const cookieHeader = loginResponse.headers.get('set-cookie');
+    const pendingCookie = loginResponse.headers.get('set-cookie').split(';')[0];
+    const verified = await fetch(`${productionUrl}/api/auth/verify-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Forwarded-Proto': 'https', Cookie: pendingCookie },
+      body: JSON.stringify({ code: TEST_OTP })
+    });
+    assert.equal(verified.status, 200, await verified.clone().text());
+    const cookieHeader = verified.headers.get('set-cookie');
     assert.match(cookieHeader, /Secure/i);
     assert.match(cookieHeader, /SameSite=Lax/i);
     const sessionCookie = cookieHeader.split(';')[0];
