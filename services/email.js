@@ -72,7 +72,7 @@ async function sendVerificationCodeEmail(user, code, purpose, minutesValid) {
     to: user.email,
     subject: `${code} is your Back2You ${isSignup ? 'verification' : 'sign-in'} code`,
     text: `Hi ${name},\n\n${reason}\n\n${code}\n\nThe code expires in ${minutesValid} minutes and only works in the browser where you requested it. Never share it with anyone.\n\n${ignore}\n\nBack2You – CSPC Lost & Found`,
-    html: `<p>Hi ${safeName},</p><p>${escapeHtml(reason)}</p><p style="font-size:28px;font-weight:700;letter-spacing:8px;margin:16px 0">${escapeHtml(code)}</p><p>The code expires in ${minutesValid} minutes and only works in the browser where you requested it. Never share it with anyone.</p><p>${escapeHtml(ignore)}</p><p>Back2You – CSPC Lost &amp; Found</p>`
+    html: `<p>Hi ${safeName},</p><p>${escapeHtml(reason)}</p><p style="margin:20px 0;padding:14px 0;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;color:#1d4ed8;font-family:Consolas,'Courier New',monospace;font-size:32px;font-weight:700;letter-spacing:10px;text-align:center">${escapeHtml(code)}</p><p>The code expires in ${minutesValid} minutes and only works in the browser where you requested it. Never share it with anyone.</p><p>${escapeHtml(ignore)}</p><p>Back2You – CSPC Lost &amp; Found</p>`
   });
 }
 
