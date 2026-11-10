@@ -88,15 +88,18 @@ function createApp() {
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'geolocation=(), microphone=()',
+      // Location only for this site's own pages: the handover meetup asks for one reading
+      // when a student agrees to share it. Embedded frames can never ask.
+      'Permissions-Policy': 'geolocation=(self), microphone=()',
       // Scripts only from this site (no inline code or handlers); inline style
       // attributes are still used by some markup. QR codes and photo previews use data:/blob: images.
+      // OpenStreetMap tiles draw the small map of a shared meetup location.
       'Content-Security-Policy': [
         "default-src 'self'",
         "script-src 'self'",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
-        "img-src 'self' data: blob:",
+        "img-src 'self' data: blob: https://tile.openstreetmap.org",
         "connect-src 'self'",
         "object-src 'none'",
         "base-uri 'self'",

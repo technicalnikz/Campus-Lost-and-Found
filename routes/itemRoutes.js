@@ -14,7 +14,8 @@ const {
   sendClaimRequestEmail,
   sendFinderNotificationEmail,
   sendMatchFinderNotificationEmail,
-  sendBroadcastEmail
+  sendBroadcastEmail,
+  sendMeetupRequestEmail
 } = require('../services/email');
 const postgresStore = require('../services/postgresStore');
 const supabaseStorage = require('../services/supabaseStorage');
@@ -512,6 +513,201 @@ router.patch('/claims/:claimId/handover', requireRole('admin'), (req, res) => {
   res.json({ success: true, handover: claim.handover });
 });
 
+// ── Handover meetup: one-time location sharing on an approved claim ────────
+// The owner (who claimed the item) and the finder (who reported it found) can ask
+// each other for their current location to arrange the handover. Nothing is shared
+// until the other person agrees; a shared location is one reading that is deleted
+// after an hour, or earlier when its sender stops sharing.
+//   claim.meetup[requesterId] = { status: 'pending' | 'shared' | 'declined' | 'stopped' | 'expired',
+//                                 createdAt, respondedAt, location? }  (location = the other person's)
+const MEETUP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const MEETUP_LOCATION_TTL_MS = 60 * 60 * 1000;
+const MEETUP_REQUEST_TTL_MS = 24 * 60 * 60 * 1000;
+const MEETUP_ASK_AGAIN_MS = 2 * 60 * 1000;
+
+function firstName(fullName, fallback) {
+  return String(fullName || '').trim().split(/\s+/)[0] || fallback;
+}
+
+// Owner and finder of an approved claim from the last 7 days, both with accounts.
+function meetupParties(claim, items, users) {
+  if (claim.status !== 'approved') return null;
+  if (Date.now() - Date.parse(claim.reviewedAt || claim.createdAt) > MEETUP_WINDOW_MS) return null;
+  const item = items.find(entry => String(entry.id) === String(claim.itemId));
+  const owner = users.find(user => String(user.id) === String(claim.claimantId));
+  const finder = item && users.find(user => String(user.id) === String(item.reportedBy));
+  if (!owner || !finder || String(owner.id) === String(finder.id)) return null;
+  return { owner, finder, item };
+}
+
+// Deletes expired locations and requests (and everything once the claim is no
+// longer approved). Returns true when the claim changed and needs saving.
+function pruneMeetup(claim, now = Date.now()) {
+  if (!claim.meetup) return false;
+  if (claim.status !== 'approved') {
+    delete claim.meetup;
+    return true;
+  }
+  let changed = false;
+  Object.values(claim.meetup).forEach(request => {
+    if (request.location && Date.parse(request.location.expiresAt) <= now) {
+      delete request.location;
+      request.status = 'expired';
+      changed = true;
+    }
+    if (request.status === 'pending' && now - Date.parse(request.createdAt) > MEETUP_REQUEST_TTL_MS) {
+      request.status = 'expired';
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+// Loads the claim for a meetup route and works out who is who; sends the error itself.
+function loadMeetup(req, res) {
+  const claims = getClaims();
+  const claim = claims.find(entry => entry.id === req.params.claimId);
+  const parties = claim && meetupParties(claim, getItems(), readJsonArray(USERS_FILE));
+  const userId = String(req.session.user.id);
+  if (!parties || ![String(parties.owner.id), String(parties.finder.id)].includes(userId)) {
+    res.status(404).json({ success: false, message: 'Location sharing is only available on your approved claims.' });
+    return null;
+  }
+  if (pruneMeetup(claim)) saveClaims(claims);
+  claim.meetup = claim.meetup || {};
+  const me = userId === String(parties.owner.id) ? parties.owner : parties.finder;
+  const other = me === parties.owner ? parties.finder : parties.owner;
+  return { claims, claim, item: parties.item, me, other };
+}
+
+// POST /api/items/claims/:claimId/meetup/request - Ask the other person for their location.
+router.post('/claims/:claimId/meetup/request', requireAuth, async (req, res) => {
+  const context = loadMeetup(req, res);
+  if (!context) return;
+  const { claims, claim, item, me, other } = context;
+  const otherName = firstName(other.fullName, 'The other person');
+  const existing = claim.meetup[String(me.id)];
+  if (existing?.status === 'pending') {
+    return res.status(409).json({ success: false, message: `You already asked. Waiting for ${otherName} to respond.` });
+  }
+  if (existing?.status === 'shared') {
+    return res.status(409).json({ success: false, message: `${otherName} is already sharing their location with you.` });
+  }
+  if (existing?.status === 'declined') {
+    const waitMs = MEETUP_ASK_AGAIN_MS - (Date.now() - Date.parse(existing.respondedAt));
+    if (waitMs > 0) {
+      return res.status(429).json({ success: false, retryAfter: Math.ceil(waitMs / 1000),
+        message: `${otherName} declined. You can ask again in ${Math.ceil(waitMs / 60000)} minute(s).` });
+    }
+  }
+
+  claim.meetup[String(me.id)] = { status: 'pending', createdAt: new Date().toISOString() };
+  saveClaims(claims);
+  try {
+    await sendMeetupRequestEmail(other, me.fullName || 'The other person', item.title);
+  } catch (error) {
+    console.error('Location request email could not be sent:', error.message);
+  }
+  res.status(201).json({ success: true, message: `We asked ${otherName} to share their location.` });
+});
+
+// POST /api/items/claims/:claimId/meetup/respond - Share my location once, or decline.
+router.post('/claims/:claimId/meetup/respond', requireAuth, (req, res) => {
+  const context = loadMeetup(req, res);
+  if (!context) return;
+  const { claims, claim, other } = context;
+  const request = claim.meetup[String(other.id)];
+  if (!request || request.status !== 'pending') {
+    return res.status(404).json({ success: false, message: 'There is no location request waiting for you.' });
+  }
+  const now = new Date();
+
+  if (req.body.action === 'decline') {
+    request.status = 'declined';
+    request.respondedAt = now.toISOString();
+    saveClaims(claims);
+    return res.json({ success: true, message: 'You declined to share your location.' });
+  }
+  if (req.body.action !== 'share') {
+    return res.status(400).json({ success: false, message: 'Choose to share your location or decline.' });
+  }
+
+  const latitude = Number(req.body.latitude);
+  const longitude = Number(req.body.longitude);
+  const accuracy = Number(req.body.accuracy);
+  const note = sanitizeString(req.body.note || '');
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 ||
+      !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+    return res.status(400).json({ success: false, message: 'Your location could not be read. Please try again.' });
+  }
+  if (!Number.isFinite(accuracy) || accuracy < 0 || accuracy > 5000) {
+    return res.status(400).json({ success: false, message: 'Your location is too imprecise to share. Turn on GPS or move near a window and try again.' });
+  }
+  if (note.length > 160) {
+    return res.status(400).json({ success: false, message: 'The note must be 160 characters or fewer.' });
+  }
+
+  request.status = 'shared';
+  request.respondedAt = now.toISOString();
+  request.location = {
+    latitude: Math.round(latitude * 1e6) / 1e6,
+    longitude: Math.round(longitude * 1e6) / 1e6,
+    accuracy: Math.round(accuracy),
+    note,
+    sharedAt: now.toISOString(),
+    expiresAt: new Date(now.getTime() + MEETUP_LOCATION_TTL_MS).toISOString()
+  };
+  saveClaims(claims);
+  res.json({ success: true, message: `Your location is shared with ${firstName(other.fullName, 'them')} for one hour.`,
+    expiresAt: request.location.expiresAt });
+});
+
+// POST /api/items/claims/:claimId/meetup/stop - Delete the location I shared.
+router.post('/claims/:claimId/meetup/stop', requireAuth, (req, res) => {
+  const context = loadMeetup(req, res);
+  if (!context) return;
+  const { claims, claim, other } = context;
+  const request = claim.meetup[String(other.id)];
+  if (!request?.location) {
+    return res.status(404).json({ success: false, message: 'You are not sharing your location.' });
+  }
+  delete request.location;
+  request.status = 'stopped';
+  request.respondedAt = new Date().toISOString();
+  saveClaims(claims);
+  res.json({ success: true, message: 'You stopped sharing your location. It has been deleted.' });
+});
+
+// Inbox entry describing both directions of a meetup for one person.
+function meetupNotification(claim, item, me, other, isOwner) {
+  const meetup = claim.meetup || {};
+  const mine = meetup[String(me.id)];     // my request: their location for me
+  const theirs = meetup[String(other.id)]; // their request: my location for them
+  const times = [claim.reviewedAt, mine?.createdAt, mine?.respondedAt, theirs?.createdAt, theirs?.respondedAt]
+    .filter(Boolean).map(Date.parse);
+  return {
+    id: `meetup-${claim.id}`,
+    notificationType: 'meetup',
+    claimId: claim.id,
+    itemId: item.id,
+    itemTitle: item.title,
+    refCode: item.refCode,
+    role: isOwner ? 'owner' : 'finder',
+    otherName: firstName(other.fullName, isOwner ? 'The finder' : 'The owner'),
+    timestamp: new Date(Math.max(...times)).toISOString(),
+    read: theirs?.status !== 'pending',
+    theirLocation: {
+      status: mine?.status || 'none',
+      askAgainAt: mine?.status === 'declined' ? new Date(Date.parse(mine.respondedAt) + MEETUP_ASK_AGAIN_MS).toISOString() : null,
+      location: mine?.status === 'shared' ? mine.location : null
+    },
+    myLocation: {
+      status: theirs?.status || 'none',
+      expiresAt: theirs?.location?.expiresAt || null
+    }
+  };
+}
+
 // GET /api/items - Retrieve items with filters
 router.get('/', (req, res) => {
   let items = getItems();
@@ -809,7 +1005,8 @@ router.get('/my-notifications', requireAuth, (req, res) => {
     }
   });
 
-  getClaims().filter(claim => claim.claimantId === userId && claim.notification).forEach(claim => {
+  const claims = getClaims();
+  claims.filter(claim => claim.claimantId === userId && claim.notification).forEach(claim => {
     notifications.push({
       ...claim.notification,
       notificationType: 'claim',
@@ -819,6 +1016,20 @@ router.get('/my-notifications', requireAuth, (req, res) => {
       refCode: claim.itemRefCode
     });
   });
+
+  // Handover meetup (location sharing) for approved claims this user is part of.
+  const users = readJsonArray(USERS_FILE);
+  let claimsChanged = false;
+  claims.forEach(claim => {
+    if (pruneMeetup(claim)) claimsChanged = true;
+    const parties = meetupParties(claim, items, users);
+    if (!parties) return;
+    const isOwner = String(parties.owner.id) === String(userId);
+    if (!isOwner && String(parties.finder.id) !== String(userId)) return;
+    notifications.push(meetupNotification(claim, parties.item,
+      isOwner ? parties.owner : parties.finder, isOwner ? parties.finder : parties.owner, isOwner));
+  });
+  if (claimsChanged) saveClaims(claims);
 
   notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 

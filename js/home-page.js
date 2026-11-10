@@ -70,6 +70,11 @@ async function checkAuthSession() {
       renderAuthenticatedHeader(currentUser);
       fetchMyBelongingsCount();
       loadMyNotifications();
+      // Keep the bell's count current, e.g. when someone asks for your location.
+      clearInterval(window.notificationBadgeTimer);
+      window.notificationBadgeTimer = setInterval(() => {
+        if (document.visibilityState === 'visible') loadMyNotifications();
+      }, 60000);
       // Refresh with the signed-in view (owner actions) without losing the current page.
       fetchAndRenderItems({ keepPage: true });
 
@@ -1064,13 +1069,207 @@ async function openMatchReferenceFromQr(token) {
 }
 
 // ── Notifications Modal ───────────────────────────────────────────────────
+let notificationsRefreshTimer = null;
+
 async function openNotificationsModal() {
   document.getElementById('notificationsModal').classList.add('open');
   await loadNotificationsIntoModal();
+  // While the inbox is open, pick up the other person's reply to a location request.
+  clearInterval(notificationsRefreshTimer);
+  notificationsRefreshTimer = setInterval(refreshOpenNotifications, 20000);
 }
 
 function closeNotificationsModal() {
+  clearInterval(notificationsRefreshTimer);
   document.getElementById('notificationsModal').classList.remove('open');
+}
+
+function refreshOpenNotifications() {
+  const list = document.getElementById('notificationsList');
+  if (!document.getElementById('notificationsModal').classList.contains('open')) {
+    clearInterval(notificationsRefreshTimer);
+    return;
+  }
+  // Never wipe a note being typed, a pending action or a selection in progress.
+  const busy = [...list.querySelectorAll('.meetup-note')].some(input => input.value || input === document.activeElement) ||
+    list.querySelector('button:disabled[data-busy]') || list.querySelector('.notification-select:checked');
+  if (!busy && list.querySelector('.notif-item--meetup')) loadNotificationsIntoModal();
+}
+
+// ── Handover meetup: one-time location sharing on an approved claim ────────
+const MEETUP_MAP_ZOOM = 17;
+
+function meetupTime(iso) {
+  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function meetupNotificationHtml(n) {
+  const other = escapeHtml(n.otherName);
+  const otherRole = n.role === 'owner' ? 'the finder' : 'the owner';
+  const claimArg = actionArgs(n.claimId, '$el');
+  const askButton = label => `<button type="button" class="btn btn-outline btn-compact meetup-btn" data-action="requestMeetupLocation" data-args="${claimArg}">${label}</button>`;
+
+  // Their location (what I asked for).
+  const theirs = n.theirLocation || {};
+  let theirsHtml;
+  if (theirs.status === 'shared' && theirs.location) {
+    theirsHtml = meetupMapHtml(theirs.location, n.otherName);
+  } else if (theirs.status === 'pending') {
+    theirsHtml = `<p class="meetup-status"><span class="meetup-waiting" aria-hidden="true"></span>Waiting for ${other} to share their location…</p>`;
+  } else if (theirs.status === 'declined') {
+    const canAsk = !theirs.askAgainAt || Date.now() >= Date.parse(theirs.askAgainAt);
+    theirsHtml = `<p class="meetup-status">${other} declined to share their location.</p>
+      ${canAsk ? askButton('Ask again') : `<p class="meetup-hint">You can ask again after ${meetupTime(theirs.askAgainAt)}.</p>`}`;
+  } else {
+    const reason = theirs.status === 'expired' ? `${other}'s shared location has expired. `
+      : theirs.status === 'stopped' ? `${other} stopped sharing their location. ` : '';
+    theirsHtml = `<p class="meetup-status">${reason}Ask ${other} where to meet.</p>${askButton(`Ask ${other} for their location`)}`;
+  }
+
+  // My location (what they asked me for).
+  const mine = n.myLocation || {};
+  let mineHtml = '';
+  if (mine.status === 'pending') {
+    mineHtml = `
+      <div class="meetup-incoming">
+        <p class="meetup-incoming-title"><strong>${other} is asking for your location</strong> to meet you for the handover.</p>
+        <input type="text" class="meetup-note" maxlength="160" aria-label="Optional note for ${other}" placeholder="Optional note, e.g. I'm at the library entrance" />
+        <div class="meetup-actions">
+          <button type="button" class="btn btn-primary btn-compact meetup-btn" data-action="shareMeetupLocation" data-args="${claimArg}">Share my current location</button>
+          <button type="button" class="btn btn-outline btn-compact meetup-btn" data-action="declineMeetupLocation" data-args="${claimArg}">Decline</button>
+        </div>
+        <p class="meetup-hint">Your location is taken once (no tracking), shown only to ${other}, and deleted after one hour.</p>
+      </div>`;
+  } else if (mine.status === 'shared' && mine.expiresAt) {
+    mineHtml = `
+      <div class="meetup-sharing">
+        <p class="meetup-status"><span class="meetup-live" aria-hidden="true"></span>You are sharing your location with ${other} until ${meetupTime(mine.expiresAt)}.</p>
+        <button type="button" class="btn btn-outline btn-compact meetup-btn" data-action="stopMeetupLocation" data-args="${claimArg}">Stop sharing</button>
+      </div>`;
+  }
+
+  const intro = n.role === 'owner'
+    ? `Your claim was approved. Arrange where to meet ${otherRole}, ${other}.`
+    : `${other}'s claim for the item you found was approved. Arrange where to meet ${otherRole}, ${other}.`;
+  return `
+    <p class="notif-msg"><strong>Handover meetup</strong> · ${intro}</p>
+    ${mineHtml}
+    <div class="meetup-section">
+      <p class="meetup-label">${other}'s location</p>
+      ${theirsHtml}
+    </div>`;
+}
+
+// A small OpenStreetMap map (3×3 tiles) centred on the shared point, with the
+// reading's accuracy as a circle and links to open it in a full map app.
+function meetupMapHtml(location, otherName) {
+  const zoom = MEETUP_MAP_ZOOM;
+  const tilesPerSide = 2 ** zoom;
+  const latRad = location.latitude * Math.PI / 180;
+  const worldX = (location.longitude + 180) / 360 * tilesPerSide * 256;
+  const worldY = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * tilesPerSide * 256;
+  const tileX = Math.floor(worldX / 256);
+  const tileY = Math.floor(worldY / 256);
+  const offsetX = worldX - (tileX - 1) * 256;
+  const offsetY = worldY - (tileY - 1) * 256;
+  const tiles = [];
+  for (let dy = -1; dy <= 1; dy += 1) {
+    for (let dx = -1; dx <= 1; dx += 1) {
+      const x = (tileX + dx + tilesPerSide) % tilesPerSide;
+      const y = tileY + dy;
+      if (y < 0 || y >= tilesPerSide) continue;
+      tiles.push(`<img src="https://tile.openstreetmap.org/${zoom}/${x}/${y}.png" alt="" draggable="false" style="left:${(dx + 1) * 256}px;top:${(dy + 1) * 256}px">`);
+    }
+  }
+  const metersPerPixel = 156543.03392 * Math.cos(latRad) / tilesPerSide;
+  const radius = Math.round(Math.min(140, Math.max(10, location.accuracy / metersPerPixel)));
+  const lat = location.latitude.toFixed(6);
+  const lng = location.longitude.toFixed(6);
+  const name = escapeHtml(otherName);
+  return `
+    <div class="meetup-map" role="img" aria-label="Map showing where ${name} is">
+      <div class="meetup-tiles" style="left:calc(50% - ${offsetX.toFixed(1)}px);top:calc(50% - ${offsetY.toFixed(1)}px)">${tiles.join('')}</div>
+      <span class="meetup-accuracy" style="width:${radius * 2}px;height:${radius * 2}px" aria-hidden="true"></span>
+      <span class="meetup-pin" aria-hidden="true"></span>
+      <a class="meetup-attribution" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>
+    </div>
+    ${location.note ? `<p class="meetup-note-text">“${escapeHtml(location.note)}”</p>` : ''}
+    <p class="meetup-hint">Shared ${escapeHtml(relativeTimeLabel(new Date(location.sharedAt)))} · accurate to about ${escapeHtml(String(location.accuracy))} m · visible until ${meetupTime(location.expiresAt)}</p>
+    <div class="meetup-actions">
+      <a class="btn btn-primary btn-compact meetup-btn" href="https://www.google.com/maps/search/?api=1&amp;query=${lat},${lng}" target="_blank" rel="noopener">Open in Google Maps</a>
+      <a class="btn btn-outline btn-compact meetup-btn" href="https://www.openstreetmap.org/?mlat=${lat}&amp;mlon=${lng}#map=18/${lat}/${lng}" target="_blank" rel="noopener">OpenStreetMap</a>
+    </div>`;
+}
+
+async function meetupAction(claimId, path, body, button, busyLabel) {
+  button.disabled = true;
+  button.dataset.busy = 'true';
+  const label = button.textContent;
+  button.textContent = busyLabel;
+  try {
+    const res = await fetch(`/api/items/claims/${encodeURIComponent(claimId)}/meetup/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {})
+    });
+    const data = await res.json();
+    showToast(data.message || (data.success ? 'Done.' : 'Something went wrong.'), !data.success);
+    if (data.success) {
+      await loadNotificationsIntoModal();
+      await loadMyNotifications();
+      return;
+    }
+  } catch (error) {
+    showToast('Network error. Please try again.', true);
+  }
+  button.disabled = false;
+  delete button.dataset.busy;
+  button.textContent = label;
+}
+
+function requestMeetupLocation(claimId, button) {
+  return meetupAction(claimId, 'request', {}, button, 'Sending request…');
+}
+
+function declineMeetupLocation(claimId, button) {
+  return meetupAction(claimId, 'respond', { action: 'decline' }, button, 'Declining…');
+}
+
+function stopMeetupLocation(claimId, button) {
+  return meetupAction(claimId, 'stop', {}, button, 'Stopping…');
+}
+
+// One reading from the device (GPS where available), sent only after the student taps Share.
+function shareMeetupLocation(claimId, button) {
+  if (!('geolocation' in navigator)) {
+    showToast('This browser cannot share a location.', true);
+    return;
+  }
+  const note = button.closest('.meetup-incoming')?.querySelector('.meetup-note')?.value.trim() || '';
+  button.disabled = true;
+  button.dataset.busy = 'true';
+  const label = button.textContent;
+  button.textContent = 'Getting your location…';
+  navigator.geolocation.getCurrentPosition(position => {
+    button.textContent = label;
+    meetupAction(claimId, 'respond', {
+      action: 'share',
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      note
+    }, button, 'Sharing…');
+  }, error => {
+    button.disabled = false;
+    delete button.dataset.busy;
+    button.textContent = label;
+    const messages = {
+      1: 'Location permission is blocked. Allow location for this site in your browser settings, then try again.',
+      2: 'Your location is not available right now. Turn on GPS or location services and try again.',
+      3: 'Getting your location took too long. Please try again.'
+    };
+    showToast(messages[error.code] || 'Your location could not be read.', true);
+  }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
 }
 
 async function loadNotificationsIntoModal() {
@@ -1092,7 +1291,15 @@ async function loadNotificationsIntoModal() {
 
     document.getElementById('notificationSelectionToolbar').hidden = false;
     document.getElementById('selectAllNotifications').checked = false;
-    list.innerHTML = data.notifications.map(n => `
+    list.innerHTML = data.notifications.map(n => n.notificationType === 'meetup' ? `
+      <div class="notif-item notif-item--meetup${n.read ? '' : ' unread'}" data-id="${escapeHtml(String(n.id))}">
+        <div class="notif-header">
+          <strong>🏷️ ${escapeHtml(n.itemTitle || n.refCode || 'Item')}</strong>
+          <span class="notif-time">${new Date(n.timestamp).toLocaleString()}</span>
+        </div>
+        ${meetupNotificationHtml(n)}
+      </div>
+    ` : `
       <div class="notif-item${n.read ? '' : ' unread'}" data-id="${escapeHtml(String(n.id))}">
         <label class="notification-select-control">
           <input class="notification-select" type="checkbox" value="${escapeHtml(JSON.stringify({
@@ -1236,21 +1443,194 @@ document.addEventListener('error', event => {
   if (event.target.matches?.('img[data-item-photo]')) setItemPhotoState(event.target, 'error');
 }, true);
 
+// ── Photo viewer (css/lightbox.css) ────────────────────────────────────────
+// Opening a card's photo shows it full screen with the item's details. The other
+// photos on the current page can be browsed with the arrows, ← / → or a swipe.
+let lightboxPhotos = [];
+let lightboxIndex = 0;
+
+// Every card photo on the page that can be opened, in the order shown.
+function collectLightboxPhotos() {
+  return [...document.querySelectorAll('#itemsGrid .item-photo-frame[data-action="openImageModal"]')].map(frame => {
+    let src = '';
+    let title = '';
+    try { [src, title] = JSON.parse(frame.dataset.args); } catch { /* skip malformed */ }
+    const cardId = frame.closest('[id^="item-card-"]')?.id.replace('item-card-', '');
+    const item = loadedItems.find(entry => String(entry.id) === cardId);
+    return { src, title, item };
+  }).filter(photo => photo.src);
+}
+
 function openImageModal(photoSrc, title) {
   if (!photoSrc) return;
-  const image = document.getElementById('imageModalImg');
-  const fallback = document.getElementById('imageModalFallback');
-  image.hidden = false;
-  fallback.hidden = true;
-  image.onload = () => { image.hidden = false; fallback.hidden = true; };
-  image.onerror = () => { image.hidden = true; fallback.hidden = false; };
-  image.src = photoSrc;
-  document.getElementById('imageModalTitle').innerText = title || 'Item Photo View';
+  lightboxPhotos = collectLightboxPhotos();
+  lightboxIndex = lightboxPhotos.findIndex(photo => photo.src === photoSrc);
+  if (lightboxIndex === -1) {
+    lightboxPhotos = [{ src: photoSrc, title }];
+    lightboxIndex = 0;
+  }
+  const box = document.querySelector('#imageModal .lightbox');
+  box.classList.remove('is-next', 'is-prev');
+  showLightboxPhoto();
   document.getElementById('imageModal').classList.add('open');
 }
 
+function showLightboxPhoto(direction = 0) {
+  const photo = lightboxPhotos[lightboxIndex];
+  const box = document.querySelector('#imageModal .lightbox');
+  const image = document.getElementById('imageModalImg');
+  const fallback = document.getElementById('imageModalFallback');
+  setImageZoom(false);
+
+  box.classList.add('is-loading');
+  image.hidden = false;
+  fallback.hidden = true;
+  image.onload = () => box.classList.remove('is-loading');
+  image.onerror = () => {
+    box.classList.remove('is-loading');
+    image.hidden = true;
+    fallback.hidden = false;
+  };
+  image.alt = photo.title ? `Photo of ${photo.title}` : 'Item photo';
+  image.src = photo.src;
+  if (image.complete && image.naturalWidth) box.classList.remove('is-loading');
+
+  // Slide in from the side the photo came from.
+  box.classList.remove('is-next', 'is-prev');
+  if (direction) {
+    void box.offsetWidth;
+    box.classList.add(direction > 0 ? 'is-next' : 'is-prev');
+  }
+
+  renderLightboxCaption(photo);
+  const total = lightboxPhotos.length;
+  document.getElementById('imageModalCounter').textContent = total > 1 ? `${lightboxIndex + 1} / ${total}` : '';
+  document.getElementById('imageModalPrev').hidden = total < 2;
+  document.getElementById('imageModalNext').hidden = total < 2;
+  document.getElementById('imageModalOpen').href = photo.src;
+
+  // Load the neighbours now so the next arrow press is instant.
+  [lightboxIndex - 1, lightboxIndex + 1].forEach(index => {
+    const neighbour = lightboxPhotos[(index + total) % total];
+    if (neighbour && total > 1) new Image().src = neighbour.src;
+  });
+}
+
+function renderLightboxCaption(photo) {
+  const item = photo.item;
+  document.getElementById('imageModalTitle').textContent = item?.title || photo.title || 'Item photo';
+
+  const badge = document.getElementById('imageModalBadge');
+  if (item) {
+    const status = item.claimed ? 'claimed' : item.type === 'lost' ? 'lost' : 'found';
+    badge.className = `item-badge badge-${status}`;
+    badge.textContent = status[0].toUpperCase() + status.slice(1);
+    badge.hidden = false;
+  } else {
+    badge.hidden = true;
+  }
+
+  const meta = document.getElementById('imageModalMeta');
+  meta.replaceChildren();
+  if (!item) return;
+  const reported = item.createdAt || item.date ? new Date(item.createdAt || item.date) : null;
+  const parts = [
+    [item.category, ''],
+    [item.location, ''],
+    [reported && !Number.isNaN(reported.getTime()) ? `Reported ${relativeTimeLabel(reported)}` : '', ''],
+    [item.refCode, 'lightbox-ref']
+  ];
+  parts.filter(([text]) => text).forEach(([text, className]) => {
+    const span = document.createElement('span');
+    span.textContent = text;
+    if (className) span.className = className;
+    meta.appendChild(span);
+  });
+}
+
+function showAdjacentPhoto(step) {
+  const total = lightboxPhotos.length;
+  if (total < 2) return;
+  lightboxIndex = (lightboxIndex + step + total) % total;
+  showLightboxPhoto(step);
+}
+
+// Zoom in around a point of the photo (fractions 0-1), or out.
+function setImageZoom(zoomed, originX = 0.5, originY = 0.5) {
+  const box = document.querySelector('#imageModal .lightbox');
+  const image = document.getElementById('imageModalImg');
+  box.classList.toggle('is-zoomed', zoomed);
+  image.style.transformOrigin = `${originX * 100}% ${originY * 100}%`;
+  const button = document.getElementById('imageModalZoom');
+  button.setAttribute('aria-label', zoomed ? 'Zoom out' : 'Zoom in');
+  button.setAttribute('aria-pressed', String(zoomed));
+}
+
+function toggleImageZoom() {
+  const zoomed = document.querySelector('#imageModal .lightbox').classList.contains('is-zoomed');
+  setImageZoom(!zoomed);
+}
+
 function closeImageModal() {
+  setImageZoom(false);
   document.getElementById('imageModal').classList.remove('open');
+}
+
+function setupPhotoLightbox() {
+  const modal = document.getElementById('imageModal');
+  const stage = document.getElementById('imageModalStage');
+  const image = document.getElementById('imageModalImg');
+  if (!modal || !stage || !image) return;
+  const box = modal.querySelector('.lightbox');
+  const pointFraction = event => {
+    const rect = image.getBoundingClientRect();
+    return [
+      Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
+      Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height))
+    ];
+  };
+
+  // Click the photo to zoom in where you clicked; click again to zoom out.
+  image.addEventListener('click', event => {
+    if (swipeHandled) return;
+    const zoomed = box.classList.contains('is-zoomed');
+    setImageZoom(!zoomed, ...pointFraction(event));
+  });
+  // While zoomed, the visible part follows the pointer.
+  image.addEventListener('pointermove', event => {
+    if (!box.classList.contains('is-zoomed') || event.pointerType === 'touch') return;
+    const [x, y] = pointFraction(event);
+    image.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+  });
+
+  // Clicking the dark area around the photo closes the viewer.
+  stage.addEventListener('click', event => {
+    if (event.target === stage || event.target.id === 'imageModalFrame') closeImageModal();
+  });
+
+  // Swipe left / right on touch screens.
+  let swipeStart = null;
+  let swipeHandled = false;
+  stage.addEventListener('pointerdown', event => {
+    swipeHandled = false;
+    swipeStart = event.pointerType === 'touch' && !box.classList.contains('is-zoomed') ? { x: event.clientX, y: event.clientY } : null;
+  });
+  stage.addEventListener('pointerup', event => {
+    if (!swipeStart) return;
+    const dx = event.clientX - swipeStart.x;
+    const dy = event.clientY - swipeStart.y;
+    swipeStart = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      swipeHandled = true;
+      showAdjacentPhoto(dx < 0 ? 1 : -1);
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    if (!modal.classList.contains('open')) return;
+    if (event.key === 'ArrowRight') { event.preventDefault(); showAdjacentPhoto(1); }
+    else if (event.key === 'ArrowLeft') { event.preventDefault(); showAdjacentPhoto(-1); }
+  });
 }
 
 let selectedPhotoFile = null;
@@ -1645,6 +2025,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPhotoDropZone();
   setupReportMoreDetails();
   setupReportPanelSticky();
+  setupPhotoLightbox();
   const matchParams = new URLSearchParams(window.location.search);
   checkAuthSession().then(() => {
     if (matchParams.get('action') === 'register-belonging') {

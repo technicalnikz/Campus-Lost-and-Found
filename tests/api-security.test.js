@@ -1145,6 +1145,105 @@ test('image upload stores a bounded image file and rejects invalid uploads', asy
   assert.equal(oversizedResponse.status, 413);
 });
 
+test('owner and finder of an approved claim can share a one-time location, only with each other', async () => {
+  const itemsPath = path.join(dataDir, 'items.json');
+  const claimsPath = path.join(dataDir, 'claims.json');
+  const originalItems = fs.readFileSync(itemsPath, 'utf8');
+  const originalClaims = fs.existsSync(claimsPath) ? fs.readFileSync(claimsPath, 'utf8') : '[]';
+  const readClaim = () => JSON.parse(fs.readFileSync(claimsPath, 'utf8')).find(claim => claim.id === 'claim-meetup-test');
+  try {
+    // Found by match.student, claimed by student, approved by an admin just now.
+    const items = JSON.parse(originalItems);
+    items.push({ id: 90, refCode: 'CSPC-LF-2026-090', title: 'Blue umbrella', category: 'Others', type: 'found',
+      location: 'Library', desc: 'Blue umbrella.', reportedBy: 'match-student-test', status: 'claimed', claimed: true,
+      createdAt: new Date().toISOString() });
+    fs.writeFileSync(itemsPath, JSON.stringify(items));
+    const claims = JSON.parse(originalClaims);
+    claims.unshift({ id: 'claim-meetup-test', itemId: 90, itemTitle: 'Blue umbrella', itemRefCode: 'CSPC-LF-2026-090',
+      claimantId: 'student-test', claimantName: 'Test Student', status: 'approved', proof: 'Initials on the handle.',
+      createdAt: new Date().toISOString(), reviewedAt: new Date().toISOString() });
+    fs.writeFileSync(claimsPath, JSON.stringify(claims));
+
+    const ownerCookie = await login('student@my.cspc.edu.ph', studentPassword);
+    const finderCookie = await login('match.student@my.cspc.edu.ph', studentPassword);
+    const adminCookie = await login('admin@cspc.edu.ph', adminPassword);
+    const meetupEntry = async cookie => {
+      const response = await fetch(`${baseUrl}/api/items/my-notifications`, { headers: { Cookie: cookie } });
+      return (await response.json()).notifications.find(n => n.notificationType === 'meetup' && n.claimId === 'claim-meetup-test');
+    };
+    const meetupPost = (cookie, action, body = {}) => fetch(`${baseUrl}/api/items/claims/claim-meetup-test/meetup/${action}`, {
+      method: 'POST',
+      headers: { Cookie: cookie, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const ownerStart = await meetupEntry(ownerCookie);
+    assert.equal(ownerStart.role, 'owner');
+    assert.equal(ownerStart.theirLocation.status, 'none');
+    assert.equal((await meetupEntry(finderCookie)).role, 'finder');
+
+    // Only the two people on the claim can use it; not even an admin.
+    assert.equal((await meetupPost(adminCookie, 'request')).status, 404);
+    assert.equal((await meetupPost(ownerCookie, 'respond', { action: 'share', latitude: 1, longitude: 1, accuracy: 5 })).status, 404,
+      'nobody can share before being asked');
+
+    assert.equal((await meetupPost(ownerCookie, 'request')).status, 201);
+    assert.equal((await meetupPost(ownerCookie, 'request')).status, 409);
+    const finderAsked = await meetupEntry(finderCookie);
+    assert.equal(finderAsked.myLocation.status, 'pending');
+    assert.equal(finderAsked.read, false, 'an incoming request counts as unread');
+
+    assert.equal((await meetupPost(finderCookie, 'respond', { action: 'share', latitude: 200, longitude: 123, accuracy: 10 })).status, 400);
+    assert.equal((await meetupPost(finderCookie, 'respond', { action: 'share', latitude: 13.4, longitude: 123.37, accuracy: 9000 })).status, 400);
+    const shared = await meetupPost(finderCookie, 'respond', {
+      action: 'share', latitude: 13.4123456789, longitude: 123.3712345678, accuracy: 24.6, note: 'At the library entrance'
+    });
+    assert.equal(shared.status, 200);
+
+    const ownerSees = await meetupEntry(ownerCookie);
+    assert.equal(ownerSees.theirLocation.status, 'shared');
+    assert.equal(ownerSees.theirLocation.location.latitude, 13.412346);
+    assert.equal(ownerSees.theirLocation.location.accuracy, 25);
+    assert.equal(ownerSees.theirLocation.location.note, 'At the library entrance');
+    assert.ok(Date.parse(ownerSees.theirLocation.location.expiresAt) - Date.now() > 55 * 60 * 1000);
+    const finderSees = await meetupEntry(finderCookie);
+    assert.equal(finderSees.myLocation.status, 'shared');
+    assert.equal(finderSees.theirLocation.location, null, 'the finder only sees a location the owner shared');
+
+    // Stopping deletes the stored location.
+    assert.equal((await meetupPost(finderCookie, 'stop')).status, 200);
+    assert.equal((await meetupEntry(ownerCookie)).theirLocation.status, 'stopped');
+    assert.equal(readClaim().meetup['student-test'].location, undefined);
+
+    // A shared location is deleted once its hour is up.
+    assert.equal((await meetupPost(ownerCookie, 'request')).status, 201);
+    assert.equal((await meetupPost(finderCookie, 'respond', { action: 'share', latitude: 13.4, longitude: 123.37, accuracy: 15 })).status, 200);
+    const stored = JSON.parse(fs.readFileSync(claimsPath, 'utf8'));
+    stored.find(claim => claim.id === 'claim-meetup-test').meetup['student-test'].location.expiresAt = new Date(Date.now() - 1000).toISOString();
+    fs.writeFileSync(claimsPath, JSON.stringify(stored));
+    const afterExpiry = await meetupEntry(ownerCookie);
+    assert.equal(afterExpiry.theirLocation.status, 'expired');
+    assert.equal(afterExpiry.theirLocation.location, null);
+    assert.equal(readClaim().meetup['student-test'].location, undefined);
+
+    // Declining is respected for a while before asking again.
+    assert.equal((await meetupPost(finderCookie, 'request')).status, 201);
+    assert.equal((await meetupPost(ownerCookie, 'respond', { action: 'decline' })).status, 200);
+    assert.equal((await meetupPost(finderCookie, 'request')).status, 429);
+    assert.equal((await meetupEntry(finderCookie)).theirLocation.status, 'declined');
+
+    // Once the claim is no longer approved, everything about the meetup is deleted.
+    const rejected = JSON.parse(fs.readFileSync(claimsPath, 'utf8'));
+    rejected.find(claim => claim.id === 'claim-meetup-test').status = 'rejected';
+    fs.writeFileSync(claimsPath, JSON.stringify(rejected));
+    assert.equal(await meetupEntry(ownerCookie), undefined);
+    assert.equal(readClaim().meetup, undefined);
+  } finally {
+    fs.writeFileSync(itemsPath, originalItems);
+    fs.writeFileSync(claimsPath, originalClaims);
+  }
+});
+
 test('production requires a secret and persists secure sessions', async () => {
   process.env.NODE_ENV = 'production';
   delete process.env.SESSION_SECRET;

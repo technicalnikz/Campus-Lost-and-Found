@@ -14,6 +14,8 @@
   <link rel="stylesheet" href="/css/glass.css" />
   <link rel="stylesheet" href="/css/polish.css" />
   <link rel="stylesheet" href="/css/splash.css" />
+  <link rel="stylesheet" href="/css/lightbox.css" />
+  <link rel="stylesheet" href="/css/meetup.css" />
   <script src="/js/main.js"></script>
   <script src="/js/ui.js"></script>
   <script src="/vendor/qrcode.js"></script>
@@ -416,16 +418,44 @@
     </div>
   </div>
 
-  <!-- FULL IMAGE VIEWER LIGHTBOX MODAL -->
-  <div class="slip-overlay" id="imageModal" data-close="closeImageModal">
-    <div class="modal-card modal-card--xl modal-card--neutral modal-card--center">
-      <div class="modal-header modal-header--center">
-        <h3 id="imageModalTitle" class="modal-heading--accent">Item Photo View</h3>
-        <button type="button" class="modal-close modal-close--boxed" data-action="closeImageModal" aria-label="Close image preview">✕</button>
+  <!-- PHOTO VIEWER: full-screen photo with item details, browsing and zoom (css/lightbox.css, js/home-page.js) -->
+  <div class="slip-overlay photo-lightbox" id="imageModal" data-close="closeImageModal">
+    <div class="lightbox" role="dialog" aria-labelledby="imageModalTitle">
+      <div class="lightbox-toolbar">
+        <span class="lightbox-counter" id="imageModalCounter" aria-live="polite"></span>
+        <div class="lightbox-tools">
+          <button type="button" class="lightbox-tool" id="imageModalZoom" data-action="toggleImageZoom" aria-label="Zoom in" title="Zoom (click the photo)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5M7.5 10.5h6" /><path class="lightbox-zoom-plus" d="M10.5 7.5v6" /></svg>
+          </button>
+          <a class="lightbox-tool" id="imageModalOpen" href="#" target="_blank" rel="noopener" aria-label="Open original photo in a new tab" title="Open original">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
+          </a>
+          <button type="button" class="lightbox-tool" data-action="closeImageModal" aria-label="Close photo" title="Close (Esc)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </div>
       </div>
-      <div class="image-viewer">
-        <img id="imageModalImg" src="" alt="Full Item View" />
-        <p id="imageModalFallback" hidden>This photo could not be loaded.</p>
+
+      <div class="lightbox-stage" id="imageModalStage">
+        <button type="button" class="lightbox-nav lightbox-nav--prev" id="imageModalPrev" data-action="showAdjacentPhoto" data-args="[-1]" aria-label="Previous photo">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 5-7 7 7 7" /></svg>
+        </button>
+        <div class="lightbox-frame" id="imageModalFrame">
+          <img id="imageModalImg" src="" alt="" draggable="false" />
+          <span class="lightbox-spinner" aria-hidden="true"></span>
+          <p id="imageModalFallback" class="lightbox-fallback" hidden>This photo could not be loaded.</p>
+        </div>
+        <button type="button" class="lightbox-nav lightbox-nav--next" id="imageModalNext" data-action="showAdjacentPhoto" data-args="[1]" aria-label="Next photo">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" /></svg>
+        </button>
+      </div>
+
+      <div class="lightbox-caption">
+        <div class="lightbox-caption-head">
+          <span class="item-badge" id="imageModalBadge" hidden></span>
+          <h3 class="lightbox-title" id="imageModalTitle">Item photo</h3>
+        </div>
+        <p class="lightbox-meta" id="imageModalMeta"></p>
       </div>
     </div>
   </div>

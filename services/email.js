@@ -145,6 +145,24 @@ async function sendPossibleMatchEmail(user, lostItem, foundItem) {
   });
 }
 
+// The other person on an approved claim asked where to meet for the handover.
+async function sendMeetupRequestEmail(user, requesterName, itemTitle) {
+  const transport = createTransport();
+  const name = user.fullName || 'Student';
+  const inboxUrl = getAppUrl('/');
+  const lines = [
+    `${requesterName} has asked for your current location so you can meet and hand over "${itemTitle}".`,
+    'To respond, sign in to Back2You and open your notifications (the bell icon). You may share your location once or decline. A shared location is visible only to that person and is deleted automatically after one hour.'
+  ];
+  await transport.sendMail({
+    from: process.env.SMTP_FROM,
+    to: user.email,
+    subject: `Back2You: location request for "${itemTitle}"`,
+    text: `Dear ${name},\n\n${lines.join('\n\n')}\n\n${inboxUrl}\n\nSincerely,\nThe Back2You Team\nCamarines Sur Polytechnic Colleges`,
+    html: `<p>Dear ${escapeHtml(name)},</p>${lines.map(line => `<p>${escapeHtml(line)}</p>`).join('')}<p><a href="${escapeHtml(inboxUrl)}">Open Back2You</a></p><p>Sincerely,<br>The Back2You Team<br>Camarines Sur Polytechnic Colleges</p>`
+  });
+}
+
 async function sendClaimStatusEmail(user, item, claim, status) {
   const transport = createTransport();
   const name = user.fullName || claim.claimantName || 'there';
@@ -236,5 +254,6 @@ module.exports = {
   sendClaimRequestEmail,
   sendFinderNotificationEmail,
   sendMatchFinderNotificationEmail,
-  sendBroadcastEmail
+  sendBroadcastEmail,
+  sendMeetupRequestEmail
 };

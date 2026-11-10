@@ -1,0 +1,205 @@
+/* Photo viewer on the home page (js/home-page.js: openImageModal). A dark full-screen
+   stage in both themes, so the photo stands out: toolbar on top, photo in the middle
+   with previous/next arrows, item details underneath. Click the photo to zoom in where
+   you clicked; move to look around; click again to zoom out. */
+
+/* Overrides the light theme's white popup panel, heading and paragraph colours
+   (styles.css), which use !important. */
+:root .slip-overlay.photo-lightbox {
+  padding: 0;
+  background: rgba(2, 6, 23, 0.92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+:root[data-theme] .slip-overlay.photo-lightbox > div.lightbox {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #f8fafc !important;
+}
+:root[data-theme] .slip-overlay.photo-lightbox h3.lightbox-title { color: #f8fafc !important; }
+:root[data-theme] .slip-overlay.photo-lightbox p.lightbox-meta { color: #cbd5e1 !important; }
+:root[data-theme] .slip-overlay.photo-lightbox p.lightbox-fallback { color: #94a3b8 !important; }
+
+.slip-overlay.photo-lightbox.open { animation: lightbox-fade 0.22s ease both; }
+@keyframes lightbox-fade { from { opacity: 0; } }
+
+.lightbox {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  padding: 0.75rem clamp(0.75rem, 3vw, 2rem) clamp(0.75rem, 2.5vh, 1.5rem);
+  outline: none;
+}
+
+/* ── Toolbar ── */
+.lightbox-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.75rem;
+}
+.lightbox-counter {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.lightbox-tools { display: flex; gap: 0.5rem; margin-left: auto; }
+.lightbox-tool,
+.lightbox-nav {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+.lightbox-tool { width: 2.6rem; height: 2.6rem; }
+.lightbox-tool:hover,
+.lightbox-nav:hover { background: rgba(255, 255, 255, 0.18); }
+.lightbox-tool:focus-visible,
+.lightbox-nav:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
+.lightbox-tool svg,
+.lightbox-nav svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* The zoom button shows a minus while zoomed in. */
+.lightbox.is-zoomed .lightbox-zoom-plus { display: none; }
+
+/* ── Stage: photo with previous / next ── */
+.lightbox-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding-block: 0.5rem;
+  touch-action: pan-y;
+}
+.lightbox-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 8rem;
+  min-height: 8rem;
+  overflow: hidden;
+  border-radius: 14px;
+}
+.lightbox-frame img {
+  display: block;
+  max-width: min(100%, 1400px);
+  max-height: calc(100dvh - 12rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
+  cursor: zoom-in;
+  user-select: none;
+  -webkit-user-drag: none;
+  opacity: 1;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+/* Opening: the photo grows in. Changing photo: it slides in from the side it came from. */
+.photo-lightbox.open .lightbox-frame img { animation: lightbox-photo-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+.lightbox.is-next .lightbox-frame img { animation: lightbox-from-right 0.28s ease both; }
+.lightbox.is-prev .lightbox-frame img { animation: lightbox-from-left 0.28s ease both; }
+@keyframes lightbox-photo-in { from { opacity: 0; transform: scale(0.94); } }
+@keyframes lightbox-from-right { from { opacity: 0; transform: translateX(40px); } }
+@keyframes lightbox-from-left { from { opacity: 0; transform: translateX(-40px); } }
+
+/* Loading and failed states. */
+.lightbox-spinner {
+  position: absolute;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #93c5fd;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  animation: lightbox-spin 0.8s linear infinite;
+  transition: opacity 0.15s ease;
+}
+.lightbox.is-loading .lightbox-spinner { opacity: 1; }
+.lightbox.is-loading .lightbox-frame img { opacity: 0; }
+@keyframes lightbox-spin { to { transform: rotate(360deg); } }
+.lightbox-fallback { margin: 2rem; font-size: 0.9375rem; text-align: center; }
+
+/* Zoomed: twice the size around the point that was clicked; moving pans it. */
+.lightbox.is-zoomed .lightbox-frame img {
+  transform: scale(2.2);
+  cursor: zoom-out;
+  box-shadow: none;
+  transition: transform 0.25s ease, transform-origin 0.08s linear;
+}
+.lightbox.is-zoomed .lightbox-nav { opacity: 0; pointer-events: none; }
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  width: 3rem;
+  height: 3rem;
+  transform: translateY(-50%);
+}
+.lightbox-nav--prev { left: 0; }
+.lightbox-nav--next { right: 0; }
+.lightbox-nav--prev:hover { transform: translateY(-50%) translateX(-2px); }
+.lightbox-nav--next:hover { transform: translateY(-50%) translateX(2px); }
+.lightbox-nav[hidden] { display: none; }
+
+/* ── Caption: what the photo is ── */
+.lightbox-caption {
+  width: min(100%, 46rem);
+  margin: 0 auto;
+  padding-top: 0.6rem;
+  text-align: center;
+}
+.lightbox-caption-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.6rem;
+}
+.lightbox-title {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.lightbox-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+/* Each detail wraps as a whole, never mid-word (e.g. inside the reference code). */
+.lightbox-meta span { display: inline-block; white-space: nowrap; }
+.lightbox-meta span + span::before {
+  content: '·';
+  margin: 0 0.5rem;
+  color: #64748b;
+}
+.lightbox-meta .lightbox-ref { font-family: Consolas, 'Courier New', monospace; letter-spacing: 0.03em; }
+
+/* Phones: arrows sit lower and smaller; swiping also changes photo. */
+@media (max-width: 640px) {
+  .lightbox-nav { width: 2.5rem; height: 2.5rem; background: rgba(15, 23, 42, 0.6); }
+  .lightbox-frame img { max-height: calc(100dvh - 13rem); border-radius: 10px; }
+}

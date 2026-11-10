@@ -1,0 +1,165 @@
+/* Handover meetup entry in the notifications inbox (js/home-page.js): the owner and
+   finder of an approved claim can ask each other for a one-time location. */
+
+.notif-item--meetup .meetup-section {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+.meetup-label {
+  margin: 0 0 0.4rem;
+  color: var(--blue-dark);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.meetup-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  color: var(--text-main);
+  font-size: 0.9375rem;
+}
+.meetup-hint {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.meetup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+:root .meetup-btn {
+  min-height: 2.4rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Someone is asking for my location: the part that needs an answer stands out. */
+.meetup-incoming {
+  margin-top: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--blue-main) 45%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--blue-main) 10%, transparent);
+  animation: meetup-attention 0.5s ease-out;
+}
+@keyframes meetup-attention {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+.meetup-incoming-title {
+  margin: 0 0 0.6rem;
+  color: var(--text-main);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+:root .meetup-note {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--field-border, var(--border));
+  border-radius: 10px;
+  background: var(--field-bg, transparent);
+  color: var(--text-main);
+}
+.meetup-sharing {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 14px;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+/* Small live dots: green while my location is shared, blue while waiting. */
+.meetup-live,
+.meetup-waiting {
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+.meetup-live { background: #22c55e; animation: meetup-pulse 1.6s ease-out infinite; }
+.meetup-waiting { background: var(--blue-main); animation: meetup-pulse 1.6s ease-out infinite; }
+@keyframes meetup-pulse {
+  0% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  70% { box-shadow: 0 0 0 8px transparent; opacity: 0.6; }
+  100% { opacity: 1; }
+}
+.meetup-live { color: rgba(34, 197, 94, 0.5); }
+.meetup-waiting { color: color-mix(in srgb, var(--blue-main) 50%, transparent); }
+
+/* ── The map: 3×3 OpenStreetMap tiles centred on the shared point ── */
+.meetup-map {
+  position: relative;
+  height: 210px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #e5e7eb;
+}
+.meetup-tiles {
+  position: absolute;
+  width: 768px;
+  height: 768px;
+}
+.meetup-tiles img {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  max-width: none;
+  user-select: none;
+}
+.meetup-accuracy {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 2px solid rgba(37, 99, 235, 0.55);
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.16);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+/* Pin: a blue dot with a white ring that drops in, then pulses. */
+.meetup-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: #2563eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+  animation: meetup-pin-drop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.4) both, meetup-pin-pulse 2s ease-out 0.5s infinite;
+}
+@keyframes meetup-pin-drop {
+  from { opacity: 0; transform: translate(-50%, -160%); }
+}
+@keyframes meetup-pin-pulse {
+  0% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(37, 99, 235, 0.45); }
+  70% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 0 0 16px rgba(37, 99, 235, 0); }
+}
+.meetup-attribution {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0.1rem 0.4rem;
+  border-top-left-radius: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #334155;
+  font-size: 0.6875rem;
+  text-decoration: none;
+}
+.meetup-note-text {
+  margin: 0.55rem 0 0;
+  color: var(--text-main);
+  font-size: 0.9375rem;
+  font-style: italic;
+}
