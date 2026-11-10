@@ -601,10 +601,12 @@
   :root #report .report-more > summary { padding-block: 0.6rem; }
 }
 
-/* Large screens: 1320px content gives the items three cards per row. */
+/* Large screens: the content follows the window (2rem margin each side) up to
+   1760px, so items get three to five cards per row. Widths elsewhere are
+   percentage-based, so this only caps them and never causes sideways scroll. */
 @media (min-width: 1440px) {
   body:has(.browse-report-layout) {
-    --home-content-width: 1320px;
+    --home-content-width: min(calc(100vw - 4rem), 1760px);
   }
   /* The content width plus the bars' 1.25rem side padding. */
   body:has(.browse-report-layout) .navbar-container,
