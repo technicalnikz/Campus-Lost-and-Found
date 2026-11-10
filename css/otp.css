@@ -195,7 +195,8 @@
   border: none;
   cursor: pointer;
 }
-.otp-submit.is-busy { opacity: 0.75; cursor: progress; }
+/* Sign In, Create Student Account and Verify while their request is running. */
+:root .btn.is-busy { opacity: 0.75; cursor: progress; }
 .otp-resend {
   display: flex;
   flex-wrap: wrap;

@@ -57,22 +57,51 @@ function getAppUrl(pathname) {
 // sign-in ('login'). The code is only valid in the browser that asked for it.
 async function sendVerificationCodeEmail(user, code, purpose, minutesValid) {
   const transport = createTransport();
-  const name = user.fullName || 'there';
-  const safeName = escapeHtml(name);
+  const name = user.fullName || 'Student';
   const isSignup = purpose === 'signup';
-  const reason = isSignup
-    ? 'Welcome to Back2You! Enter this code to confirm your CSPC email address and activate your account:'
-    : 'Enter this code to finish signing in to Back2You:';
-  const ignore = isSignup
-    ? 'If you did not create this account, you can ignore this email.'
-    : 'If you did not try to sign in, someone may know your password. Change it after you sign in.';
 
+  // Paragraphs shared by the text and HTML versions; the code sits after `before`.
+  const before = isSignup
+    ? [
+      'Thank you for registering with Back2You, the official Lost & Found system of Camarines Sur Polytechnic Colleges.',
+      'To complete your registration, please verify your CSPC email address by entering the one-time password (OTP) below on the verification screen:'
+    ]
+    : [
+      'A sign-in to your Back2You account was requested.',
+      'To complete the sign-in, please enter the one-time password (OTP) below on the verification screen:'
+    ];
+  const after = [
+    `This code will expire in ${minutesValid} ${minutesValid === 1 ? 'minute' : 'minutes'} and can be used only once, in the browser where it was requested. For your security, do not share this code with anyone, including Back2You staff.`,
+    ...(isSignup
+      ? [
+        'Once your email address is verified, you will be able to report lost items, report items you have found, and receive alerts when a found item may match your lost-item report. You may also register personal belongings to generate QR recovery stickers.',
+        'If you did not create a Back2You account, please disregard this email. No account will be activated without this code.'
+      ]
+      : ['If you did not attempt to sign in, please disregard this email and change your password as soon as possible, as someone may know it.'])
+  ];
+
+  const paragraph = text => `<p style="margin:0 0 14px;line-height:1.6">${escapeHtml(text)}</p>`;
   await transport.sendMail({
     from: process.env.SMTP_FROM,
     to: user.email,
-    subject: `${code} is your Back2You ${isSignup ? 'verification' : 'sign-in'} code`,
-    text: `Hi ${name},\n\n${reason}\n\n${code}\n\nThe code expires in ${minutesValid} minutes and only works in the browser where you requested it. Never share it with anyone.\n\n${ignore}\n\nBack2You – CSPC Lost & Found`,
-    html: `<p>Hi ${safeName},</p><p>${escapeHtml(reason)}</p><p style="margin:20px 0;padding:14px 0;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;color:#1d4ed8;font-family:Consolas,'Courier New',monospace;font-size:32px;font-weight:700;letter-spacing:10px;text-align:center">${escapeHtml(code)}</p><p>The code expires in ${minutesValid} minutes and only works in the browser where you requested it. Never share it with anyone.</p><p>${escapeHtml(ignore)}</p><p>Back2You – CSPC Lost &amp; Found</p>`
+    subject: isSignup
+      ? `Back2You Email Verification Code: ${code}`
+      : `Back2You Sign-in Verification Code: ${code}`,
+    text: [
+      `Dear ${name},`,
+      ...before,
+      `Your verification code: ${code}`,
+      ...after,
+      'Sincerely,\nThe Back2You Team\nCamarines Sur Polytechnic Colleges'
+    ].join('\n\n'),
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#1f2937">
+      ${paragraph(`Dear ${name},`)}
+      ${before.map(paragraph).join('')}
+      <p style="margin:6px 0 4px;color:#4b5563;font-size:13px;text-align:center">Your verification code</p>
+      <p style="margin:0 0 20px;padding:14px 0;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;color:#1d4ed8;font-family:Consolas,'Courier New',monospace;font-size:32px;font-weight:700;letter-spacing:10px;text-align:center">${escapeHtml(code)}</p>
+      ${after.map(paragraph).join('')}
+      <p style="margin:18px 0 0;line-height:1.6">Sincerely,<br>The Back2You Team<br><span style="color:#6b7280">Camarines Sur Polytechnic Colleges</span></p>
+    </div>`
   });
 }
 

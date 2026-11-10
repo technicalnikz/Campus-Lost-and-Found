@@ -23,7 +23,8 @@ const STUDENT_DEPARTMENTS = new Set([
 
 const VERIFICATION_RESEND_MS = 2 * 60 * 1000;
 // Emailed one-time codes (sign-up confirmation and every sign-in).
-const OTP_TTL_MS = 10 * 60 * 1000;
+// A code lasts 1 minute; "Resend code" unlocks at the same moment it expires.
+const OTP_TTL_MS = 60 * 1000;
 const OTP_RESEND_MS = 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;

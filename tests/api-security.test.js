@@ -351,7 +351,7 @@ test('new accounts are confirmed with the emailed code before they can sign in',
   const latestEmail = smtp.messages.at(-1);
   assert.match(latestEmail.recipient, /new\.student@my\.cspc\.edu\.ph/);
   const emailContent = latestEmail.content.replace(/=\r\n/g, '').replace(/=3D/g, '=');
-  assert.match(emailContent, new RegExp(`${TEST_OTP} is your Back2You verification code`));
+  assert.match(emailContent, new RegExp(`Back2You Email Verification Code: ${TEST_OTP}`));
 
   // The squatter's session code died when the real owner registered with a new password.
   const squatterVerify = await verifyCode(squatterCookie);

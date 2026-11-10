@@ -213,8 +213,35 @@ function togglePasswordVisibility(inputId, btn) {
       document.getElementById('registerSubmit').disabled = !Object.values(requirements).every(Boolean);
     }
 
-    async function handleLogin(e) {
+    // Sign-in and sign-up wait for the code email to be sent, which takes a few
+    // seconds. The button shows that it is working and ignores repeat clicks, so a
+    // second request cannot send a second code that replaces the first.
+    let authRequestBusy = false;
+
+    async function runWhileBusy(buttonId, busyLabel, request) {
+      if (authRequestBusy) return;
+      authRequestBusy = true;
+      const button = document.getElementById(buttonId);
+      const label = button.textContent;
+      button.disabled = true;
+      button.classList.add('is-busy');
+      button.textContent = busyLabel;
+      try {
+        await request();
+      } finally {
+        authRequestBusy = false;
+        button.classList.remove('is-busy');
+        button.textContent = label;
+        button.disabled = false;
+      }
+    }
+
+    function handleLogin(e) {
       e.preventDefault();
+      return runWhileBusy('loginSubmit', 'Signing in…', submitLogin);
+    }
+
+    async function submitLogin() {
       hideError();
 
       const email = document.getElementById('loginEmail').value.trim();
@@ -444,6 +471,7 @@ function togglePasswordVisibility(inputId, btn) {
 
     async function handleRegister(e) {
       e.preventDefault();
+      if (authRequestBusy) return;
       hideError();
       updatePasswordRequirements();
 
@@ -452,6 +480,12 @@ function togglePasswordVisibility(inputId, btn) {
         return;
       }
 
+      await runWhileBusy('registerSubmit', 'Creating account…', submitRegistration);
+      // The button's enabled state follows the password rules again.
+      updatePasswordRequirements();
+    }
+
+    async function submitRegistration() {
       const fullName = document.getElementById('regFullName').value.trim();
       const email = document.getElementById('regEmail').value.trim();
       const password = document.getElementById('regPassword').value;
