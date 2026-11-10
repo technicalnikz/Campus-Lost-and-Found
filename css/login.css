@@ -16,7 +16,7 @@ body.auth-checking > .site-footer {
       align-items: center;
       justify-content: center;
       color: var(--text-muted);
-      font-size: 0.9rem;
+      font-size: 1rem;
     }
 
 .auth-container {
@@ -58,7 +58,7 @@ body.auth-checking > .site-footer {
       margin-bottom: 0.25rem;
     }
     .auth-header p {
-      font-size: 0.8rem;
+      font-size: 0.875rem;
       color: var(--text-muted);
     }
 
@@ -76,7 +76,7 @@ body.auth-checking > .site-footer {
       border: none;
       color: var(--text-muted);
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.9375rem;
       cursor: pointer;
       border-radius: 6px;
       transition: all 0.2s;
@@ -93,7 +93,7 @@ body.auth-checking > .site-footer {
       margin-bottom: 1.1rem;
     }
     .form-group label {
-      font-size: 0.75rem;
+      font-size: 0.875rem;
       font-weight: 700;
       color: var(--blue-light);
       text-transform: uppercase;
@@ -109,7 +109,7 @@ body.auth-checking > .site-footer {
       border-radius: 8px;
       padding: 0.65rem 0.85rem;
       color: var(--text-main);
-      font-size: 0.88rem;
+      font-size: 0.9375rem;
       outline: none;
       transition: border-color 0.2s;
       width: 100%;
@@ -129,7 +129,7 @@ body.auth-checking > .site-footer {
       border-radius: 8px;
       padding: 0.75rem;
       margin-top: 1.25rem;
-      font-size: .75rem;
+      font-size: 0.8125rem;
       color: var(--text-muted);
       line-height: 1.5;
     }
@@ -143,7 +143,7 @@ body.auth-checking > .site-footer {
       color: #fca5a5;
       padding: 0.6rem 0.8rem;
       border-radius: 6px;
-      font-size: 0.78rem;
+      font-size: 0.875rem;
       margin-bottom: 1rem;
       display: none;
     }
@@ -154,7 +154,7 @@ body.auth-checking > .site-footer {
       color: #86efac;
       padding: 0.6rem 0.8rem;
       border-radius: 6px;
-      font-size: 0.78rem;
+      font-size: 0.875rem;
       margin-bottom: 1rem;
       display: none;
     }
@@ -170,7 +170,7 @@ body.auth-checking > .site-footer {
       background: none;
       border: none;
       color: var(--blue-light, #60a5fa);
-      font-size: 0.8rem;
+      font-size: 0.875rem;
       font-weight: 600;
       cursor: pointer;
       text-decoration: underline;
@@ -178,11 +178,11 @@ body.auth-checking > .site-footer {
     .auth-form-intro,
     .auth-form-hint {
       color: var(--text-muted);
-      font-size: 0.8rem;
+      font-size: 0.875rem;
       margin-bottom: 1rem;
     }
     .auth-form-hint {
-      font-size: .75rem;
+      font-size: 0.8125rem;
       margin: -0.25rem 0 0.75rem;
     }
 
@@ -235,7 +235,7 @@ body.auth-checking > .site-footer {
   margin: 0.55rem 0 0;
   padding: 0;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   line-height: 1.7;
 }
 

@@ -46,7 +46,7 @@
     [data-theme='light'] .stat-val--found { color: #15803d; }
     .stat-lbl {
       display: block;
-      font-size: .75rem;
+      font-size: 0.8125rem;
       font-weight: 600;
       color: #cbd5e1;
       letter-spacing: 0.05em;
@@ -86,7 +86,7 @@
     .slip-overlay label,
     .modal label,
     label {
-      font-size: 0.78rem;
+      font-size: 0.875rem;
       font-weight: 700;
       color: var(--label-color, #93c5fd);
       letter-spacing: 0.04em;
@@ -115,7 +115,7 @@
       border-radius: 8px;
       padding: 0.65rem 0.85rem;
       color: var(--text-main);
-      font-size: 0.88rem;
+      font-size: 0.9375rem;
       outline: none;
       transition: border-color 0.2s;
       width: 100%;
@@ -130,7 +130,7 @@
       color: #3b82f6;
       font-weight: 800;
       font-style: normal;
-      font-size: 0.88rem;
+      font-size: 0.9375rem;
       padding: 0.4rem 0.2rem;
     }
     .input-field select option {
@@ -159,7 +159,7 @@
       border: 1.5px solid rgba(59, 130, 246, 0.25);
       border-radius: 8px;
       cursor: pointer;
-      font-size: 0.84rem;
+      font-size: 0.875rem;
       font-weight: 700;
       color: var(--text-muted);
       transition: all 0.2s;
@@ -196,7 +196,7 @@
       border-radius: 8px;
       padding: 0.6rem 0.9rem;
       color: var(--text-main);
-      font-size: 0.88rem;
+      font-size: 0.9375rem;
       outline: none;
     }
     .search-box input:focus {
@@ -213,7 +213,7 @@
       color: var(--text-muted);
       border-radius: 6px;
       padding: 0.35rem 0.75rem;
-      font-size: 0.76rem;
+      font-size: 0.8125rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
@@ -229,7 +229,7 @@
       display: inline-block;
       padding: 0.2rem 0.5rem;
       border-radius: 5px;
-      font-size: .75rem;
+      font-size: 0.8125rem;
       font-weight: 800;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -287,7 +287,7 @@
       gap: 0.55rem;
       padding: 1rem;
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.875rem;
       font-weight: 600;
       text-align: center;
       pointer-events: none;
@@ -314,7 +314,7 @@
     }
 
     .card-meta-line {
-      font-size: 0.78rem;
+      font-size: 0.875rem;
       color: var(--text-muted);
       display: flex;
       flex-direction: column;
@@ -333,7 +333,7 @@
     }
     .btn-sm {
       padding: 0.35rem 0.65rem;
-      font-size: .75rem;
+      font-size: 0.8125rem;
       font-weight: 700;
       border-radius: 6px;
       cursor: pointer;
@@ -369,7 +369,7 @@
 
     .ref-code {
       font-family: monospace;
-      font-size: .75rem;
+      font-size: 0.8125rem;
       font-weight: 700;
       color: var(--text-muted);
       letter-spacing: 0.05em;
@@ -381,7 +381,7 @@
       border-radius: 8px;
       padding: 0.55rem 0.75rem;
       margin: 0 0 0.5rem;
-      font-size: 0.75rem;
+      font-size: 0.8125rem;
       color: var(--blue-light);
       display: flex;
       justify-content: space-between;
@@ -397,7 +397,7 @@
       border: none;
       border-radius: 6px;
       padding: 0.3rem 0.65rem;
-      font-size: .75rem;
+      font-size: 0.8125rem;
       font-weight: 800;
       cursor: pointer;
       display: inline-flex;
@@ -426,7 +426,7 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 0.4rem;
-      font-size: 0.85rem;
+      font-size: 0.9375rem;
       color: #ffffff;
     }
     .notification-selection-toolbar {
@@ -435,7 +435,7 @@
       gap: 0.75rem;
       margin-bottom: 0.75rem;
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.875rem;
     }
     .notification-selection-toolbar[hidden] {
       display: none;
@@ -450,7 +450,7 @@
     .notification-select-control {
       margin-bottom: 0.55rem;
       color: var(--text-muted);
-      font-size: .75rem;
+      font-size: 0.8125rem;
     }
     .notification-select-all input,
     .notification-select-control input {
@@ -471,17 +471,17 @@
       cursor: not-allowed;
     }
     .notif-time {
-      font-size: .75rem;
+      font-size: 0.8125rem;
       color: var(--text-muted);
     }
     .notif-msg {
-      font-size: 0.8rem;
+      font-size: 0.875rem;
       color: #e2e8f0;
       margin: 0.25rem 0;
       line-height: 1.4;
     }
     .notif-contact {
-      font-size: 0.75rem;
+      font-size: 0.8125rem;
       color: #86efac;
       margin: 0.4rem 0 0;
     }
@@ -491,7 +491,7 @@
       color: var(--blue-light);
       border-radius: 6px;
       padding: 0.2rem 0.5rem;
-      font-size: .75rem;
+      font-size: 0.8125rem;
       cursor: pointer;
       margin-top: 0.5rem;
     }
@@ -521,7 +521,7 @@
       gap: 0.75rem;
       flex-wrap: wrap;
       margin-bottom: 1.25rem;
-      font-size: 0.76rem;
+      font-size: 0.8125rem;
       color: var(--text-muted);
     }
     .location-filter-wrap {
@@ -538,7 +538,7 @@
       border: 1px solid rgba(59, 130, 246, 0.18);
       border-radius: 12px;
       padding: 0.7rem 2.75rem 0.7rem 0.9rem;
-      font-size: 0.78rem;
+      font-size: 0.875rem;
       font-weight: 600;
       color: var(--text-main);
       cursor: pointer;
@@ -601,7 +601,7 @@
       width: 100%;
       margin: 1.2rem 0;
       border-collapse: collapse;
-      font-size: 0.84rem;
+      font-size: 0.875rem;
     }
     .slip-table td {
       padding: 0.45rem 0.5rem;
@@ -620,7 +620,7 @@
       margin-top: 1.8rem;
       padding-top: 1rem;
       border-top: 1px dashed #cbd5e1;
-      font-size: 0.75rem;
+      font-size: 0.8125rem;
       color: #64748b;
       text-align: center;
     }
@@ -665,7 +665,7 @@
       color: var(--text-main);
       padding: 0.8rem 1.25rem;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.9375rem;
       font-weight: 600;
       z-index: 999;
       box-shadow: 0 4px 20px rgba(0,0,0,0.5);
@@ -728,7 +728,7 @@
     .feed-empty-text {
       max-width: 460px;
       margin: 0 auto 1.1rem;
-      font-size: 0.85rem;
+      font-size: 0.9375rem;
       line-height: 1.5;
     }
     .feed-empty--error .feed-empty-title { color: #f87171; }

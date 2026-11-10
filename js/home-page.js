@@ -381,7 +381,7 @@ function renderItemsGrid(items) {
         <div style="grid-column: 1 / -1; text-align: center; padding: 3.5rem 1rem; background: rgba(59,130,246,0.06); border: 1.5px dashed rgba(59,130,246,0.35); border-radius: 16px;">
           <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🏷️</div>
           <h3 style="font-size: 1.15rem; font-weight: 800; color: #93c5fd; margin-bottom: 0.4rem;">Your Belongings Vault is Empty</h3>
-          <p style="font-size: 0.84rem; color: var(--text-muted); max-width: 480px; margin: 0 auto 1.25rem; line-height: 1.5;">
+          <p style="font-size: 0.875rem; color: var(--text-muted); max-width: 480px; margin: 0 auto 1.25rem; line-height: 1.5;">
             Register your personal laptops, tumblers, water bottles, and binder folders before they get lost to generate your unique, anonymous QR recovery sticker!
           </p>
           <button class="btn btn-primary" data-action="handleOpenRegisterBelonging">+ Register a Belonging Now</button>
