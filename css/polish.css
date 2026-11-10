@@ -66,28 +66,7 @@
   font-size: 0.8rem;
   line-height: 1.45;
 }
-.footer-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.25rem 1.5rem;
-}
-.footer-links a {
-  padding-block: 0.35rem;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-.footer-links a:hover,
-.footer-links a[aria-current='page'] { color: var(--blue-light); }
-.footer-links a:focus-visible {
-  outline: 2px solid var(--blue-light);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-/* Always the last column, also on the admin page, which has no footer links. */
+/* Always the last column: logo on the left, address on the right. */
 .footer-location {
   grid-column: -2 / -1;
   text-align: right;
@@ -106,7 +85,7 @@
 }
 
 @media (max-width: 767px) {
-  :root { --footer-space: 13rem; }
+  :root { --footer-space: 10rem; }
   :root .site-footer .footer-container {
     grid-template-columns: minmax(0, 1fr);
     justify-items: center;
