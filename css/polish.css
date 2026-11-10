@@ -552,7 +552,8 @@
 
   .browse-report-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(340px, 380px);
+    /* 420px still leaves the items room for two cards (three from 1440px). */
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
     gap: clamp(0.75rem, 1.5vw, 1.25rem);
     align-items: start;
     width: calc(100% - 1rem);
@@ -712,3 +713,18 @@
     height: 1.6rem;
   }
 }
+
+/* ── Report form: actions ───────────────────────────────────────────────── */
+/* Submit is the main action, so it gets twice Cancel's width; labels never wrap. */
+.report-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+.report-actions .btn {
+  min-width: 0;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.report-actions .report-cancel { flex: 1 1 0; }
+.report-actions .report-submit { flex: 2 1 0; border: none; }
