@@ -832,7 +832,7 @@ function renderItemsGrid(items) {
 
           <div class="card-actions" style="margin-top: 1rem;">
             <button class="btn-sm btn-outline" data-action="openQrStickerModal" data-args="${actionArgs(item.id)}">View / Print QR</button>
-            <button class="btn-sm btn-outline btn-finder-test" data-action="openAnonymousFinderModal" data-args="${actionArgs(item.refCode)}">Test Finder Screen</button>
+            <button class="btn-sm btn-outline btn-finder-test" data-action="openTestFinderScreen" data-args="${actionArgs(item.refCode)}">Test Finder Screen</button>
           </div>
         </div>
       `;
@@ -1557,6 +1557,7 @@ async function handleRegisterBelongingSubmit(e) {
 
 // ── Anonymous Finder Modal ────────────────────────────────────────────────
 let activeFinderConversationToken = null;
+let activeFinderTestMode = false;
 let activeRegisteredFinderConversation = null;
 
 function getSavedFinderConversations() {
@@ -1758,10 +1759,28 @@ function openFinderConversationFromModal() {
   openRegisteredFinderConversation(credentials.id, credentials.token);
 }
 
-function showAnonymousFinderForItem(item, matchToken = '') {
+function showAnonymousFinderForItem(item, matchToken = '', testMode = false) {
   const safeItem = item || {};
+  const isRegisteredBelonging = safeItem.isRegisteredBelonging === true && !matchToken;
+  activeFinderTestMode = testMode && isRegisteredBelonging;
   document.getElementById('finderScreenItemTitle').textContent = safeItem.title || 'Found Item';
   document.getElementById('finderScreenRefCode').textContent = safeItem.refCode || '—';
+  document.getElementById('finderScreenEyebrow').textContent = activeFinderTestMode ? 'QR Code Test' : 'You Found';
+  document.getElementById('finderTestNotice').hidden = !activeFinderTestMode;
+  document.getElementById('finderTestNotice').textContent =
+    'This is only a test. Sending it will email the address on your account, but will not create an inbox alert or conversation. You do not need to reply. If you receive the test email, the item’s QR finder link and email notification are working.';
+  document.querySelector('label[for="finderLocationInput"]').firstChild.textContent = activeFinderTestMode
+    ? 'Test location '
+    : 'Where is it right now? ';
+  document.querySelector('label[for="finderMessageInput"]').firstChild.textContent = activeFinderTestMode
+    ? 'Test message '
+    : 'Your message to the owner ';
+  document.getElementById('finderLocationInput').placeholder = activeFinderTestMode
+    ? 'Example: Library entrance'
+    : 'e.g. Library 2nd floor desk';
+  document.getElementById('finderMessageInput').placeholder = activeFinderTestMode
+    ? 'This message will appear in the test email.'
+    : 'Hi! Found your item near table 5. Handed it over to campus security desk.';
   const instructions = String(safeItem.instructions || '')
     .replace(/If found, please (notify owner via QR or )?leave with CSPC SASO \/ Campus Security(?: Desk)?\.?/gi, '')
     .trim();
@@ -1776,6 +1795,7 @@ function showAnonymousFinderForItem(item, matchToken = '') {
   document.getElementById('finderLocationInput').value = '';
   document.getElementById('finderContactInput').value = '';
   document.getElementById('finderShareContactToggle').checked = false;
+  document.getElementById('finderShareContactLabel').hidden = activeFinderTestMode;
   document.getElementById('finderContactField').hidden = true;
   const form = document.getElementById('anonymousFinderForm');
   form.querySelectorAll('input:not([type="hidden"]), textarea').forEach((field) => {
@@ -1783,9 +1803,9 @@ function showAnonymousFinderForItem(item, matchToken = '') {
   });
   const sendButton = document.getElementById('finderSendBtn');
   sendButton.disabled = false;
-  sendButton.textContent = '🚀 Send to Owner';
-  const isRegisteredBelonging = safeItem.isRegisteredBelonging === true && !matchToken;
-  activeFinderConversationToken = isRegisteredBelonging ? createFinderConversationToken() : null;
+  sendButton.textContent = activeFinderTestMode ? 'Send Test Email' : '🚀 Send to Owner';
+  activeFinderConversationToken =
+    isRegisteredBelonging && !activeFinderTestMode ? createFinderConversationToken() : null;
   const copyConversationButton = document.getElementById('finderCopyConversationLinkBtn');
   copyConversationButton.hidden = true;
   copyConversationButton.disabled = true;
@@ -1802,7 +1822,7 @@ function toggleFinderContactField(checked) {
   if (!checked) document.getElementById('finderContactInput').value = '';
 }
 
-async function openAnonymousFinderModal(refCode) {
+async function openAnonymousFinderModal(refCode, testMode = false) {
   try {
     const res = await fetch(`/api/items/qr-lookup/${encodeURIComponent(refCode)}`);
     const data = await res.json();
@@ -1815,10 +1835,14 @@ async function openAnonymousFinderModal(refCode) {
       document.getElementById('ownReportScanModal').classList.add('open');
       return;
     }
-    showAnonymousFinderForItem(item);
+    showAnonymousFinderForItem(item, '', testMode);
   } catch (err) {
     showToast('Failed to load item info.', 'error');
   }
+}
+
+function openTestFinderScreen(refCode) {
+  openAnonymousFinderModal(refCode, true);
 }
 
 function closeOwnReportScanModal() {
@@ -1846,7 +1870,7 @@ async function handleAnonymousFinderSubmit(e) {
   }
 
   sendButton.disabled = true;
-  sendButton.textContent = 'Sending Alert...';
+  sendButton.textContent = activeFinderTestMode ? 'Sending Test Email...' : 'Sending Alert...';
   try {
     const endpoint = matchToken ? '/api/items/match-reference-notify' : '/api/items/anonymous-notify';
     const body = matchToken
@@ -1856,6 +1880,7 @@ async function handleAnonymousFinderSubmit(e) {
           message,
           locationFound,
           finderContact,
+          ...(activeFinderTestMode ? { testMode: true } : {}),
           ...(activeFinderConversationToken ? { conversationToken: activeFinderConversationToken } : {}),
         };
     const res = await fetch(endpoint, {
@@ -1865,9 +1890,14 @@ async function handleAnonymousFinderSubmit(e) {
     });
     const data = await res.json();
     if (data.success) {
-      showToast(data.message || 'Finder alert submitted.');
-      loadMyNotifications();
-      sendButton.textContent = 'Alert Sent';
+      if (activeFinderTestMode) {
+        document.getElementById('finderTestNotice').textContent = data.message;
+        showToast('Test email sent.');
+      } else {
+        showToast(data.message || 'Finder alert submitted.');
+        loadMyNotifications();
+      }
+      sendButton.textContent = activeFinderTestMode ? 'Test Email Sent' : 'Alert Sent';
       document
         .getElementById('anonymousFinderForm')
         .querySelectorAll('input:not([type="hidden"]), textarea')
@@ -1891,12 +1921,12 @@ async function handleAnonymousFinderSubmit(e) {
       }
     } else {
       sendButton.disabled = false;
-      sendButton.textContent = '🚀 Send to Owner';
+      sendButton.textContent = activeFinderTestMode ? 'Send Test Email' : '🚀 Send to Owner';
       showToast(data.message || 'Failed to send notification.', 'error');
     }
   } catch (err) {
     sendButton.disabled = false;
-    sendButton.textContent = '🚀 Send to Owner';
+    sendButton.textContent = activeFinderTestMode ? 'Send Test Email' : '🚀 Send to Owner';
     showToast('Server error. Please try again.', 'error');
   }
 }
