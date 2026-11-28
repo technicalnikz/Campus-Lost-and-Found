@@ -813,6 +813,29 @@
       </div>
     </div>
 
+    <div class="slip-overlay" id="ownReportScanModal" data-close="closeOwnReportScanModal">
+      <div
+        class="modal-card modal-card--center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ownReportScanTitle"
+      >
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-heading modal-heading--plain" id="ownReportScanTitle">This is your report</h2>
+            <p class="modal-subtitle">
+              You reported this item, so you can’t send a finder alert to yourself. The item’s QR code is still available
+              for someone else to scan.
+            </p>
+          </div>
+          <button type="button" class="modal-close" data-action="closeOwnReportScanModal" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-actions modal-actions--center">
+          <button type="button" class="btn btn-primary btn-compact" data-action="closeOwnReportScanModal">Got it</button>
+        </div>
+      </div>
+    </div>
+
     <!-- PHOTO VIEWER: full-screen photo with item details, browsing and zoom (css/lightbox.css, js/home-page.js) -->
     <div class="slip-overlay photo-lightbox" id="imageModal" data-close="closeImageModal">
       <div class="lightbox" role="dialog" aria-labelledby="imageModalTitle">

@@ -774,6 +774,32 @@ test('registered belongings are private except through QR reference lookup', asy
   assert.equal(Object.hasOwn(item, 'ownerEmail'), false);
 });
 
+test('a report owner cannot send a finder alert to themself through its QR code', async (t) => {
+  const studentCookie = await login('student@my.cspc.edu.ph', studentPassword);
+  const itemsPath = path.join(dataDir, 'items.json');
+  const originalItems = fs.readFileSync(itemsPath);
+  const items = JSON.parse(originalItems);
+  const item = items.find((entry) => entry.refCode === 'CSPC-LF-2026-013');
+  assert.ok(item);
+  item.reportedBy = 'student-test';
+  fs.writeFileSync(itemsPath, JSON.stringify(items));
+  t.after(() => fs.writeFileSync(itemsPath, originalItems));
+
+  const lookupResponse = await fetch(`${baseUrl}/api/items/qr-lookup/${item.refCode}`, {
+    headers: { Cookie: studentCookie },
+  });
+  assert.equal(lookupResponse.status, 200);
+  assert.equal((await lookupResponse.json()).item.isOwnReport, true);
+
+  const alertResponse = await fetch(`${baseUrl}/api/items/anonymous-notify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: studentCookie },
+    body: JSON.stringify({ refCode: item.refCode, message: 'I found my own item.' }),
+  });
+  assert.equal(alertResponse.status, 403);
+  assert.match((await alertResponse.json()).message, /report you submitted/i);
+});
+
 test('registered QR alerts create a secure owner-finder conversation with messaging, meetup, and mutual return confirmation', async (t) => {
   const studentCookie = await login('student@my.cspc.edu.ph', studentPassword);
   const otherStudentCookie = await login('match.student@my.cspc.edu.ph', studentPassword);
