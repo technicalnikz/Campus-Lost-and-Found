@@ -1811,10 +1811,18 @@ async function openAnonymousFinderModal(refCode) {
       return;
     }
     const item = data.item;
+    if (item.isOwnReport) {
+      document.getElementById('ownReportScanModal').classList.add('open');
+      return;
+    }
     showAnonymousFinderForItem(item);
   } catch (err) {
     showToast('Failed to load item info.', 'error');
   }
+}
+
+function closeOwnReportScanModal() {
+  document.getElementById('ownReportScanModal').classList.remove('open');
 }
 
 function closeAnonymousFinderModal() {

@@ -1483,6 +1483,9 @@ router.get('/qr-lookup/:refCode', (req, res) => {
       location: item.location,
       instructions: item.instructions || '',
       isRegisteredBelonging: item.type === 'registered',
+      isOwnReport:
+        ['lost', 'found'].includes(item.type) &&
+        Boolean(req.session?.user && String(item.reportedBy) === String(req.session.user.id)),
     },
   });
 });
@@ -1516,6 +1519,17 @@ router.post('/anonymous-notify', async (req, res) => {
 
     const items = getItems();
     const searchRef = String(refCode).toUpperCase().trim();
+    const targetItem = items.find((i) => i.refCode && i.refCode.toUpperCase().trim() === searchRef);
+    if (
+      targetItem &&
+      ['lost', 'found'].includes(targetItem.type) &&
+      req.session?.user &&
+      String(targetItem.reportedBy) === String(req.session.user.id)
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: 'You cannot send a finder alert to a report you submitted.' });
+    }
     const submissionFingerprint = finderSubmissionFingerprint(
       searchRef,
       message,
