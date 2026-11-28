@@ -1151,6 +1151,70 @@ test('finder QR alerts appear in the owner inbox and are emailed to the owner', 
   assert.equal(savedClaims[0].notification, null);
 });
 
+test('registered belonging QR tests email the owner without creating an alert or conversation', async () => {
+  const studentCookie = await login('student@my.cspc.edu.ph', studentPassword);
+  const otherStudentCookie = await login('match.student@my.cspc.edu.ph', studentPassword);
+  const smtp = await startSmtpCaptureServer();
+  const mailEnvironment = Object.fromEntries(smtpEnvironmentKeys.map((key) => [key, process.env[key]]));
+  process.env.SMTP_HOST = '127.0.0.1';
+  process.env.SMTP_PORT = String(smtp.port);
+  process.env.SMTP_SECURE = 'false';
+  process.env.SMTP_FROM = 'Back2You <noreply@example.edu>';
+  process.env.APP_BASE_URL = baseUrl;
+  delete process.env.SMTP_USER;
+  delete process.env.SMTP_PASS;
+
+  const itemPath = path.join(dataDir, 'items.json');
+  const itemsBefore = JSON.parse(fs.readFileSync(itemPath, 'utf8'));
+  const itemBefore = itemsBefore.find((entry) => entry.refCode === 'CSPC-REG-QR-0012');
+  assert.ok(itemBefore);
+  const request = (cookie) =>
+    fetch(`${baseUrl}/api/items/anonymous-notify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({
+        refCode: itemBefore.refCode,
+        message: 'Testing the QR code email.',
+        locationFound: 'Test location',
+        testMode: true,
+      }),
+    });
+
+  let ownerResponse;
+  try {
+    const unauthorizedResponse = await request(otherStudentCookie);
+    assert.equal(unauthorizedResponse.status, 403);
+    ownerResponse = await request(studentCookie);
+  } finally {
+    await new Promise((resolve, reject) => smtp.server.close((error) => (error ? reject(error) : resolve())));
+    Object.entries(mailEnvironment).forEach(([key, value]) => {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    });
+  }
+
+  assert.equal(ownerResponse.status, 200);
+  const result = await ownerResponse.json();
+  assert.equal(result.testMode, true);
+  assert.equal(result.emailSent, true);
+  assert.equal(Object.hasOwn(result, 'notification'), false);
+  assert.equal(Object.hasOwn(result, 'conversation'), false);
+  assert.match(result.message, /only a test/i);
+  assert.match(result.message, /do not need to reply/i);
+  assert.match(result.message, /QR finder link and email notification are working/i);
+  assert.equal(smtp.messages.length, 1);
+  assert.match(smtp.messages[0].recipient, /owner@example\.edu/i);
+  assert.match(smtp.messages[0].content, /Back2You QR code test: Registered laptop/i);
+  assert.match(smtp.messages[0].content, /only a test/i);
+  assert.match(smtp.messages[0].content, /do not need to reply/i);
+  assert.match(smtp.messages[0].content, /QR finder link and email notification are working/i);
+  assert.match(smtp.messages[0].content, /Testing the QR code email\./i);
+
+  const itemsAfter = JSON.parse(fs.readFileSync(itemPath, 'utf8'));
+  const itemAfter = itemsAfter.find((entry) => entry.refCode === itemBefore.refCode);
+  assert.deepEqual(itemAfter.notifications || [], itemBefore.notifications || []);
+});
+
 test('finder QR landing URL serves the app for the anonymous finder screen', async () => {
   const response = await fetch(`${baseUrl}/found?ref=CSPC-REG-QR-0012`);
   assert.equal(response.status, 200);

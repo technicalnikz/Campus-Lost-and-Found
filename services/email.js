@@ -238,6 +238,27 @@ async function sendFinderNotificationEmail(user, item, notification) {
   });
 }
 
+async function sendFinderTestEmail(user, item, testDetails) {
+  const transport = createTransport();
+  const name = user.fullName || 'there';
+  const safeName = escapeHtml(name);
+  const confirmation =
+    'This is only a test. No finder alert or conversation was created, and you do not need to reply. If you received this email, the item’s QR finder link and email notification are working.';
+  const subject = `Back2You QR code test: ${item.title}`;
+  const text = `Hi ${name},\n\n${confirmation}\n\nItem: ${item.title} (${item.refCode})\nTest location: ${testDetails.locationFound}\nTest message: ${testDetails.message}\n\nBack2You – CSPC Lost & Found`;
+  const html = `<p>Hi ${safeName},</p><p>${escapeHtml(confirmation)}</p><ul><li><strong>Item:</strong> ${escapeHtml(item.title)} (${escapeHtml(item.refCode)})</li><li><strong>Test location:</strong> ${escapeHtml(testDetails.locationFound)}</li><li><strong>Test message:</strong> ${escapeHtml(testDetails.message)}</li></ul><p>Back2You – CSPC Lost &amp; Found</p>`;
+  const info = await transport.sendMail({
+    from: process.env.SMTP_FROM,
+    to: user.email,
+    subject,
+    text,
+    html,
+  });
+  if (info.rejected && info.rejected.length) {
+    throw new Error(`SMTP rejected recipient(s): ${info.rejected.join(', ')}`);
+  }
+}
+
 async function sendMatchFinderNotificationEmail(user, item, notification) {
   const transport = createTransport();
   const name = user.fullName || 'there';
@@ -276,6 +297,7 @@ module.exports = {
   sendClaimStatusEmail,
   sendClaimRequestEmail,
   sendFinderNotificationEmail,
+  sendFinderTestEmail,
   sendMatchFinderNotificationEmail,
   sendBroadcastEmail,
   sendMeetupRequestEmail,

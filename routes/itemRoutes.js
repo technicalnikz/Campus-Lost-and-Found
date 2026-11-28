@@ -14,6 +14,7 @@ const {
   sendClaimStatusEmail,
   sendClaimRequestEmail,
   sendFinderNotificationEmail,
+  sendFinderTestEmail,
   sendMatchFinderNotificationEmail,
   sendBroadcastEmail,
   sendMeetupRequestEmail,
@@ -324,6 +325,12 @@ function getItems() {
 
 function saveItems(items) {
   writeJsonArray(ITEMS_FILE, items);
+}
+
+function getFinderAlertOwner(item) {
+  return item.ownerEmail
+    ? { email: item.ownerEmail, fullName: item.ownerName }
+    : readJsonArray(USERS_FILE).find((user) => String(user.id) === String(item.reportedBy));
 }
 
 function isItemClaimed(item) {
@@ -1501,7 +1508,7 @@ router.get('/qr-lookup/:refCode', (req, res) => {
 // POST /api/items/anonymous-notify - Public finder messaging (delivers alert straight to owner's account)
 router.post('/anonymous-notify', async (req, res) => {
   try {
-    const { refCode, message, locationFound, finderContact, conversationToken } = req.body;
+    const { refCode, message, locationFound, finderContact, conversationToken, testMode } = req.body;
     const submissionKey = req.get('Idempotency-Key')?.trim();
     if (!refCode || !message) {
       return res.status(400).json({ success: false, message: 'Reference code and message are required.' });
@@ -1528,6 +1535,47 @@ router.post('/anonymous-notify', async (req, res) => {
     const items = getItems();
     const searchRef = String(refCode).toUpperCase().trim();
     const targetItem = items.find((i) => i.refCode && i.refCode.toUpperCase().trim() === searchRef);
+    if (testMode === true) {
+      if (
+        !targetItem ||
+        targetItem.type !== 'registered' ||
+        !req.session?.user ||
+        String(targetItem.reportedBy) !== String(req.session.user.id)
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: 'Only the owner of a registered belonging can send its QR test email.',
+        });
+      }
+
+      const owner = getFinderAlertOwner(targetItem);
+      if (!owner?.email) {
+        return res.status(404).json({ success: false, message: 'The item owner email address could not be found.' });
+      }
+
+      recordAttempt(finderAlertSenders, req.ip, FINDER_ALERT_SENDER_LIMIT);
+      try {
+        await sendFinderTestEmail(owner, targetItem, {
+          locationFound: sanitizeString(locationFound || 'QR test'),
+          message: sanitizeString(message),
+        });
+      } catch (error) {
+        console.error('Finder QR test email could not be sent:', error.message);
+        return res.status(502).json({
+          success: false,
+          message: 'The test could not finish because its confirmation email was not sent. Please try again later.',
+        });
+      }
+
+      return res.json({
+        success: true,
+        testMode: true,
+        emailSent: true,
+        message:
+          'This was only a test. No alert or conversation was created, and you do not need to reply. If you received the test email, the item’s QR finder link and email notification are working.',
+      });
+    }
+
     if (
       targetItem &&
       ['lost', 'found'].includes(targetItem.type) &&
@@ -1636,9 +1684,7 @@ router.post('/anonymous-notify', async (req, res) => {
     recordAttempt(finderAlertItems, String(item.id), FINDER_ALERT_ITEM_LIMIT);
     await postgresStore.commitRequest();
 
-    const owner = item.ownerEmail
-      ? { email: item.ownerEmail, fullName: item.ownerName }
-      : readJsonArray(USERS_FILE).find((user) => String(user.id) === String(item.reportedBy));
+    const owner = getFinderAlertOwner(item);
 
     let emailSent = false;
     try {

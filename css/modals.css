@@ -682,6 +682,17 @@
 .connect-instructions:empty {
   display: none;
 }
+.connect-test-notice {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+.connect-test-notice[hidden] {
+  display: none !important;
+}
 
 .connect-form {
   margin-top: 1.25rem;
