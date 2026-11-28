@@ -1559,10 +1559,11 @@
           &times;
         </button>
 
-        <p class="connect-eyebrow">You Found</p>
+        <p class="connect-eyebrow" id="finderScreenEyebrow">You Found</p>
         <h3 class="connect-title" id="finderScreenItemTitle">MacBook Air M2</h3>
         <p class="connect-ref" id="finderScreenRefCode">CSPC-REG-QR-001</p>
         <p class="connect-instructions" id="finderScreenInstructions"></p>
+        <p class="connect-instructions connect-test-notice" id="finderTestNotice" role="status" aria-live="polite" hidden></p>
 
         <form id="anonymousFinderForm" class="connect-form" data-submit="handleAnonymousFinderSubmit">
           <input type="hidden" id="finderRefCodeInput" />
@@ -1598,7 +1599,7 @@
             </div>
           </div>
 
-          <label class="connect-toggle" for="finderShareContactToggle">
+          <label class="connect-toggle" id="finderShareContactLabel" for="finderShareContactToggle">
             <input
               type="checkbox"
               id="finderShareContactToggle"
