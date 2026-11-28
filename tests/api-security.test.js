@@ -1949,6 +1949,60 @@ test('owner and finder of an approved claim can share a one-time location, only 
   }
 });
 
+test('a Supabase-stored photo resolves to a browsable URL even for the reporter and an admin viewing their own report', async () => {
+  const itemsPath = path.join(dataDir, 'items.json');
+  const originalItems = fs.readFileSync(itemsPath, 'utf8');
+  try {
+    const items = JSON.parse(originalItems);
+    items.push({
+      id: 91,
+      refCode: 'CSPC-LF-2026-091',
+      title: 'Grey backpack',
+      category: 'Bags & Wallets',
+      type: 'found',
+      location: 'Library',
+      desc: 'Grey backpack.',
+      // Stored exactly as services/supabaseStorage.js saves it - never a URL a
+      // browser can load directly, only a key the photo route can fetch by id.
+      photo: 'storage://items/fixture-photo.png',
+      reportedBy: 'student-test',
+      status: 'active',
+      claimed: false,
+      createdAt: new Date().toISOString(),
+    });
+    fs.writeFileSync(itemsPath, JSON.stringify(items));
+
+    const ownerCookie = await login('student@my.cspc.edu.ph', studentPassword);
+    const adminCookie = await login('admin@cspc.edu.ph', adminPassword);
+    const expectedPhotoUrl = '/api/items/91/photo';
+
+    const listAsOwner = await fetch(`${baseUrl}/api/items?type=found`, { headers: { Cookie: ownerCookie } });
+    const ownerListed = (await listAsOwner.json()).items.find((entry) => String(entry.id) === '91');
+    assert.ok(ownerListed, 'the reporter can see their own report in the list');
+    assert.equal(ownerListed.photo, expectedPhotoUrl, "the reporter's own listed item exposes a browsable photo URL");
+
+    const singleAsOwner = await fetch(`${baseUrl}/api/items/91`, { headers: { Cookie: ownerCookie } });
+    assert.equal(
+      (await singleAsOwner.json()).item.photo,
+      expectedPhotoUrl,
+      "the reporter's single-item view exposes a browsable photo URL"
+    );
+
+    const listAsAdmin = await fetch(`${baseUrl}/api/items?type=found`, { headers: { Cookie: adminCookie } });
+    const adminListed = (await listAsAdmin.json()).items.find((entry) => String(entry.id) === '91');
+    assert.equal(adminListed.photo, expectedPhotoUrl, "an admin's listed view exposes a browsable photo URL");
+
+    const singleAsAdmin = await fetch(`${baseUrl}/api/items/91`, { headers: { Cookie: adminCookie } });
+    assert.equal(
+      (await singleAsAdmin.json()).item.photo,
+      expectedPhotoUrl,
+      "an admin's single-item view exposes a browsable photo URL"
+    );
+  } finally {
+    fs.writeFileSync(itemsPath, originalItems);
+  }
+});
+
 test('a student can delete their own account; personal data goes, shared records are anonymised', async () => {
   const paths = Object.fromEntries(
     ['users', 'items', 'claims'].map((name) => [name, path.join(dataDir, `${name}.json`)])

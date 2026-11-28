@@ -281,6 +281,15 @@ function currentYear() {
   return new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', year: 'numeric' }).format(new Date());
 }
 
+// A Supabase-stored photo is saved as an internal "storage://..." key, never a
+// browsable URL - any response that reaches the client must route it through
+// GET /:id/photo instead, the same as publicItemView already does.
+function resolvePhotoUrl(item) {
+  return supabaseStorage.objectKey(item.photo)
+    ? `/api/items/${encodeURIComponent(item.id)}/photo`
+    : item.photo || item.imageUrl || '';
+}
+
 function publicItemView(item, potentialMatch = null, canResolve = false, canRequestClaim = false) {
   return {
     id: item.id,
@@ -290,9 +299,7 @@ function publicItemView(item, potentialMatch = null, canResolve = false, canRequ
     type: item.type,
     location: item.location,
     desc: item.desc || item.description || '',
-    photo: supabaseStorage.objectKey(item.photo)
-      ? `/api/items/${encodeURIComponent(item.id)}/photo`
-      : item.photo || item.imageUrl || '',
+    photo: resolvePhotoUrl(item),
     date: item.date,
     createdAt: item.createdAt,
     status: item.status,
@@ -1441,6 +1448,7 @@ router.get('/', (req, res) => {
     return canViewPrivateFields
       ? {
           ...item,
+          photo: resolvePhotoUrl(item),
           canResolve: true,
           canRequestClaim,
           potentialMatch: match
@@ -2451,6 +2459,7 @@ router.get('/:id', (req, res) => {
     success: true,
     item: {
       ...item,
+      photo: resolvePhotoUrl(item),
       potentialMatch: match ? { id: match.id, title: match.title, location: match.location, type: match.type } : null,
     },
   });
